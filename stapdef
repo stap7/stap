@@ -10,13 +10,13 @@ Example Interaction:
 	Server->Client (provide choice between two actions):
 		{"a":{"choose a button":["button 1","button 2"]}}
 	Client->Server (choose the first action):
-		{"choose a button":0}
+		{"choose a button":"button1"}
 	Server->Client (give reward, remove actions for 1 second):
 		{"r":{"Coins Earned":7},"a":{"_timer":1,"_=":0}}
 	Server->Client (provide choice between two actions, again):
 		{"a":{"choose a button":["button 1","button 2"]}}
 	Client->Server (choose the second action):
-		{"choose a button":1}
+		{"choose a button":"button2"}
 	Server->Client (give reward, remove actions for 1 second):
 		{"r":{"Coins Earned":3},"a":{"_timer":1,"_=":0}}
 	...
