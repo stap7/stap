@@ -1,107 +1,99 @@
 STAP (Simple Task-Actor Protocol)
-
+v2.3 (20150904)
 
 <!---------------------------------------------------------------->
-Example Interaction:
-	Server is waiting for websocket clients
-	Client connects to server
-	Server->Client (let client know that reward "Coins Earned" will be an integer between 0 and 10):
-		{"_numspecs":{"r.Coins Earned":{">=":0,"<=":10}}}
-	Server->Client (provide choice between two actions):
-		{"a":{"choose a button":["button 1","button 2"]}}
-	Client->Server (choose the first action):
-		{"choose a button":"button 1"}
-	Server->Client (give reward, remove actions for 1 second):
-		{"r":{"Coins Earned":7},"a":{"_timer":1,"_=":0}}
-	Server->Client (provide choice between two actions, again):
-		{"a":{"choose a button":["button 1","button 2"]}}
+Sample Interaction:
+	Server (hosting the TASK) is waiting for websocket clients
+	Client (human or compuational participant) connects to server
+	Server->Client (let client know that "Coins Earned" will be an integer between 0 and 10, and should be removed after 500ms):
+		{"_num": {"Coins Earned": {">=":0, "<=":10, "goal":10, "temp":500}}}
+	Server->Client (let client know that there are two possible actions that may be presented in this task, Button 1 and Button 2):
+		{"_input": {"#b1":{"type":"btn", "txt":"Button 1"}}, {"#b2":{"type":"btn", "txt":"Button 2"}}}
+	Server->Client (display both buttons):
+		{"choose a button":["#b1","#b2"]}}
+	Client->Server (click the first action):
+		{"#b1":3}
+	Server->Client (give reward, remove actions):
+		{"Coins Earned":7}
 	Client->Server (choose the second action):
-		{"choose a button":"button 2"}
-	Server->Client (give reward, remove actions for 1 second):
-		{"r":{"Coins Earned":3},"a":{"_timer":1,"_=":0}}
+		{"#b2":3}
+	Server->Client (give reward, remove actions):
+		{"Coins Earned":3}
 	...
 
 <!---------------------------------------------------------------->
-#each key-value pair below is optional, unless otherwise stated
+//each key-value pair below is optional, unless otherwise stated
 
-TASK->CLIENT protocol
-	(task-server sends information is the following format):
+TASK->CLIENT protocol													//task-server sends information is the following format
+({																		//keys that begin with _ are expected to be processed prior to rest
+	"_W":{<<waitID>>,<<number>>},										//wait flag, used to delay the processing of the current message (i.e. to delay the display of actions); <<number>> signifies milliseconds; following references to the same <<waitID>> either reset the timer, or, if null, destroy the queued message (e.g. "_W":{"0":20000} will delay msg processing by 20s, "_W":{"0":10000} will reset the delay on that same msg to 10s, and "_W":{"0":null} will destroy that msg
+	"_template":<<url>>,												//optional url of js for interpreting STAP; may be sent once before task begins, may be ignored by machine agents
+	"_conds":{"(win)|(los)|(end)":[([<<cond>>+],)+]},					//win, loss, and neutral task-end conditions; may be sent once before task begins; assume OR for all items in outer list, assume AND for all items in inner list
+	"_replace":{(<<text>>:<<html>>,)+},									//replace shorthand text with longer text/html/imgs; used to save bandwidth/processing and make things nice looking in gui, rather than to add meaningful information (e.g. to replace certain words with icon equivalents); Example:  {"_replace":{":)":"<img src=smiley.gif>"}} would signify that whenever ":)" is found in text, it is to be replaced with the smiley.gif image;  may be sent once before task begins, may be ignored by machine agents
+	"_input":{(<<inputID>>:{(<<inputOption>>,)*},)+},					//input element definitions; may be sent once before task begins
+	"_num":{("<<key>>(.<<key>>)*":{(<<numOption>>,)*},)+},				//number specs (e.g. min/max, format, goal, rate of change); may be sent once before task begins
+	"_C":<<number>>,													//optionally clear all <<key>>:<<element>> pairs (NOT the "_*" directives); if <<number>> is <=0, clear prior state, else wait <<number>> of milliseconds and then clear the state
+	(<<key>>:<<element>>,)*,											//state of the task
+	"_A":{<<clear>>? (<<inputID>>:<<actionValue>>,)+},					//auto-select action (e.g. for cruise control, replay/spy, demo, instructions); processed AFTER <<state>>; clearing flag timing is a way to indicate how long auto-selected actions are to be visible
+}) | ([(<<element>>,)+])												//[element1, element2] is shorthand for {"0":element1, "1":element2}
 
-{																		#keys that begin with _ are expected to be processed prior to rest
-	"_template":<<url>>,												#optional js for interpreting mgin; may be sent once before task begins, may be ignored by machine agents
-	"_replace":{														#Replace shorthand text with longer text/html/imgs; used to save bandwidth/processing and make things nice looking in gui, rather than to add meaningful information (e.g. to replace certain words with icon equivalents)
-		(<<text>>:<<html>>,)+											# (e.g. "_replace":{":)":"<img src=smiley.gif>"} would signify that whenever ":)" is found in text, it is to be replaced with the smiley.gif image
-	},																	# may be sent once before task begins, may be ignored by machine agents
-	"_actspecs":{														#may be sent once before task begins
-		"_onsubmit":<<text>>,											#replace controls with <<text>> when all actions are done (e.g. "waiting for opponent...")
-		(<<key>>:{
-			"type":("btn"|												#buttons (default)
-					"txt"|												#text input
-					"hold"|												#hold down buttons (returns button value for mouse-up or touchend, button value with ".D" appended for mouse-down or touchend events)
-					"onoff"|											#click to change value (e.g. checkbox)
-					"choice"|											#forced choice (e.g. radiobutton, select)
-					"choices"|											#multiple choices (e.g. multiple checkboxes or multi-select; returns list as action-value)
-					"bx"|												#turns _bx elements under the "s" directive into clickable areas; the key of this action must be the full key of the _bx element (e.g. {"_actspecs":{"s.the zone":{"type":"bx"}}, "s":{"the zone":{"_bx":{"w":400,"h":300}}}, "a":{"s.the zone":[]}}); clicking on a _bx element would send back the x,y pos (e.g. {"s.the zone":[24,60]})
-					"bxhold"|											#same as "bx", but sends [x,y] pos for mouse-up or touchend, [x,y,1] for mouse-down or touchend events
-					"bxdrag"|											#same as "bxhold", but assumes that the element is draggable; only valid for interior _bx elements
-					"nav4"|												#4 directions arrow hold-down buttons, sends back "n|s|e|w" for up, down, right, and left
-					"nav8"),											#8 directions arrow hold-down buttons, sends back "n|s|e|w", as well as "ns","nw","se","sw"
-			"default":<<text>>,											#default value
-			"after":1|0|-1|<<text>>,									#what to do after action is chosen/submitted: 1: leave as is, 0: disable, -1: clear, <<text>>: replace control with <<text>>
-			"keycode":[(<<keycode>>,)+]									#assigned keyboard shortcuts (e.g. use 13 for carriage return, 65 for A, 37 for left arrow key)
-			"multiline":true|false,										#if action is txt, this specifies whether carriage returns are allowed in text
-			"maxchars":<<number>>,										#if action is txt, this specifies max number of characters
-		},)+
-	},
-	"_numspecs":{														#Min, max, floating point precision, and utility +/- for values; may be sent once before task begins
-		("<<key>>(.<<key>>)*":{
-			"flt":<<number>>,											#floating point precision, if this parameter is missing, or 0, assume this is an int
-			"<=":<<number>>,											#minimum value
-			">=":<<number>>,											#maximum value
-			"u":(-1|1)													#utility is proportional, or inverse proportional, to the number
-		},)+
-	},
-	"_endconds":{														#instructions for win, loss, and task-end conditions; may be sent once before task begins
-		"win":[([<<cond>>+],)+],										#assume OR for all items in outer list, assume AND for all items in inner list
-		"los":[([<<cond>>+],)+],
-		"end":[([<<cond>>+],)+]
-	},
-	"_error":<<text>>,													#server-side errors that may have occurred during processing
-	"_W":<<number>>,													#Wait flag, used to delay the processing of the current message (i.e. to delay the display of actions); can be ignored by computational actors running faster-than-real-time simulations
-	"_A":{																#Auto-select action (e.g. for cruise control, replay/spy, demo, instructions); processed AFTER the allowed actions directive ("a")
-		<<clear>>?														#clearing flag timing is a way to indicate how long auto-selected actions are to be visible
-		(<<key>>:<<actionValue>>,)+
-	},
-	"s":<<state>>,														#State of the task
-	"t":{<<clear>>? (<<key>>:<<value>>,)+},								#Title-bar information (optional special information that doesn't go into main display; e.g. task title, trial number)
-	"a":{<<clear>>? (<<key>>:[(<<text>>,)*],)*},						#Allowed actions
-	"r":{(<<key>>:<<number>>)+},										#Reward (non-persistent value feedback)
-	"$":{<<clear>>? (<<key>>:(<<number>>|null)+},						#Score (persistent value feedback); null signifies deletion
-}
+CLIENT->TASK protocol													//client responses to task-server, i.e. action choices
+{(<<inputID>>:<<actionValue>>,)*}
 
 
-CLIENT->TASK protocol
-	(client responses to task-server, i.e. action choices):
-
-{(<<key>>:<<actionValue>>,)*}											#key must match one of the available keys in Allowed actions sent by server
-
-
-#each key-value pair in specs below is mandatory, unless otherwise stated
+//each key-value pair below is mandatory, unless otherwise stated
 <<cond>>::= "<<key>>(.<<key>>)* (=|!=|<|>) <<value>>",
-<<state>>::= {<<clear>>? (<<key>>:(<<state>>|<<value>>|<<graphicsArea>>),)*}
-<<graphicsArea>>::= {<<clear>>? "_bx":{("x":<<number>>, "y":<<number>>,)? "w":<<number>>, "h":<<number>> (,<<divOption>>)*} (,<<key>>:(<<graphicsArea>>|<<lines>>|<<curvedLines>>))*}
+<<inputOption>>::= "type":("btn"|										//button (default)
+							"txt"|										//text input
+							"hold"|										//hold down buttons (returns button value for mouse-up or touchend, button value with ".D" appended for mouse-down or touchend events)
+							"onoff"|									//click to change value (e.g. checkbox)
+							"choice"|									//forced choice (e.g. radiobutton, select)
+							"choices"|									//multiple choices (e.g. multiple checkboxes or multi-select; returns list as action-value)
+							"xyclick"|									//turns _bx elements into clickable areas (e.g. {"_input":{"#X":{"type":"xyclick"}}, "the zone":{"_bx":{"w":400,"h":300,"input":"#X"}}}; would send back tuple [x,y,3], where x,y is the click pos, relative to the top-left corner of the _bx element (e.g. {"#X":[24,60,3]})
+							"xyhold"|									//same as "xyclick", but sends [x,y,1] for mouse-down/touchstart, and [x,y,2] for mouse-up or touchend events
+							"xydrag"|									//same as "bxhold", but assumes that the element is draggable; only valid for interior _bx elements
+							"nav4"|										//4 directions arrow hold-down buttons, sends back "n|s|e|w" for up, down, right, and left
+							"nav8") |									//8 directions arrow hold-down buttons, sends back "n|s|e|w", as well as "ns","nw","se","sw"
+					"text":<<text>> | [(<<text>>,)+] |					//button or choice options text
+					"default":<<text>> |								//default value
+					"onsubmit":1|0|-1|<<text>> |						//what to do after action is clicked/chosen/submitted: 1: leave as is, 0: disable, -1: clear, <<text>>: replace control with <<text>>
+					"keycode":[(<<keycode>>,)+] |						//assigned keyboard shortcuts (e.g. use 13 for carriage return, 65 for A, 37 for left arrow key)
+					"multiline":(true|false) |							//if action is txt, this specifies whether carriage returns are allowed in text
+					"maxchars":<<number>>								//if action is txt, this specifies max number of characters
+<<numOption>>::= ("flt":<<number>>) | ("time":<<timeFormat>>) |			//floating point precision or time format; if these parameters are missing, or flt:0, assume this is an int
+				"<=":<<number>> |										//minimum value
+				">=":<<number>> |										//maximum value
+				"goal":<<number>> |										//value actors are seeking in the given task
+				"temp":<<number>> |										//temp>0 indicates that this is temporary, rather than cumulative feedback, and should disappear within <<number>> of milliseconds (e.g. temp reward vs long-term score, the difference being that a temp reward of 1 followed by 0 is fine, whereas a cumulative score of 1 followed by 0 signifies a loss of points)
+				"ani":[<<number>>,<<number>>(,<<number>>)]				//[<<number>>,<<number>>,<<number>>] tuple signifies the change in value, time between each change in milliseconds, and the boundary condition, respectively
+<<element>>::= <<state>>|<<value>>|<<graphicsArea>>|<<inputID>>
+<<state>>::= {<<clear>>? (<<key>>:<<element>>,)*} | [(<<element>>,)+]	//[element1, element2] is shorthand for {"0":element1, "1":element2}
+<<graphicsArea>>::= {<<clear>>? "_bx":{"w":<<number>>, "h":<<number>> (,<<divOption>>)*} (,<<key>>:(<<graphicsArea>>|<<lines>>|<<curvedLines>>))*}
 <<lines>>::= {"_ln":[<<number>>,<<number>> (,<<number>>,<<number>>)+] (,<<strokeOption>>)*}
 <<curvedLines>>::= {"_cr":[<<number>>,<<number>> (,<<number>>,<<number>>,<<number>>,<<number>>)+] (,<<strokeOption>>)*}
-<<divOption>>::= "r":<<number>> | "rot":<<number>> | "bg":<<cssBackground>> | "bd":<<cssBorder>> | "txt":<<text>> | "fnt":<<cssFont>> | "txtcol":<<color>>
-<<strokeOption>>::= "f":(<<color>>|"none") |							#similar to SVG fill
-					"c":(<<color>>|"none") |							#similar to SVG stroke
-					"w":<<number>> |									#similar to SVG stroke-width
-					"(start|end)":("arrow"|"circle"|"square"|"") |		#similar to SVG marker-start/marker-end
-					"cap":("square"|"round"|"butt") |					#similar to SVG stroke-linecap
-					"dash":<<strokeDasharray>>							#similar to SVG stroke-dasharray
-<<clear>>::= "_(R|C)":<<number>>,										#flags to remove element (_R) or clear all child elements (_C); if flag value>0, set a timeout before clearing/removing
-<<key>>::= <<text>>														#if key string begins with a number, the number is used for sorting, but stripped from text to be displayed
-<<value>>::= <<text>> | <<number>> | null								#null signifies deletion
+<<divOption>>::= "input":<<inputID>> |									//inputID corresponding to an entry in _input of type xyclick, xyhold, or xydrag
+				"x":<<number>>, "y":<<number>> |						//position of left-top corner of the graphics area
+				"r":<<number>> |										//rounded corner radius (ex: create a circle w/ radius=10 -> {"_bx":{"w":20,"h":20,"r":10}})
+				"rot":<<number>> |										//rotation
+				"bg":<<cssBackground>> |								//background
+				"bd":<<cssBorder>> |									//border
+				"txt":<<text>> |										//text to be displayed inside the graphics area
+				"fnt":<<cssFont>> |										//font for text displayed inside the graphics area
+				"txtcol":<<color>> |									//color for text displayed inside the graphics area
+				//"opc":<<number>> |										//opacity of the graphics area
+				//"scl":<<number>> |										//scale factor for the graphics area
+				"ani":<<number>> |										//signifies that w, h, and other divOption values are not set instantly, but rather via animation; <<number>> signifies milliseconds
+				//"anieas":("ease"|"ease-in"|"ease-out"|"ease-in-out")	//easing option for animation; if not specified, animation is linear
+<<strokeOption>>::= "f":(<<color>>|"none") |							//similar to SVG fill
+					"c":(<<color>>|"none") |							//similar to SVG stroke
+					"w":<<number>> |									//similar to SVG stroke-width
+					"(start|end)":("arrow"|"circle"|"square"|"") |		//similar to SVG marker-start/marker-end
+					"cap":("square"|"round"|"butt") |					//similar to SVG stroke-linecap
+					"dash":<<strokeDasharray>>							//similar to SVG stroke-dasharray
+<<clear>>::= "_(R|C)":<<number>>,										//flags to remove element (_R) or clear all child elements (_C); if flag value>0, set a timeout before clearing/removing
+<<key>>::= <<text>> ** must not begin with "_"; empty string not allowed; if key string begins with a number, the number is used for sorting, but stripped from text to be displayed **
+<<value>>::= <<text>> | <<number>> | null								//null signifies deletion
+<<inputID>>::= <<text>> ** unique id string to identify input element (e.g. "#button1") **
 <<actionValue>>::= ** name of button, or name of button + ".D" for mousedown/touchstart events, or input text for "txt" type actions, or 0|1 for "onoff" type action **
 <<keycode>>::= ** javascript key code, e.g. http://www.cambiaresearch.com/articles/15/javascript-char-codes-key-codes **
 <<url>>::=	** legal url **
@@ -114,4 +106,5 @@ CLIENT->TASK protocol
 <<cssFont>>::= ** see CSS font specification, e.g. http://www.w3schools.com/cssref/pr_font_font.asp **
 <<strokeDasharray>>::= ** see SVG stroke-dasharray specification, e.g. https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-dasharray **
 , ::= ** commas trailing the last pair in an object or the last element in an array must be trimmed, see JSON members/elements specification, e.g. http://json.org **
+
 
