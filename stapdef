@@ -13,11 +13,11 @@ Sample Interaction:
         {"choose a button":["#b1","#b2"]}}
     Client->Server (click the first action):
         {"#b1":3}
-    Server->Client (give reward, remove actions):
+    Server->Client (give reward):
         {"Coins Earned":7}
     Client->Server (choose the second action):
         {"#b2":3}
-    Server->Client (give reward, remove actions):
+    Server->Client (give reward):
         {"Coins Earned":3}
     ...
 
