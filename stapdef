@@ -4,7 +4,7 @@ v2.3 (20150904)
 <!---------------------------------------------------------------->
 Sample Interaction:
     Server (hosting the TASK) is waiting for websocket clients
-    Client (human or compuational participant) connects to server
+    Client (human or computational participant) connects to server
     Server->Client (let client know that "Coins Earned" will be an integer between 0 and 10, and should be removed after 500ms):
         {"_num": {"Coins Earned": {">=":0, "<=":10, "goal":10, "temp":500}}}
     Server->Client (let client know that there are two possible actions that may be presented in this task, Button 1 and Button 2):
