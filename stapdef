@@ -111,10 +111,11 @@ ACTOR->TASK protocol                                                    //partic
                     "_nav8"                                             //8 directions arrow hold-down buttons, sends back "n|s|e|w", as well as "ns","nw","se","sw"
 <<inputOption>>::=  "disabled":0|1 |                                    //disable/enable input
                     "onsubmit":1|0|-1|<<text>> |                        //what to do after action is clicked/chosen/submitted: 1: leave as is, 0: disable, -1: clear, <<text>>: replace control with <<text>>
-                    "keycode":[(<<keycode>>,)+] |                       //assigned keyboard shortcuts (e.g. use 13 for carriage return, 65 for A, 37 for left arrow key)
-                    "multiline":(true|false) |                          //if action is txt, this specifies whether carriage returns are allowed in text
+                    "keycode":<<keycode>> |                             //assigned keyboard shortcuts (e.g. use 13 for carriage return, 65 for A, 37 for left arrow key)
+                    "lines":<<number>> |                                //if action is txt, this specifies number of lines allowed in text
                     "maxchars":<<number>>                               //if action is txt, this specifies max number of characters
-                    "default":<<text>> |                                //default value
+                    "default":<<key>> |                                 //if action is _select, default value specifies selected key
+                    "default":[(<<key>>,)*]                             //if action is _onoff, default is a list of selected keys
 <<color>>::= ** see CSS color specification, e.g. http://www.w3schools.com/cssref/css_colors.asp **
 <<cssBackground>>::= ** see CSS background specification, e.g. http://www.w3schools.com/cssref/css3_pr_background.asp **
 <<cssBorder>>::= ** see CSS border specification, e.g. http://www.w3schools.com/cssref/pr_border.asp **
