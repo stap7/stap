@@ -1,45 +1,4 @@
 STAP (Simple Task-Actor Protocol)
-<!---------------------------------------------------------------->
-v0.1    20150528    first complete protocol, including multiple types of actions, feedback, hierarchical state information, and vector graphics
-v0.1.01 20150529a   comment added for easier comprehension of the <<clear>> flag
-v0.1.02 20150529b   added sections for Current Setup and Example Interaction; added CLIENT->TASK protocol
-v0.1.03 20150601    changed dashed keys to shortened names; u: in numspec changed to "u":
-v0.1.04 20150603    changed "_icons":{(<<text>>:<<url>>,)+} to "_replace":{(<<text>>:<<html>>,)+}; 
-v0.1.05 20150617    changed "_div", "_lin", "_cur" to "_vg", "_ln", and "_cr"; changed "_=" to clear into _R to remove and _C to clear; added comment regarding potential _vg (x,y) action type
-v0.1.06 20150618    changed "_vg" to "_bx"
-v0.2.01 20150626    added _actspecs (and removed redundancy from "a")
-v0.2.02 20150701    onoff separated from choices action types; <<actionValue>> specified
-v0.2.03 20150701    _onsubmit added instead of _C in _actspecs
-v1.0.00 20150708    _W and _A directives added for waiting and action auto-selection, respectively; added key:null option for key removals; added "bx", "bxhold", and "bxdrag" action types
-v1.1.00 20150728    <<divOption>> expanded to include animation
-v2.0.00 20150824    no more s/t/a/r directives, everything is under root, with $ reserved as a special directive to display scoring/rewards/tracking info
-v2.1.00 20150826    numspec temp directives are changed from binary to <<number>> signifying milliseconds to display the reward; no $ directive, everything is under root (individual templates may be available to have special visualization for various keys, e.g. a given tempalte may treat "0" as a special directive under root)
-v2.1.01 20150901    bx/bxhold/bxdrag changed to xyclick/xyhold/xydrag, input added to <<divOption>> as a way to tag _bx element with <<inputID>>
-v2.2.00 20150903    _numspecs changed to _num, _inputs changed to _input since these 2 directives may be used often; _num now allows time format and animation; _endconds changed to _conds for future-proofing (in case other conditionals are added later)
-v2.3.00 20150904    _W now requires a <<waitID>> which can be used to reset the wait timer in later messages
-v2.3.01 20150922    all references to time changed from milliseconds to seconds (this saves bandwidth and adds consistency with GSAP, which is likely to be the animation standard in GUI templates)
-v3.0.00 20151111    removed _input and _numspec directives; uniform syntax for all directives; removed constraints that forced _cr/_ln to be only inside _bx and disallowed non _cr/_ln/_bx to be in there; allowing state to have _bx specifications; added "_." directive for by-key editing
-v3.0.01 20151117    _choices removed as it was a duplicate of _onoff; _choice renamed to _select (more consistent with html)
-
-
-<!---------------------------------------------------------------->
-TODO:
-    allow w/h specification in terms of screen% and aspect ratios, e.g. w:90%, h:.5w
-    add input type for mouse tracking
-
-<!---------------------------------------------------------------->
-Current Setup:
-    1:  task-server hosts a task on a given TCP and/or WebSocket port
-    1a: same server, or another server, hosts an http webpage with javascript
-            that can connect to the task-server over WebSocket and present the
-            TASK<->CLIENT interaction as an interactive gui for human users
-    2a: human performer goes to the webpage to participate in the task
-    2b: computational agent connects to task-server as WebSocket or standard TCP client
-    3:  server sends information to connected client(s) in the format specified
-            by TASK->CLIENT protocol below, as needed, asynchronously
-    4:  client sends task-actions to the server in the format specified by
-            CLIENT->TASK protocol below, as needed, asynchronously 
-
 
 <!---------------------------------------------------------------->
 Sample Interaction 1:
