@@ -79,7 +79,7 @@ ACTOR->TASK protocol													//participant responses to task-server, i.e. ac
 					"goal":<<number>> |									//value actors are seeking in the given task
 					"temp":<<number>> |									//temp>0 indicates that this is temporary, rather than cumulative feedback, and should disappear within <<number>> of seconds (e.g. temp reward vs long-term score, the difference being that a temp reward of 1 followed by 0 is fine, whereas a cumulative score of 1 followed by 0 signifies a loss of points)
 					"ani":[<<number>>,<<number>>(,<<number>>)]			//[<<number>>,<<number>>,<<number>>] tuple signifies the change in value, time between each change in seconds, and the boundary condition, respectively
-<<divOption>>::= 	"w":<<number>>, "h":<<number>> |						//width/height of the box
+<<divOption>>::= 	"w":<<number>>, "h":<<number>> |					//width/height of the box
 					"x":<<number>>, "y":<<number>> |					//position of left-top corner of the graphics area
 					"r":<<number>> |									//rounded corner radius (ex: create a circle w/ radius=10 -> {"_bx":{"w":20,"h":20,"r":10}})
 					"rot":<<number>> |									//rotation
