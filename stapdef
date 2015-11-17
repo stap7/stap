@@ -122,3 +122,4 @@ ACTOR->TASK protocol													//participant responses to task-server, i.e. ac
 <<strokeDasharray>>::= ** see SVG stroke-dasharray specification, e.g. https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-dasharray **
 <<keycode>>::= ** javascript key code, e.g. http://www.cambiaresearch.com/articles/15/javascript-char-codes-key-codes **
 , ::= ** commas trailing the last pair in an object or the last element in an array must be trimmed, see JSON members/elements specification, e.g. http://json.org **
+
