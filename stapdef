@@ -1,121 +1,162 @@
 STAP (Simple Task-Actor Protocol)
 
 <!---------------------------------------------------------------->
-Sample Interaction 1:
-    // display "Hello World"
-    -> ["Hello World"]
-    // display two buttons
-    -> {"choose a button":{"_btn":{}, "#b1":"Button 1", "#b2":"Button 2"}}
-    // first button was clicked
-    <- {"#b1":3}
-    // give client reward, "Coins Earned"=7, and "Coins Earned" is an integer between 0 and 10, higher is better, and should be removed after 500ms
-    ->  [{"_nm":{">=":0, "<=":10, "goal":10, "temp":.5}, "Coins Earned":7}]
-    // second button was clicked
-    <-  {"#b2":3}
-    // give reward
-    ->  {"_.":{"Coins Earned":3}}
-    ...
+Examples
 
-Sample Interation 2:
-    // display a 100x100 box, with an element inside it that will display red lines
-    -> {"click somewhere":{"_xyclick":{}, "#c":{_bx:{w:100,h:100}, "#lines":{_ln:{c:'red'}}}}}
-    // user clicked in location 24,60 relative to top-left corner of the box
-    <- {"#c":[24,60,3]}
-    // draw a line from middle of the box to where user clicked
-    -> {"_.":{"#lines":{0:[50,50,24,60]}}}
-    // user clicked in location 91,10 relative to top-left corner of the box
-    <- {"#c":[91,10,3]}
-    // draw a line from middle of the box to where user clicked
-    -> {"_.":{"#lines":{1:[50,50,91,10]}}}
-    // user clicked in location 31,33 relative to top-left corner of the box
-    <- {"#c":[31,33,3]}
-    // draw a line from middle of the box to where user clicked
-    -> {"_.":{"#lines":{2:[50,50,31,33]}}}
-    ...
+	->::= Message sent from task software to participant software
+	<-::= Message sent to task software from participant software
 
-->::= Message sent from task software to participant software
-<-::= Message sent to task software from participant software
+	Sample Interaction 1:
+		// display "Hello World"
+		-> ["Hello World"]
+		// let client know that a goal in this task is to maximize coins earned
+		-> {"task":{"good":{"Coins Earned":"+"}}}
+		// display two buttons
+		-> {"choose a button":{"_i":{}, "Button 1":1, "Button 2":1}}
+		// first button was clicked
+		<- {"choose a button":{"Button 1":3}}
+		// give client reward, "Coins Earned"=7
+		-> {"Coins Earned":7}
+		// wait 2 seconds and remove the coins earned display
+		-> {"_W":{"":2},"Coins Earned":null}
+		// second button was clicked
+		<- {"choose a button":{"Button 2":3}}
+		// give reward
+		-> {"Coins Earned":3}
+		...
+
+	Sample Interation 2:
+		// display a 100x100 box, with an element inside it that will display red lines
+		-> {"click somewhere":{"_bx":{"w":100,"h":100},"_i+":[3],"#lines":{"_ln":{"c":"red"}}}}
+		// user clicked in location 24,60 relative to top-left corner of the box
+		<- {"click somewhere":[3,24,60]}
+		// draw a line from middle of the box to where user clicked
+		-> {"_.":{"#lines":{0:[50,50,24,60]}}}
+		// user clicked in location 91,10 relative to top-left corner of the box
+		<- {"click somewhere":[3,91,10]}
+		// draw a line from middle of the box to where user clicked
+		-> {"_.":{"#lines":{1:[50,50,91,10]}}}
+		// user clicked in location 31,33 relative to top-left corner of the box
+		<- {"click somewhere":[3,31,33]}
+		// draw a line from middle of the box to where user clicked
+		-> {"_.":{"#lines":{2:[50,50,31,33]}}}
+		...
+
+
+	Input		Control definition (->)									Actions (<-)
+	-------------------------------------------------------------------------------------------------------------------
+	button		"#abc":{"_i":{},"press me":1}							{"#abc":{"press me":3}}
+	holddown	"#abc":{"_ih":{},"hold me":1}							{"#abc":{"hold me":2}} {"#abc":{"hold me":1}}
+	select		"#abc":{"_i1":{},"male":1,"female":1}					{"#abc":{"male":2}} {"#abc":{"female":2}} {"#abc":{"female":1}}
+	onoff		"#abc":{"_i2":{},"subaru":1,"tesla":1}					{"#abc":{"male":2}} {"#abc":{"female":2}} {"#abc":{"male":1}} {"#abc":{"female":1}}
+	text		"#abc":{"_ix":{}}										{"#abc":"hello world"} 
+	events		"#abc":{"_i+":[2,16],...}								{"#abc":[2,x,y]} {"#abc":[16,x,y]}
+
+
+
 
 
 <!---------------------------------------------------------------->
-TASK->ACTOR protocol                                                    //task-server sends information is the following format
-<<state>> |                                                             //edit current state recursively with values in <<state>>
-{"_.":{<<key>>:<<element>>}}                                            //find first occurrence of <<key>> in existing hierarchy, edit its value based on <<element>>
+TASK->ACTOR protocol													//task-server sends information is the following format
+<<state>> |																//edit current state recursively with values in <<state>>
+{"_.":{<<key>>:<<element>>}}											//find first occurrence of <<key>> in existing hierarchy, edit its value based on <<element>>
 
-ACTOR->TASK protocol                                                    //participant responses to task-server, i.e. action choices
+ACTOR->TASK protocol													//participant responses to task-server, i.e. action choices
 {(<<key>>:<<actionValue>>,)*}
 
 
-//each key-value pair below is mandatory, unless otherwise stated
 <<state>>::= {(<<option>>,)* (<<key>>:<<element>>,)*}
-<<state>>::= [(<<element>>,)+]                                          //[element1, element2] is shorthand for {"0":element1, "1":element2}
-<<element>>::= <<state>>|<<text>>|<<number>>|null                       //null signifies key deletion
-<<key>>::= <<text>> ** must not begin with "_"; empty string not allowed; if key string begins with a number, the number is used for sorting, but stripped from text to be displayed; if key string begins with #, it is not displayed **
-**top-level only**
-<<option>>::= "_error":<<text>>                                         //error messages
-<<option>>::= "_css":<<url>>                                            //may be sent once before task begins; may be ignored by computational agents; url of CSS to customize visualization of STAP messages
-<<option>>::= "_js":<<url>>                                             //may be sent once before task begins; may be ignored by computational agents; url of javascript code to customize visualization of STAP messages
-<<option>>::= "_replace":{(<<text>>:<<html>>,)+}                        //may be sent once before task begins; may be ignored by computational agents; replace shorthand text with longer text/html (can be used for special characters, icons, sound, images, movies, etc.); used to save bandwidth/processing and make things nice looking in gui, rather than to add meaningful information (e.g. to replace certain words with icon equivalents); Example:  {"_replace":{":)":"<img src=smiley.gif>"}} would signify that whenever ":)" is found in text, it is to be replaced with the smiley.gif image
-<<option>>::= "_conds":{"(win)|(los)|(end)":[([<<cond>>+],)+]}          //may be sent once before task begins; win, loss, and neutral task-end conditions; assume OR for all items in outer list, assume AND for all items in inner list
-<<option>>::= "_A":{(<<key>>:<<actionValue>>,)+}                        //auto-select action (e.g. for cruise control, replay/spy, demo, instructions)
+<<state>>::= [(<<element>>,)+]											//[element1, element2] is shorthand for {"0":element1, "1":element2}
+<<element>>::= <<state>>|<<text>>|<<number>>|null						//null signifies key deletion
+<<key>>::= ** legal JSON string that does not begin with "_"; empty string refers to parent key (e.g. {"":""} clears the whole interface, {"x":{"_nm":{"<=":10},"":5}} changes numeric options for "x" and sets its value to 5); if key string begins with #, it is hidden; if key string begins with a number, the number is used for sorting, but stripped from text to be displayed; preceed the number by a space to make it a displayable key; all spaces are stripped from beginning of key **
+**root-level only**
+<<option>>::= "_error":<<text>>											//error messages
+<<option>>::= "_clientinfo":[(<<clientInfo>>,)*]						//may be sent once before task begins; request information about the participant; participant replies to this request as such: {"_clientinfo":<<json>>}, e.g. {"_clientinfo":{"ip":"129.84.2.65","url":"http://localhost:8080/stap.html","screen":{"availWidth":1524,"availHeight":900,"width":1600,"height":900,"colorDepth":24,"pixelDepth":24,"availLeft":0,"availTop":0,"orientation":{"angle":0}},"userAgent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36"}}
+<<option>>::= "_css":<<url>>											//may be sent once before task begins; may be ignored by computational agents; url of CSS to customize visualization of STAP messages
+<<option>>::= "_js":<<url>>												//may be sent once before task begins; may be ignored by computational agents; url of javascript code to customize visualization of STAP messages
+<<option>>::= "_unloadwarn":<<text>>									//may be sent once before task begins; may be ignored by computational agents; text to display in web browsers in case participant is accidentally or intentionally closing the STAP display page or navigating away from it (e.g. "Navigating away from this page will pause your task session, your progress will be saved. Use your participant ID next time to resume.")
+<<option>>::= "_task":{"(win)|(loss)|(end)":<<conds>>}					//may be sent once before task begins; win, loss, and neutral task-end conditions; 
+<<option>>::= "_task":{"(good)|(bad)":<<conds>>							//may be sent once before task begins; goal values, e.g. {"good":{<<key>>:"correct"}} means that the <<key>>="correct" condition is a goal-state, {"bad":{<<key>>:"incorrect"}} means that the <<key>>="incorrect" is a condition to avoid, {"good":{<<key>>:1}} means <<key>> values closer to 1.0 are better, {"good":{<<key>>:"+"}} means higher numbers are better, {"good":{<<key>>:"-"}} means lower numbers are better
+<<option>>::= "_replace":{(<<text>>:<<html>>,)+}						//may be sent once before task begins; may be ignored by computational agents; replace shorthand text with longer text/html (can be used for special characters, icons, sound, images, movies, etc.); used to save bandwidth/processing and make things nice looking in gui, rather than to add meaningful information (e.g. to replace certain words with icon equivalents); Example:	{"_replace":{":)":"<img src=smiley.gif>"}} would signify that whenever ":)" is found in text, it is to be replaced with the smiley.gif image
+<<option>>::= "_W":{<<waitID>>:<<number>>}?								//wait flag, used to delay the processing of the current state; <<number>> signifies seconds; following references to the same <<waitID>> either reset the timer, or, if null, destroy the queued message (e.g. "_W":{"0":10} will delay msg processing by 10s, "_W":{"0":.5} will reset the delay on that same msg to 500ms, and "_W":{"0":null} will destroy that msg
+// deprecating <<option>>::= "_A":{(<<key>>:<<actionValue>>,)+}						//auto-select action (e.g. for cruise control, replay/spy, demo, instructions)
+<<option>>::= "_pp":<<state>>											//popup
+**special states**														//state that contains one of these directive is NOT expected to contain <<key>>:<<element>> pairs, rather only <<key>>:<<number>>|<<text>>, and <<key>>:[...] pairs, depending on the <<option>>
+<<option>>::= "_i":{(<<inputOption>>,)*}								//clickable buttons, e.g. <<key>>:{"_i":{},"button 1":1,"button 2":1} creates two buttons, will sends back {<<key>>:{"button 1":3}} or {<<key>>:{"button 2":3}} when one of those buttons is clicked
+<<option>>::= "_ih":{(<<inputOption>>,)*}								//hold-down buttons, e.g. <<key>>:{"_ih":{},"button 1":1,"button 2":1} creates two buttons, will sends back {<<key>>:{"button 1":2}} when first button is pressed down, and {<<key>>:{"button 1":1}} when it lets go
+<<option>>::= "_i1":{(<<inputOption>>,)*}								//all elements in this state are exclusive choices (e.g. radiobuttons, select); when item is selected, the return value is 1 (same as button-down), when item is explicitly deselected, return value is 2 (same as button-up); when a new item is selected, previously selected value is assumed to be deselected implicitly; optionally, the first <<key>> in this element that has value 1 is the default selected item; e.g. {"_i1":{},"Male":2,"Female":2}
+<<option>>::= "_i2":{(<<inputOption>>,)*}								//all elements in this state are boolean choices (e.g. multiple checkboxes or multi-select); when item is selected/on, the return value is 2 (same as button-down), when item is deselected/off, return value is 1 (same as button-up); for each <<key>> in this element, the value (2 or 1) is the default value; e.g. {"_i2":{},"Ford":1,"GM":1,"Subaru":2,"Tesla":2}
+<<option>>::= "_ix":{(<<inputOption>>,)*}								//text input, only "" allowed as element <<key>> in this state (to specify default text); e.g. <<key>>:{"_ix":{}} sends {<<key>>:<<text value>>} when text value is changed, <<key>>:{"_ix":{},"":"default text"} sets default text
+<<option>>::= "_i\*":[<<number>>,<<number>>]							//element is a set of directional hold-down buttons; [<<number>>,<<number>>] signify the number of direction buttons and starting direction in degrees (e.g. [4,0] signifies N/S/E/W); button-down (onmousedown or ontouchstart) returns {<<key>>:{degrees,1}}, button-up (onmouseup or ontouchend) returns {<<key>>:{degrees,2}}, e.g. <<key>>:{"_i*":[4,0]} will send back {<<key>>:{"0":2}}, {<<key>>:{<<key>>:{"90",2}}}, {<<key>>:{"180":2}}, {<<key>>:{"270":2} for N/S/E/W button-down events, respectively
+<<option>>::= "_ln":{(<<strokeOption>>,)*}								//all elements in this state are lines/paths; expected state content: (<<key>>:[<<number>>,<<number>> (,<<number>>,<<number>>)+],)* pairs to signify line points, or <<key>>:<<text>> pairs to signify SVG path strings (e.g. <<key>>:"M150 0 75 200 225 200 Z")
+<<option>>::= "_tb":{(<<tableOption>>,)*}								//all elements in this state are series (columns) in a table; expected state content: <<key>>:array pairs, where each array is a series/column of values ::= (<<key>>:[(<<number>>|<<text>>,)*],)*
 **any state**
-<<option>>::= "_W":{<<waitID>>:<<number>>}?                             //wait flag, used to delay the processing of the current state; <<number>> signifies seconds; following references to the same <<waitID>> either reset the timer, or, if null, destroy the queued message (e.g. "_W":{"0":10} will delay msg processing by 10s, "_W":{"0":.5} will reset the delay on that same msg to 500ms, and "_W":{"0":null} will destroy that msg
-<<option>>::= "_C":1|2|3                                                //optionally clear state; _C:1 = clear all <<key>>:<<element>> pairs; _C:2 = clear all "_W" directives; _C:3 = do both _C:1 and _C:2
-<<option>>::= "_nm":{(<<numOption>>,)*}                                 //these are numeric options (e.g. min, max, flt precision), and apply to state where _nm directive is found, as well as all substates
-<<option>>::= "_bx":{(<<divOption>>,)*}                                 //box formatting options, useful where visualization is task-relevant
-<<option>>::= "_ln":{(<<strokeOption>>,)*}                              //state that contains this directive is expected to have arrays of numbers as elements for drawing lines, i.e. (<<key>>:[<<number>>,<<number>> (,<<number>>,<<number>>)+],)*
-<<option>>::= "_cr":{(<<strokeOption>>,)*}                              //state that contains this directive is expected to have arrays of numbers as elements for drawing curves, i.e. (<<key>>:[<<number>>,<<number>> (,<<number>>,<<number>>,<<number>>,<<number>>)+],)*
-<<option>>::= {<<inputType>>:{(<<inputOption>>,)*}                      //state that contains this directive type is actionable (e.g. clickable)
+<<option>>::= "_T":<<aniOptions>>										//signifies that values in the state are set via animation (Tween), not instantly; e.g. {"X":100,"_T":2} signifies that "X" is incremented/decremented till it reaches 100 over the span of 2 seconds; {<<key>>:null,"_T":2} signifies key removal is animated over 2 second span; {<<key>>:"","_T":2} signifies that key value is cleared over 2 second span; {<<key>>:"hello","_T":2} signifies that key value is cleared and then replaced with "hello" over a 2 second span
+<<option>>::= "_nm":{(<<numOption>>,)*}									//these are numeric options (e.g. min, max, flt precision), and apply to element where _nm directive is found, as well as all sub-elements
+<<option>>::= "_bx":{(<<divOption>>,)*}									//box formatting options, useful where visualization is task-relevant
+<<option>>::= "_i\+":[(<<eventType>>,)*]								//capture/send element events like keyspresses and mouse movements; this list is concatenated w/ previously specified events; {"_i+":null} will clear event capturing on the element
 <<text>>::= ** see JSON specification for string, e.g. http://json.org **
 <<number>>::= ** see JSON number specification, e.g. http://json.org **
-<<url>>::=  ** legal url **
+<<url>>::=	** legal url **
 <<html>>::= ** legal text/html **
-<<cond>>::= "<<key>>(.<<key>>)* (=|!=|<|>) <<text>>|<<number>>",        //boolean statement signifying a potential game-end condition
-<<actionValue>>::= ** must be the same value as what is sent to task from the respective <<inputType>> (e.g. _btn click should be: 3) **
-<<waitID>>::= ** any JSON string **
-<<numOption>>::=    ("flt":<<number>>) | ("time":<<timeFormat>>) |      //floating point precision or time format; if these parameters are missing, or flt:0, assume this is an int
-                    "<=":<<number>> |                                   //minimum value
-                    ">=":<<number>> |                                   //maximum value
-                    "goal":<<number>> |                                 //value actors are seeking in the given task
-                    "temp":<<number>> |                                 //temp>0 indicates that this is temporary, rather than cumulative feedback, and should disappear within <<number>> of seconds (e.g. temp reward vs long-term score, the difference being that a temp reward of 1 followed by 0 is fine, whereas a cumulative score of 1 followed by 0 signifies a loss of points)
-                    "ani":[<<number>>,<<number>>(,<<number>>)]          //[<<number>>,<<number>>,<<number>>] tuple signifies the change in value, time between each change in seconds, and the boundary condition, respectively
-<<divOption>>::=    "w":<<number>>, "h":<<number>> |                        //width/height of the box
-                    "x":<<number>>, "y":<<number>> |                    //position of left-top corner of the graphics area
-                    "r":<<number>> |                                    //rounded corner radius (ex: create a circle w/ radius=10 -> {"_bx":{"w":20,"h":20,"r":10}})
-                    "rot":<<number>> |                                  //rotation
-                    "bg":<<cssBackground>> |                            //background
-                    "bd":<<cssBorder>> |                                //border
-                    "txt":<<text>> |                                    //text to be displayed inside the graphics area
-                    "fnt":<<cssFont>> |                                 //font for text displayed inside the graphics area
-                    "txtcol":<<color>> |                                //color for text displayed inside the graphics area
-                    //"opc":<<number>> |                                //opacity of the graphics area
-                    //"scl":<<number>> |                                //scale factor for the graphics area
-                    "ani":<<number>> |                                  //signifies that w, h, and other divOption values are not set instantly, but rather via animation; <<number>> signifies seconds
-                    //"anieas":("ease"|"ease-in"|"ease-out"|"ease-in-out")  //easing option for animation; if not specified, animation is linear
-<<strokeOption>>::= "f":(<<color>>|"none") |                            //similar to SVG fill
-                    "c":(<<color>>|"none") |                            //similar to SVG stroke
-                    "w":<<number>> |                                    //similar to SVG stroke-width
-                    "(start|end)":("arrow"|"circle"|"square"|"") |      //similar to SVG marker-start/marker-end
-                    "cap":("square"|"round"|"butt") |                   //similar to SVG stroke-linecap
-                    "dash":<<strokeDasharray>>                          //similar to SVG stroke-dasharray
-<<inputType>>::=    "_btn"|                                             //button (default); onclick returns 3
-                    "_hold"|                                            //hold down button; onmousedown (or ontouchstart) returns 1, onmouseup (or ontouchend) returns 2
-                    //"_num"|                                           //tied to a numspec (TODO: may need options for whether its a slider or text or both)
-                    "_onoff"|                                           //boolean choices (e.g. multiple checkboxes or multi-select); when item is selected/on, the return value is 1 (same as mousedown), when item is deselected/off, return value is 2 (same as mouseup)
-                    "_select"|                                          //forced choice (e.g. radiobutton, select); onclick returns 3
-                    "_txt"|                                             //text input
-                    "_xyclick"|                                         //turns _bx elements into clickable areas (e.g. {"_input":{"#X":{"type":"xyclick"}}, "the zone":{"_bx":{"w":400,"h":300,"input":"#X"}}}; would send back tuple [x,y,3], where x,y is the click pos, relative to the top-left corner of the _bx element (e.g. {"#X":[24,60,3]})
-                    "_xyhold"|                                          //same as "xyclick", but sends [x,y,1] for mouse-down/touchstart, and [x,y,2] for mouse-up or touchend events
-                    "_xydrag"|                                          //same as "bxhold", but assumes that the element is draggable; only valid for interior _bx elements
-                    "_nav4"|                                            //4 directions arrow hold-down buttons, sends back "n|s|e|w" for up, down, right, and left
-                    "_nav8"                                             //8 directions arrow hold-down buttons, sends back "n|s|e|w", as well as "ns","nw","se","sw"
-<<inputOption>>::=  "disabled":0|1 |                                    //disable/enable input
-                    "onsubmit":1|0|-1|<<text>> |                        //what to do after action is clicked/chosen/submitted: 1: leave as is, 0: disable, -1: clear, <<text>>: replace control with <<text>>
-                    "keycode":<<keycode>> |                             //assigned keyboard shortcuts (e.g. use 13 for carriage return, 65 for A, 37 for left arrow key)
-                    "lines":<<number>> |                                //if action is txt, this specifies number of lines allowed in text
-                    "maxchars":<<number>>                               //if action is txt, this specifies max number of characters
-                    "default":<<key>> |                                 //if action is _select, default value specifies selected key
-                    "default":[(<<key>>,)*]                             //if action is _onoff, default is a list of selected keys
+<<clientInfo>>::= "url"
+<<clientInfo>>::= "ip"
+<<clientInfo>>::= "userAgent"
+<<clientInfo>>::= "screen"
+<<conds>>::= {(<<key>>:<<text>>|<<number>>,)*}
+//<<conds>>::= [([<<cond>>+],)+]										//assume OR for all items in outer list, assume AND for all items in inner list
+//<<cond>>::= "<<key>> (==|!=|<|>) <<text>>|<<number>>",				//boolean statement signifying a potential game-end condition
+<<actionValue>>::= ** must be one of the values that is allowed for the respective input type (e.g. _bn action value is always 3, _tx action value is <<text>>) **
+<<waitID>>::= ** any number or string **
+<<strokeOption>>::=	"f":(<<color>>|"none")								//similar to SVG fill
+<<strokeOption>>::=	"c":(<<color>>|"none")								//similar to SVG stroke
+<<strokeOption>>::=	"w":<<number>>										//similar to SVG stroke-width
+<<strokeOption>>::=	"(start)|(end)":"(arrow)|(circle)|(square)|()"		//similar to SVG marker-start/marker-end
+<<strokeOption>>::=	"cap":"(square)|(round)|(butt)"						//similar to SVG stroke-linecap
+<<strokeOption>>::=	"dash"												//similar to SVG stroke-dasharray
+<<inputOption>>::=	"disabled":0|1										//disable/enable input
+<<inputOption>>::=	"onsubmit":1|0|-1|<<text>>							//what to do after action is clicked/chosen/submitted: 1: leave as is, 0: disable, -1: clear, <<text>>: replace control with <<text>>
+//<<inputOption>>::=	"keys":([(<<keycode>>,)*])|{(<<key>>:<<keycode>>,)*}//keyboard shortcuts assigned to each input element (e.g. use 13 for carriage return, 65 for A, 37 for left arrow key)
+<<inputOption>>::=	"lines":<<number>>									//if action is _ix, i1, or i2, this specifies number of visible lines or items
+<<inputOption>>::=	"maxchars":<<number>>								//if action is _ix, this specifies max number of characters
+<<inputOption>>::=	"pwd":<<text>>										//if action is _ix, this turns the field into a password field, and <<text>> specifies salt to add to the password string before using SHA1 to hash it before sending (salt must be consistent for a given user; see https://en.wikipedia.org/wiki/Salt_(cryptography))
+//<<inputOption>>::=	"default":<<key>>									//if action is _i1, default value specifies selected key
+//<<inputOption>>::=	"default":[(<<key>>,)*]								//if action is _i2, default is a list of selected keys
+<<numOption>>::=	"time":<<timeFormat>>								//exclusive with "unit" option; convert number of seconds since 1970/01/01 00:00 into datetime format such as "dddd h:mmtt d MMM yyyy", "M/d/y", "HH:mm:ss", "hh:mm:ss", "yy/M/d", "ddd MMM d h:mm"
+<<numOption>>::=	"unit":<<text>>										//exclusive with "time" option; unit for the number (e.g. "$", "%", " m/sec", "kg")
+<<numOption>>::=	"rnd":<<number>>									//round to the nearest <<number>>; e.g. {"_nm":{"rnd":.01}, "x":57.1} should be interpreted as x=57.10, {"_nm":{"rnd":5}, "x":57.1} should be interpreted as x=55
+<<numOption>>::=	"<=":<<number>>										//minimum value
+<<numOption>>::=	">=":<<number>>										//maximum value
+<<divOption>>::=	"w":<<number>>, "h":<<number>>						//width/height of the box
+<<divOption>>::=	"x":<<number>>, "y":<<number>>						//position of left-top corner of the graphics area
+<<divOption>>::=	"r":<<number>>										//rounded corner radius (ex: create a circle w/ radius=10 -> {"_bx":{"w":20,"h":20,"r":10}})
+<<divOption>>::=	"rot":<<number>>									//rotation
+<<divOption>>::=	"bg":<<cssBackground>>								//background
+<<divOption>>::=	"bd":<<cssBorderStyle>>								//border style or full border spec
+<<divOption>>::=	"bdc":<<color>>										//border color
+<<divOption>>::=	"bdw":<<number>>									//border width
+<<divOption>>::=	"fnt":<<cssFont>>									//font for text displayed inside the graphics area
+<<divOption>>::=	"col":<<color>>										//color for text displayed inside the graphics area
+//<<divOption>>::=	"opc":<<number>>									//opacity of the graphics area
+//<<divOption>>::=	"scl":<<number>>									//scale factor for the graphics area
+<<divOption>>::=	"_T":<<aniOptions>>									//signifies that divOption values are not set instantly, but rather via animation
+<<aniOptions>>::=	<<number>>											//number of seconds to animate
+//<<aniOptions>>::=	{(<<aniOption>>,)*}
+//<<aniOption>>::=	"t":<<number>>										//number of seconds to animate
+//<<aniOption>>::=	"eas":(1|2|3|4)										//easing option for animation; if not specified, animation is linear
+//<<aniOption>>::=	"easopt":("in"|"out"|"in-out")						//easing option for animation; default is "in"
+<<eventType>>::=	1													//mouseup (or touchend) event; sends [1,<<number>>,<<number>>], signifying mouse-up and its location
+<<eventType>>::=	2													//mousedown (or touchstart) event; sends [2,<<number>>,<<number>>], signifying mouse-down and its location
+<<eventType>>::=	3													//click event; sends [3,<<number>>,<<number>>], signifying a click, and its location
+<<eventType>>::=	4													//mousemove event; sends [4,<<number>>,<<number>>], signifying mouse location
+//<<eventType>>::=	"drag"												//same as hold but allows element to be dragged with mouse/finger
+//<<eventType>>::=	5													//same as "drag" but also reports back all movement locations relative to top-left of the screen
+<<eventType>>::=	6													//dblclick event; sends [6,<<number>>,<<number>>], signifying a double-click, and its location
+<<eventType>>::=	8													//mouseenter event; sends [8,<<number>>,<<number>>], signifying mouse-enter, and its location
+<<eventType>>::=	16													//mouseleave event; sends [16,<<number>>,<<number>>], signifying mouse-leave, and its location
+<<eventType>>::=	32													//keydown event; sends [32,<<keycode>>]
+<<eventType>>::=	64													//keyup event; sends [64,<<keycode>>]
+<<eventType>>::=	96													//keypress event; sends [96,<<keycode>>]
 <<color>>::= ** see CSS color specification, e.g. http://www.w3schools.com/cssref/css_colors.asp **
 <<cssBackground>>::= ** see CSS background specification, e.g. http://www.w3schools.com/cssref/css3_pr_background.asp **
 <<cssBorder>>::= ** see CSS border specification, e.g. http://www.w3schools.com/cssref/pr_border.asp **
@@ -123,4 +164,3 @@ ACTOR->TASK protocol                                                    //partic
 <<strokeDasharray>>::= ** see SVG stroke-dasharray specification, e.g. https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-dasharray **
 <<keycode>>::= ** javascript key code, e.g. http://www.cambiaresearch.com/articles/15/javascript-char-codes-key-codes **
 , ::= ** commas trailing the last pair in an object or the last element in an array must be trimmed, see JSON members/elements specification, e.g. http://json.org **
-
