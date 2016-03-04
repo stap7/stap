@@ -1,5 +1,3 @@
-STAP (Simple Task-Actor Protocol)
-
 <!---------------------------------------------------------------->
 Examples
 
@@ -79,7 +77,6 @@ ACTOR->TASK protocol													//participant responses to task-server, i.e. ac
 <<option>>::= "_task":{"(good)|(bad)":<<conds>>							//may be sent once before task begins; goal values, e.g. {"good":{<<key>>:"correct"}} means that the <<key>>="correct" condition is a goal-state, {"bad":{<<key>>:"incorrect"}} means that the <<key>>="incorrect" is a condition to avoid, {"good":{<<key>>:1}} means <<key>> values closer to 1.0 are better, {"good":{<<key>>:"+"}} means higher numbers are better, {"good":{<<key>>:"-"}} means lower numbers are better
 <<option>>::= "_replace":{(<<text>>:<<html>>,)+}						//may be sent once before task begins; may be ignored by computational agents; replace shorthand text with longer text/html (can be used for special characters, icons, sound, images, movies, etc.); used to save bandwidth/processing and make things nice looking in gui, rather than to add meaningful information (e.g. to replace certain words with icon equivalents); Example:	{"_replace":{":)":"<img src=smiley.gif>"}} would signify that whenever ":)" is found in text, it is to be replaced with the smiley.gif image
 <<option>>::= "_W":{<<waitID>>:<<number>>}?								//wait flag, used to delay the processing of the current state; <<number>> signifies seconds; following references to the same <<waitID>> either reset the timer, or, if null, destroy the queued message (e.g. "_W":{"0":10} will delay msg processing by 10s, "_W":{"0":.5} will reset the delay on that same msg to 500ms, and "_W":{"0":null} will destroy that msg
-// deprecating <<option>>::= "_A":{(<<key>>:<<actionValue>>,)+}						//auto-select action (e.g. for cruise control, replay/spy, demo, instructions)
 <<option>>::= "_pp":<<state>>											//popup
 **special states**														//state that contains one of these directive is NOT expected to contain <<key>>:<<element>> pairs, rather only <<key>>:<<number>>|<<text>>, and <<key>>:[...] pairs, depending on the <<option>>
 <<option>>::= "_i":{(<<inputOption>>,)*}								//clickable buttons, e.g. <<key>>:{"_i":{},"button 1":1,"button 2":1} creates two buttons, will sends back {<<key>>:{"button 1":3}} or {<<key>>:{"button 2":3}} when one of those buttons is clicked
