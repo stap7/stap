@@ -1,0 +1,82 @@
+{
+	"admin":{
+		"desc":"experiment admin page",
+		"serveOnWSPort":8710,
+		"serveOnTCPPort":8810,
+		"log":true,
+		"stdio":{
+			"exe":"python3",
+			"exeParams":["cmvgt/admin.py"]
+		}
+	},
+	"cm-v-gt":{
+		"desc":"Red Force",
+		"serveOnWSPort":8720,
+		"serveOnTCPPort":8820,
+		"log":true,
+		"stdio":{
+			"exe":"python3",
+			"exeParams":["cmvgt/cmvgt.py"]
+		}
+	},
+	"helloworld":{
+		"desc":"Hello World!",
+		"serveOnWSPort":8721,
+		"serveOnTCPPort":8821,
+		"log":true,
+		"stdio":{
+			"exe":"python3",
+			"exeParams":["../tasks/helloworld.py"]
+		}
+	},
+	"2arm":{
+		"desc":"2arm bandit",
+		"serveOnWSPort":8722,
+		"serveOnTCPPort":8822,
+		"log":true,
+		"stdio":{
+			"exe":"python3",
+			"exeParams":["../tasks/2arm.py"]
+		}
+	},
+	"math":{
+		"desc":"math",
+		"serveOnWSPort":8723,
+		"serveOnTCPPort":8823,
+		"log":true,
+		"stdio":{
+			"exe":"python3",
+			"exeParams":["../tasks/math.py"]
+		}
+	},
+	"shj":{
+		"desc":"Shepard, Hovland, & Jenkins categorization task",
+		"serveOnWSPort":8724,
+		"serveOnTCPPort":8824,
+		"log":true,
+		"stdio":{
+			"exe":"python3",
+			"exeParams":["../tasks/shj.py"]
+		}
+	},
+	"travel":{
+		"desc":"The Traveling Salesman Problem",
+		"serveOnWSPort":8725,
+		"serveOnTCPPort":8825,
+		"log":true,
+		"stdio":{
+			"exe":"python3",
+			"exeParams":["../tasks/travel.py"]
+		}
+	},
+	"time":{
+		"desc":"Time Estimation",
+		"serveOnWSPort":8726,
+		"serveOnTCPPort":8826,
+		"log":true,
+		"stdio":{
+			"exe":"python3",
+			"exeParams":["../tasks/timeestimation.py"]
+		}
+	}
+}
