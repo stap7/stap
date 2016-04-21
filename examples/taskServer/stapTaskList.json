@@ -1,24 +1,4 @@
 {
-	"admin":{
-		"desc":"experiment admin page",
-		"serveOnWSPort":8710,
-		"serveOnTCPPort":8810,
-		"log":true,
-		"stdio":{
-			"exe":"python3",
-			"exeParams":["cmvgt/admin.py"]
-		}
-	},
-	"cm-v-gt":{
-		"desc":"Red Force",
-		"serveOnWSPort":8720,
-		"serveOnTCPPort":8820,
-		"log":true,
-		"stdio":{
-			"exe":"python3",
-			"exeParams":["cmvgt/cmvgt.py"]
-		}
-	},
 	"helloworld":{
 		"desc":"Hello World!",
 		"serveOnWSPort":8721,

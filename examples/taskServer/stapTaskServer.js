@@ -199,23 +199,17 @@ function startPlaybackService(){
 		ws.on('message', function(msg){
 			console.log(msg);
 			data=JSON.parse(msg);
-			if(!taskpath && data['#tasks']){
-				taskpath=path.join(DATADIR,data['#tasks']);
-				ws.send(JSON.stringify({
-					_input:{
-						'#logfiles':{
-							type:'choice',
-							text:fs.readdirSync(taskpath)
-						}
-					},
-					_C:0,
-					Task:data['#tasks'],
-					'0':'#logfiles'
-				}));
+			if(!taskpath && data['Tasks']){
+				var task=Object.keys(data['Tasks'])[0];
+				taskpath=path.join(DATADIR,task);
+				ws.send(JSON.stringify(null));
+				ws.send(JSON.stringify({Task:task}));
+				ws.send(JSON.stringify({'#logfiles':['_i'].concat(fs.readdirSync(taskpath))}));
 			}else if(data['#logfiles']){
 				if(!logpath){
-					logpath=path.join(taskpath,data['#logfiles']);
-					ws.send(JSON.stringify({_C:0}));
+					var logfile=Object.keys(data['#logfiles'])[0];
+					logpath=path.join(taskpath,logfile);
+					ws.send(JSON.stringify(null));
 				}
 				// var logfile=fs.createReadStream(logpath);
 				// readLines(logfile,function(data){
@@ -258,16 +252,8 @@ function startPlaybackService(){
 		ws.on('close', function(){
 			linenum=lines.length;
 		});
-		ws.send(JSON.stringify({
-			_input:{
-				'#tasks':{
-					type:'choice',
-					text:fs.readdirSync(path.join('.','data'))
-				}
-			},
-			'0':'Logfile Playback',
-			Task:'#tasks'
-		}));
+		ws.send(JSON.stringify("Logfile Playback"));
+		ws.send(JSON.stringify({'Tasks':['_i'].concat(fs.readdirSync(path.join('.','data')))}));
 	});
 }
 
