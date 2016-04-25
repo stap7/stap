@@ -4,51 +4,57 @@
 //	each new connection will spawn a new stdio task process
 //
 // TODO:
-//  make sure playback works (based on changes to STAP)
+//  add option for playback service (with optional password)
+//  add option for data selection (with optional password)
 //	add (a better) mechanism for multi-player service
 //	add mechanism for tcp-ws relay (for servers serving one but not the other)
 //	add secure layer
-//  add nicer listing interface for log files/playback
 //
 
-var spawn = require('child_process').spawn,
+var usage=`
+This script serves stdio executables over TCP or WebSockets.
+Each new connection to server will spawn a new stdio process, 
+  and pipe socket-out to std-in, and std-out to socket-in.
+
+Usage:
+ `+process.argv[0]+' '+process.argv[1]+` stdioExec portSpec [logFolder]
+   stdioExec                    stdio executable and parameters
+                                (surround stdioExec with quotes if excutable
+								requires dashed parameters, e.g. "foo.exe -a")
+   portSpec:
+     -t, --serveOnTCPPort port  serve stdioExec over TCP port
+     -w, --serveOnWSPort port [-h,--html path]
+	                            serve stdioExec over WebSocket port,
+								optionally make html file at path (for STAP
+								WebSocket service)
+   logFolder:
+     -l, --logpath path         log all server-client interactions in
+                                separate logfiles in the specified path folder
+`;
+
+
+var childProcess = require('child_process'),
 	WebSocket = require('ws'),
 	CreateTcpServer=require('net').createServer,
+	argParser=require('minimist'),
 	fs=require('fs'),
 	path=require('path');
-//	TASKS=require('stapTaskList.js').TASKS;
 
-var DATADIR='data',
-	PLAYBACKPORT=8701;
-	WIN=process.env.comspec && process.env.comspec.search("cmd.exe")>-1,
+var WIN=process.env.comspec && process.env.comspec.search("cmd.exe")>-1,
 	spawnedProcesses=[],
-	TASKS=JSON.parse(fs.readFileSync('stapTaskList.json', 'utf8'));
-
+	filesToRemove=[];
 
 
 
 ////////////////////////////////////////
 String.prototype.replaceAll=function(s1,s2){return this.replace(new RegExp(s1, 'g'), s2);}
 
-/*function readLines(input, func) {
-	var remaining = '';
-	input.on('data', function(data) {
-		remaining += data;
-		var index = remaining.indexOf('\n');
-		while (index > -1) {
-			var line = remaining.substring(0, index);
-			remaining = remaining.substring(index + 1);
-			input.pause();
-			func(line);
-			index = remaining.indexOf('\n');
-		}
-	});
-	input.on('end', function() {
-		if (remaining.length > 0) {
-			func(remaining);
-		}
-	});
-}*/
+function exeExists(exe){
+	var p;
+	if(WIN)p=childProcess.spawnSync(process.env.comspec,['/c'].concat(['where',exe]));
+	else p=childProcess.spawnSync('which',[exe]);
+	return p.status===0;
+}
 
 function mkdir(pathname) {
 	try {fs.mkdirSync(pathname);}
@@ -60,20 +66,20 @@ function newFilePath(folder,extension){
 	return path.join(folder,(new Date()).toJSON().replaceAll(':','-')+'.'+extension);
 }
 
-function run(exe,exeParams){
+function run(cmd){
 	var p;
-	console.log('starting',exe,exeParams);
-	if(WIN)p=spawn(process.env.comspec,['/c'].concat(exe).concat(exeParams));
-	else p=spawn(exe,exeParams);
+	console.log('starting',cmd);
+	if(WIN)p=childProcess.spawn(process.env.comspec,['/c'].concat(cmd));
+	else p=childProcess.spawn(cmd[0],cmd.slice(1));
 	spawnedProcesses.push(p);
-	p.runline=[exe].concat(exeParams);
+	p.runline=cmd;
 	return p;
 }
 
 function killSpawnedProcess(p){
 	console.log('killing aborted process ['+p.runline+']');
 	spawnedProcesses.splice(spawnedProcesses.indexOf(p), 1);
-	if(WIN)spawn("taskkill", ["/pid", p.pid, '/f', '/t']);
+	if(WIN)childProcess.spawn("taskkill", ["/pid", p.pid, '/f', '/t']);
 	else p.kill();
 }
 
@@ -86,6 +92,8 @@ function killSpawnedProcesses(){
 
 function exitHandler(options, err) {
 	killSpawnedProcesses();
+	while(filesToRemove.length)
+		fs.unlinkSync(filesToRemove.pop());
     //if (options.cleanup) console.log('clean');
     if (err) console.log(err.stack);
     if (options.exit) process.exit();
@@ -96,7 +104,6 @@ process.on('exit', exitHandler.bind(null,{cleanup:true}));
 process.on('SIGINT', exitHandler.bind(null, {exit:true}));
 //catches uncaught exceptions
 process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
-
 
 
 
@@ -128,70 +135,67 @@ function onActor2TaskMsg(data,taskprocess,tasklog){
 function onActorConnection(task,socket,rcvEvent,endEvent){
 	try{
 		var tasklog;
-		if(task.log){
-			tasklog=fs.createWriteStream(newFilePath(task.datapath,'txt'));
+		if(task.logpath){
+			tasklog=fs.createWriteStream(newFilePath(task.logpath,'txt'));
 			//logfile.write('Time\tActor\tData\r\n');
 		}
-		console.log((socket.remoteAddress || socket._socket.remoteAddress)+' connected to '+task.desc);
-		if(task.stdio){
-			var taskprocess;
-			taskprocess=run(task.stdio.exe,task.stdio.exeParams);
-			taskprocess.stderr.on("data", function(data){
-				console.error("------- Error in \""+task.stdio.exe+"\" ["+task.stdio.exeParams+"]\n"+data.toString()+"\n=======");
-				killSpawnedProcess(taskprocess);
-				socket.close();
-				if(tasklog)tasklog.end();
-			});
-			taskprocess.stdout.on("data", function(data){onTask2ActorMsg(data,socket,tasklog);});	// task --> actor
-			socket.on(rcvEvent, function(data){onActor2TaskMsg(data,taskprocess,tasklog);});		// actor --> task
-			socket.on(endEvent, function(){killSpawnedProcess(taskprocess);tasklog.end();});
-			taskprocess.on("close", function(){if(socket.end)socket.end();else socket.close();tasklog.end();});
-		} else if(task.server.type=='ws'){
-			var taskCon=new WebSocket(task.server.connectSpec);
-			taskCon.on('message', function(data){onTask2ActorMsg(data,socket,tasklog);});			// task --> actor
-			taskCon.on('error',function(e){console.log('ERROR: '+task.server.connectSpec+'\n'+e);});
-			socket.on(rcvEvent, function(data){														// actor --> task
-				try{
-					data=data.toString().trim();
-					if(data.length){
-						taskCon.send(data+'\r\n');
-						record2log(tasklog,data,1);
-					}
-				}catch(e){
-					console.log('ERROR: '+e);
-				}
-			});
-			socket.on(endEvent, function(){taskCon.close();tasklog.end();});
-			taskCon.on('close', function(){if(socket.end)socket.end();else socket.close();tasklog.end();});
-		}
+		console.log((socket.remoteAddress || socket._socket.remoteAddress)+' connected.');
+		var taskprocess=run(task._);
+		taskprocess.stdout.on("data", function(data){onTask2ActorMsg(data,socket,tasklog);});	// task --> actor
+		taskprocess.stderr.on("data", function(data){
+			console.error("------- Error in \""+task._+"\"\n"+data.toString()+"\n=======");
+			killSpawnedProcess(taskprocess);
+			socket.close();
+			if(tasklog)tasklog.end();
+		});
+		socket.on(rcvEvent, function(data){onActor2TaskMsg(data,taskprocess,tasklog);});		// actor --> task
+		socket.on(endEvent, function(){killSpawnedProcess(taskprocess);if(task.logpath)tasklog.end();});
+		taskprocess.on("close", function(){if(socket.end)socket.end();else socket.close();if(task.logpath)tasklog.end();});
 	}catch(e){
 		console.log(e);
 	}
 }
-function startTaskService(taskName,task){
+function startTaskService(task){
 	if(task.server && task.server.exe){
 		var taskprocess = run(task.server.exe,task.server.exeParams);
 		taskprocess.stderr.on("data", function(data){
-			console.error("------- Error in \""+task.stdio.exe+"\" ["+task.stdio.exeParams+"]\n"+data.toString()+"\n=======");
+			console.error("------- Error in \""+task._+"\"\n"+data.toString()+"\n=======");
 			killSpawnedProcess(taskprocess);
 			socket.close();
 			if(tasklog)tasklog.end();
 		});
 	}
-	if(task.log){
-		task.datapath=path.join(DATADIR,taskName)
-		mkdir(task.datapath);
+	if(task.logpath){
+		//task.datapath=path.join(DATADIR,taskName)
+		mkdir(task.logpath);
 	}
 	//Serve task over standard TCP Socket
-	task.tcps = CreateTcpServer(function(socket){onActorConnection(task,socket,'data','end')}).listen(task.serveOnTCPPort);
+	if(task.serveOnTCPPort)
+		task.tcps = CreateTcpServer(function(socket){onActorConnection(task,socket,'data','end')}).listen(task.serveOnTCPPort);
 	//Serve task over WebSocket
-	task.wss = new WebSocket.Server({port: task.serveOnWSPort});
-	task.wss.on('connection', function(socket){onActorConnection(task,socket,'message','close')});
+	if(task.serveOnWSPort){
+		task.wss = new WebSocket.Server({port: task.serveOnWSPort});
+		task.wss.on('connection', function(socket){onActorConnection(task,socket,'message','close')});
+		if(task.html)makeHtmlStapClient(task.html,task.serveOnWSPort);
+	}
 }
 
 
 
 ////////////////////////////////////////
+function makeHtmlStapClient(filepath,port){
+	var indexPage=fs.createWriteStream(filepath);
+	indexPage.write(`<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="mobile-web-app-capable" content="yes">
+		<html><head>
+		<script src="lib/stap.js"></script>
+		<script>PORT=`+port+`</script>
+		</head><body /></html>`);
+	indexPage.end();
+	filesToRemove.push(filepath);
+}
+
 function startPlaybackService(){
 	var wss = new WebSocket.Server({port: PLAYBACKPORT});
 	wss.on('connection', function(ws){
@@ -260,18 +264,26 @@ function startPlaybackService(){
 
 
 ////////////////////////////////////////
-mkdir(DATADIR);
-var indexPage=fs.createWriteStream('index.html');
-indexPage.write('<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"> \
-<meta name="apple-mobile-web-app-capable" content="yes"> \
-<meta name="mobile-web-app-capable" content="yes"> \
-<html><body>');
-for(taskName in TASKS){
-	startTaskService(taskName,TASKS[taskName]);
-	indexPage.write('<li><a href="stap.html?'+TASKS[taskName].serveOnWSPort+'">'+TASKS[taskName].desc+'</a> ');
+function main(){
+	var args=argParser(process.argv.slice(2),{
+			alias:{
+				w:'serveOnWSPort',
+				t:'serveOnTCPPort',
+				l:'logpath',
+				h:'html'
+			},
+		});
+	if(args._.length===1)args._=args._[0].split(" ");
+	if(args.help || !args._.length)
+		console.log(usage);
+	else if(!exeExists(args._[0]))
+		console.log(args._[0]+' is not a recognized command.\n Use --help for usage.');
+	else if(!args.w && !args.t)
+		console.log('Must specify either the TCP or the WebSocket port or both.\n Use --help for usage.')
+	else if(args.h && !args.w)
+		console.log('Must specify the WebSocket port if you use the -h,--html option to create a WebSocket client HTML page.\n Use --help for usage.')
+	else
+		startTaskService(args);
 }
-indexPage.write('</body></html>');
-indexPage.end();
-startPlaybackService();
 
-
+main();
