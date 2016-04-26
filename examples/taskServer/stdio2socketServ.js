@@ -20,13 +20,13 @@ Usage:
  `+process.argv[0]+' '+process.argv[1]+` stdioExec portSpec [logFolder]
    stdioExec                    stdio executable and parameters
                                 (surround stdioExec with quotes if excutable
-								requires dashed parameters, e.g. "foo.exe -a")
+                                requires dashed parameters, e.g. "foo.exe -a")
    portSpec:
      -t, --serveOnTCPPort port  serve stdioExec over TCP port
      -w, --serveOnWSPort port [-h,--html path]
-	                            serve stdioExec over WebSocket port,
-								optionally make html file at path (for STAP
-								WebSocket service)
+                                serve stdioExec over WebSocket port,
+                                optionally make html file at path (for STAP
+                                WebSocket service)
    logFolder:
      -l, --logpath path         log all server-client interactions in
                                 separate logfiles in the specified path folder
