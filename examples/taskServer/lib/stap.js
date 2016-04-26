@@ -1,9 +1,11 @@
 /*base template for STAP visualizationualization
 
-TODO for STAP v4.1:
+TODO for latest STAP release:
 	add processing for _vis, _tb, _i+, _i*, _.
+	null should remove animations (and _W?)
 
 TODO:
+	!! kill all animations for removed elements
 	get rid of numeric key removal
 	get rid of temp/goal processing in number (especially temp)
 	add transition clear/replace/remove actions
@@ -142,7 +144,7 @@ function loadURLs(urls, callback){
 	else{url=urls;urls=[];}
 	if(urls.length)onload=function(){loadURLs(urls,callback);};
 	else onload=callback;
-	//dp(url);
+	dp(url);
 	if (url.endsWith(".js")){ //if filename is a external JavaScript file
 		fileref=document.createElement('script')
 		fileref.setAttribute("type","text/javascript")
@@ -181,7 +183,7 @@ var SVGNS="http://www.w3.org/2000/svg";
 STAP2STYLE={'x':'left','y':'top','w':'width','h':'height','r':'borderRadius','bg':'backgroundColor','bd':'borderStyle','bdw':'borderWidth','bdc':'borderColor','pad':'padding','fnt':'font','col':'color','rot':'rotation'};
 PXSTYLE=set(['x','y','w','h','r']);
  
-var ws,maindiv,autoAction,msgTimeouts={},txtReplace={};
+var ws,maindiv,msgTimeouts={},txtReplace={},animations=[];
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -274,7 +276,7 @@ function setDivOptions(div,options){
 			//else
 			newOptions[STAP2STYLE[key]]=options[key];
 		}
-		TweenLite.to(div,ani,newOptions);
+		animations.push(TweenLite.to(div,ani,newOptions));
 	}else{
 		if(options.hasOwnProperty('w')){
 			div.style.width=options.w;
@@ -593,7 +595,7 @@ function processState(data,container,level){
 		}
 		aniopt.onUpdateParams=[curnum,container,level];
 		//console.log(curnum,data._T,aniopt);
-		TweenLite.to(curnum,data._T,aniopt);
+		animations.push(TweenLite.to(curnum,data._T,aniopt));
 		return;
 	}
 	if(data.hasOwnProperty('_nm'))updateR(container._numspec,data._nm);
@@ -775,8 +777,8 @@ function initMarkers(){
  
 function initWS(){
 	ws=new window.WebSocket('ws://'+HOST+':'+PORT);
-	//ws.onerror=function(e){alert(e);};
-	ws.onopen=function(){maindiv._clear();};//dp('ws connection established.');}
+	ws.onerror=function(e){alert(e);};
+	ws.onopen=function(){maindiv._clear();dp('ws connection established.');}
 	//ws.onclose=function(){alert('Connection closed. Goodbye.');}
 	ws.onmessage=processMsg;
 }

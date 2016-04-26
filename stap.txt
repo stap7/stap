@@ -18,8 +18,8 @@ Current Setup:
 ///////////////////////////////////////////////////////////////////
 Examples
 
-    ->::= Message sent from task software to participant software
-    <-::= Message sent to task software from participant software
+    -> ::= Message sent from task software to participant software
+    <- ::= Message sent to task software from participant software
 
     Sample Interaction 1:
         // display "Hello World"
@@ -159,13 +159,13 @@ ACTOR->TASK protocol                                                    //partic
 <<eventType>>::=    1                                                   //mouseup (or touchend) event; sends [1,<<number>>,<<number>>], signifying mouse-up and its location
 <<eventType>>::=    2                                                   //mousedown (or touchstart) event; sends [2,<<number>>,<<number>>], signifying mouse-down and its location
 <<eventType>>::=    3                                                   //click event; sends [3,<<number>>,<<number>>], signifying a click, and its location
-<<eventType>>::=    4                                                   //mousemove event; sends [4,<<number>>,<<number>>], signifying mouse location
-<<eventType>>::=    6                                                   //dblclick event; sends [6,<<number>>,<<number>>], signifying a double-click, and its location
-<<eventType>>::=    8                                                   //mouseenter event; sends [8,<<number>>,<<number>>], signifying mouse-enter, and its location
-<<eventType>>::=    16                                                  //mouseleave event; sends [16,<<number>>,<<number>>], signifying mouse-leave, and its location
-<<eventType>>::=    32                                                  //keydown event; sends [32,<<keycode>>]
-<<eventType>>::=    64                                                  //keyup event; sends [64,<<keycode>>]
-<<eventType>>::=    96                                                  //keypress event; sends [96,<<keycode>>]
+<<eventType>>::=    4                                                   //dblclick event; sends [4,<<number>>,<<number>>], signifying a double-click, and its location
+<<eventType>>::=    8                                                   //mousemove event; sends [8,<<number>>,<<number>>], signifying mouse location
+<<eventType>>::=    16                                                  //mouseenter event; sends [16,<<number>>,<<number>>], signifying mouse-enter, and its location
+<<eventType>>::=    32                                                  //mouseleave event; sends [32,<<number>>,<<number>>], signifying mouse-leave, and its location
+<<eventType>>::=    64                                                  //keydown event; sends [64,<<keycode>>]
+<<eventType>>::=    128                                                 //keyup event; sends [128,<<keycode>>]
+<<eventType>>::=    192                                                 //keypress event; sends [192,<<keycode>>]
 <<color>>::=        ** see CSS color specification, e.g. http://www.w3schools.com/cssref/css_colors.asp **
 <<cssBackground>>::=** see CSS background specification, e.g. http://www.w3schools.com/cssref/css3_pr_background.asp **
 <<cssBorder>>::=    ** see CSS border specification, e.g. http://www.w3schools.com/cssref/pr_border.asp **
@@ -186,7 +186,7 @@ ACTOR->TASK protocol                                                    //partic
 // <<aniOption>>::=    "ease":(1|2|3|4|"back"|"elastic"|"bounce")          //easing option for animation; if not specified, animation is linear; see http://greensock.com/ease-visualizer to visualize ease options
 // <<aniOption>>::=    "easeout":(1|-1|0)                                  //ease direction; 1 is out, -1 is in, 0 is in-and-out; default is 1; see http://greensock.com/ease-visualizer to visualize ease options
 // <<aniOption>>::=    "tid":<<tweenID>>                                   //tween ID; if specified, this tween can later be altered in midst of animation, and actor sw will send back {<<tweenID>>:0} when animation finishes
-// <<eventType>>::=    "drag"                                              //same as hold but allows element to be dragged with mouse/finger
-// <<eventType>>::=    5                                                   //same as "drag" but also reports back all movement locations relative to top-left of the screen
+// <<eventType>>::=    "drag"                                              //same as 2 (mousedown) but allows element to be dragged with mouse/finger
+// <<eventType>>::=    10                                                  //same as "drag" but also reports back all movement locations relative to top-left of the screen
 // allow w/h (and any pixel) specification in terms of screen% and aspect ratios, e.g. w:90%, h:.5w
 
