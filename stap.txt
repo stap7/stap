@@ -1,11 +1,5 @@
 STAP (Simple Task-Actor Protocol)
-///////////////////////////////////////////////////////////////////
 
-
-///////////////////////////////////////////////////////////////////
-TODO:
-    allow w/h specification in terms of screen% and aspect ratios, e.g. w:90%, h:.5w
-    add option for screen to auto-scroll or stay in place when new items are added
 
 ///////////////////////////////////////////////////////////////////
 Current Setup:
@@ -180,10 +174,8 @@ ACTOR->TASK protocol                                                    //partic
 <<keycode>>::=      ** javascript key code, e.g. http://www.cambiaresearch.com/articles/15/javascript-char-codes-key-codes **
 , ::=               ** commas trailing the last pair in an object or the last element in an array must be trimmed, see JSON members/elements specification, e.g. http://json.org **
 
-//Deprecating:
-// <<option>>::= "_A":{(<<key>>:<<actionValue>>,)+}                        //auto-select action (e.g. for cruise control, replay/spy, demo, instructions)
 
-//Future:
+//Potential future additions:
 // <<conds>>::= [([<<cond>>+],)+]                                          //assume OR for all items in outer list, assume AND for all items in inner list
 // <<cond>>::= "<<key>> (==|!=|<|>) <<text>>|<<number>>",                  //boolean statement signifying a potential game-end condition
 // <<inputOption>>::=  "keys":([(<<keycode>>,)*])|{(<<key>>:<<keycode>>,)*}//keyboard shortcuts assigned to each input element (e.g. use 13 for carriage return, 65 for A, 37 for left arrow key)
@@ -196,4 +188,5 @@ ACTOR->TASK protocol                                                    //partic
 // <<aniOption>>::=    "tid":<<tweenID>>                                   //tween ID; if specified, this tween can later be altered in midst of animation, and actor sw will send back {<<tweenID>>:0} when animation finishes
 // <<eventType>>::=    "drag"                                              //same as hold but allows element to be dragged with mouse/finger
 // <<eventType>>::=    5                                                   //same as "drag" but also reports back all movement locations relative to top-left of the screen
+// allow w/h (and any pixel) specification in terms of screen% and aspect ratios, e.g. w:90%, h:.5w
 
