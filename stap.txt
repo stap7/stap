@@ -1,40 +1,5 @@
 STAP (Simple Task-Actor Protocol)
 ///////////////////////////////////////////////////////////////////
-v0.1    20150528    first complete protocol, including multiple types of actions, feedback, hierarchical state information, and vector graphics
-v0.1.01 20150529a   comment added for easier comprehension of the <<clear>> flag
-v0.1.02 20150529b   added sections for Current Setup and Example Interaction; added CLIENT->TASK protocol
-v0.1.03 20150601    changed dashed keys to shortened names; u: in numspec changed to "u":
-v0.1.04 20150603    changed "_icons":{(<<text>>:<<url>>,)+} to "_replace":{(<<text>>:<<html>>,)+}; 
-v0.1.05 20150617    changed "_div", "_lin", "_cur" to "_vg", "_ln", and "_cr"; changed "_=" to clear into _R to remove and _C to clear; added comment regarding potential _vg (x,y) action type
-v0.1.06 20150618    changed "_vg" to "_bx"
-v0.2.01 20150626    added _actspecs (and removed redundancy from "a")
-v0.2.02 20150701    onoff separated from choices action types; <<actionValue>> specified
-v0.2.03 20150701    _onsubmit added instead of _C in _actspecs
-v1.0.00 20150708    _W and _A directives added for waiting and action auto-selection, respectively; added key:null option for key removals; added "bx", "bxhold", and "bxdrag" action types
-v1.1.00 20150728    <<divOption>> expanded to include animation
-v2.0.00 20150824    no more s/t/a/r directives, everything is under root, with $ reserved as a special directive to display scoring/rewards/tracking info
-v2.1.00 20150826    numspec temp directives are changed from binary to <<number>> signifying milliseconds to display the reward; no $ directive, everything is under root (individual templates may be available to have special visualization for various keys, e.g. a given tempalte may treat "0" as a special directive under root)
-v2.1.01 20150901    bx/bxhold/bxdrag changed to xyclick/xyhold/xydrag, input added to <<divOption>> as a way to tag _bx element with <<inputID>>
-v2.2.00 20150903    _numspecs changed to _num, _inputs changed to _input since these 2 directives may be used often; _num now allows time format and animation; _endconds changed to _conds for future-proofing (in case other conditionals are added later)
-v2.3.00 20150904    _W now requires a <<waitID>> which can be used to reset the wait timer in later messages
-v2.3.01 20150922    all references to time changed from milliseconds to seconds (this saves bandwidth and adds consistency with GSAP, which is likely to be the animation standard in GUI templates)
-v3.0.00 20151111    removed _input and _numspec directives; uniform syntax for all directives; removed constraints that forced _cr/_ln to be only inside _bx and disallowed non _cr/_ln/_bx to be in there; allowing state to have _bx specifications; added "_." directive for by-key editing
-v3.0.01 20151117    _choices removed as it was a duplicate of _onoff; _choice renamed to _select (more consistent with html)
-v3.1.00 20151120    shortened some directive names; added _ev events directive; made most directives applicable to any state
-v3.1.01 20151130    shortened some more directive names for consistency
-v3.1.02 20151201    event types for _ev directive converted to integer values for speed and consistency
-v3.1.03 20151221    _onbeforeunload directive added
-v3.1.04 20160112    _sl changed to send 1/2 just like _on so that a selected item may be deselected
-v3.1.05 20160204    _clientinfo added
-v3.2.00 20160205    options allowed for <<number>> and <<text>> elements (not just <<state>>); animated clearing/removing options added, temp option removed from _nm; goal moved from _nm to conds; _pp, _tb, _i* directives added; _bn, _hd, _on, _sl, _tx, _ev directives renamed _i, _ih, _i2, _i1, _ix, _i+ to make clear which elements are input elements; _onbeforeunload changed to _unloadwarn
-v3.3.00 20160208    _N (aNimate) changed to _T (tween) to avoid confusion between _N and _nm; _R and _C removed, as these can be accomplished via combinations of <<key>>:null and <<key>>:"" with _T:<<number>>
-v3.3.01 20160212    pwd option added for _ix input
-v3.3.02 20160216    lines option extended to _i1 and _i2
-v3.3.03 20160217    _i1 and _i2 specs changed such that subkey/values are text and value of options, e.g. <<key>>:{"_i1":{},"male":1,"female":0} is a forced-choice with "male" selected as default option; _i1 and _i2 send back element value changes, e.g. {<<key>>:{"male":0}}; default is no longer an input option; _i and _ix are no longer button/text panels, but rather singular button and text input
-v3.4.00 20160224    all input actions changed to send and return their values, e.g. {"#abc":{"_i":{},"Click Me":2}} adds a Click Me button in the #abc button panel, {"#abc":{"Click Me":3}} sent from actor to task lets the task know that the button was clicked, and same string {"#abc":{"Click Me":3}} sent from task to actor lets the actor know to automatically click that same button; _A directive becomes redundant, removed
-v3.4.01 20160330    _W spec updated so as to make up for deprecating _A; onsubmit renamed oninput; future and deprecating options organized; animation easing and id options updated in Future
-v4.0.00 20160408    arrays used to pass ordered key/element pairs or keys (not elements) (this aids with specifying order, button declarations), numbers at beginning of key names no longer hidden or used for sorting
-v4.1.00 20160420    <<text>> and null allowed at root (<<text>> is shorthand for adding a sequential hidden key with the text, null clears screen); _vis added for autoscroll options
 
 
 ///////////////////////////////////////////////////////////////////
