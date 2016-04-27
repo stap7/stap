@@ -1,36 +1,18 @@
 /*base template for STAP visualizationualization
 
 TODO for latest STAP release:
-	add processing for _vis, _tb, _i+, _i*, _.
+	add processing for _vis, _tb, _i+, _i*, _., _task
 	null should remove animations (and _W?)
-
-TODO:
-	!! kill all animations for removed elements
-	get rid of numeric key removal
-	get rid of temp/goal processing in number (especially temp)
-	add transition clear/replace/remove actions
-	add automatic instruction generator
-	instead of updating all sub-elements, each element should just have its own numspec, but reference the parents' numspecs too
-	remove goal class stuff from css or assign the class based on _task directive
 */
- 
+
 //////////////////////////////////////////////////////////////////////////////
 // helper functions
 dp=function(s){console.log(typeof(s)=="string"?s:JSON.stringify(s));};
 function round2(n,r){return (Math.round(n/r) * r);}
 if(String.prototype.startsWith===undefined)String.prototype.startsWith=function(prefix){return this.slice(0,prefix.length)===prefix;};
 if(String.prototype.endsWith===undefined)String.prototype.endsWith=function(suffix){return this.slice(this.length-suffix.length)===suffix;};
-//String.prototype.replaceAll=function(s1,s2){return this.replace(new RegExp(s1, 'g'), s2);};
 String.prototype.replaceAll = function(search, replacement) {
 	return this.split(search).join(replacement);
-};
-String.prototype.trimNum=function(){
-	var num=parseFloat(this);
-	return isNaN(num)?this:this.substr((''+num).length);
-};
-String.prototype.splitNum=function(){
-	var num=parseFloat(this);
-	return isNaN(num)?['A',this]:[num,this.substr((''+num).length)];
 };
 Date.prototype.format = function (format, utc){return formatDate(this, format, utc);};
 TIMEZONEOFFSET=new Date().getTimezoneOffset()* 60000
@@ -111,20 +93,6 @@ function formatDate(date, format, utc){
  
 	return format;
 };
-function updateR(obj,obj2){
-	if(!obj2)return;
-	var key,val;
-	for(key in obj2){
-		if(obj2.hasOwnProperty(key)){
-			val=obj2[key];
-			if(typeof(val)==="object"){
-				if(typeof(obj[key])!=="object")obj[key]={};
-				updateR(obj[key],val);
-			}
-			else obj[key]=obj2[key];
-		}
-	}
-}
 function firstkey(obj){return Object.keys(obj)[0];}
 function set(a){var o={};for(var key in a)o[a[key]]="";return o;}
 function find1common(obj1,obj2){
@@ -165,10 +133,10 @@ function loadURLs(urls, callback){
 var BTNUP=1,
 	BTNDOWN=2,
 	CLICK=3,
-	DBLCLICK=6,
-	MOVE=4,
-	MOUSEENTER=8,
-	MOUSELEAVE=16;
+	DBLCLICK=4,
+	MOVE=8,
+	MOUSEENTER=16,
+	MOUSELEAVE=32;
 
 var ONSUBMIT_NOTHING=1,
 	ONSUBMIT_DISABLE=0,
@@ -220,18 +188,21 @@ function addDivs(container,type,level,key){
 		c.id=key;
 		c._type=type;
 		c._childmap={};
-		c._order=[];
+		c._numspec={};
 		c._hide=function(){cf.style.visibility='hidden';};
 		c._unhide=function(){cf.style.visibility='visible';};
 		c._clear=function(){
 			c._content.innerHTML='';
 			c._childmap={};
-			c._order=[];
+			c._numspec={};
+			c._value=0;
+			c._type=undefined;
 		};
 		c._remove=function(){
 			//cf.remove();
 			cf.parentElement.removeChild(cf);
 			delete container.parentElement._childmap[key];
+			c._type=undefined;
 		};
 		c._setclass=function(cls){
 			cls=cls.replace(/[^\w-_]/gi, '_');
@@ -401,8 +372,11 @@ specialElementOption={
 		container._content.style.height=(2*value*(2*parseInt(window.getComputedStyle(container._content).padding)+parseInt(window.getComputedStyle(container._content).fontSize)))+"px";
 	}
 }
-function processOptions(container,data){
-	if(container._type in data){
+function processOptions(data,container){
+	if(data.hasOwnProperty('_nm'))Object.assign(container._numspec,data._nm);
+	if(data.hasOwnProperty('_bx'))setDivOptions(container._content,data._bx);
+	if(data.hasOwnProperty('_ev'))addEvents(container._content,data._ev);
+	if(container._specialElement && container._type in data){
 		for(var key in data[container._type]){
 			if(key in specialElementOption)
 				specialElementOption[key](container,data[container._specialElement][key]);
@@ -416,33 +390,39 @@ function processOptions(container,data){
 elementTypes={
 	'object':processState,
 	'number':function(data,container,level){
-		//if(typeof(data)==="object" && ("" in data))data=data[""];
-		if(typeof(data)==="object"){
-			processState(data,container,level);
-			return;
+		//create numspec based on parents
+		var key,parent=container,
+			numspec=Object.assign({},container._numspec);
+		while(parent!=maindiv){
+			parent=parent._parentState;
+			for(key in parent._numspec)
+				if(!(key in numspec))
+					numspec[key]=parent._numspec[key];
 		}
-		if(container._numspec.rnd!==undefined){
-			data=round2(data,container._numspec.rnd);
-			if(container._numspec.rnd<1){
-				data=data.toFixed((''+container._numspec.rnd).split('.')[1].length);
+		//process numspec
+		if(typeof(data)!=='number')data=container._value||numspec['=']||0;
+		if(numspec.rnd!==undefined){
+			data=round2(data,numspec.rnd);
+			if(numspec.rnd<1){
+				data=data.toFixed((''+numspec.rnd).split('.')[1].length);
 			}
 		}
 		container._value=data;
-		if(container._numspec.unit){
-			data=(container._numspec.unit=='$')?'$'+data:data+''+container._numspec.unit;
-		}else if(container._numspec.time){
-			data=new Date(1000*data).format(container._numspec.time);
+		if(numspec.unit){
+			data=(numspec.unit=='$')?'$'+data:data+''+numspec.unit;
+		}else if(numspec.time){
+			data=new Date(1000*data).format(numspec.time);
 		}
-		if(container._numspec.hasOwnProperty('<=') && container._numspec.hasOwnProperty('>=')){
+		if(numspec.hasOwnProperty('<=') && numspec.hasOwnProperty('>=')){
 			if(!container._progressbar){
 				container._content.classList.add("progress");
 				container._progressbar=addDiv(container._content,["progressbar"]);
 				container._progressval=addDiv(container._content,["progressval"]);
 			}
-			container._progressbar.style.width=(100*(container._value-container._numspec['>='])/(container._numspec['<=']-container._numspec['>=']))+'%';
+			container._progressbar.style.width=(100*(container._value-numspec['>='])/(numspec['<=']-numspec['>=']))+'%';
 			container._progressval.innerHTML=data;
-		}else if(container._numspec.hasOwnProperty('<=')){
-			container._content.innerHTML=data+" of "+container._numspec['<=']+"\n";
+		}else if(numspec.hasOwnProperty('<=')){
+			container._content.innerHTML=data+" of "+numspec['<=']+"\n";
 		}else{
 			container._content.innerHTML=data;
 		}
@@ -508,8 +488,8 @@ elementTypes={
 	},
 	'_ix':function(data,container){
 		if(typeof(data)==="object"){
-			if("" in data)container._content.innerHTML=replaceShorthand(data[""]);
-			//processOptions(container,data);
+			if("#0" in data)container._content.innerHTML=replaceShorthand(data["#0"]);
+			//processOptions(data,container);
 		}else container._content.innerHTML=replaceShorthand(data);
 		if(container._content.getAttribute('contenteditable')===null){
 			container._content.setAttribute('contenteditable',true);
@@ -536,7 +516,7 @@ elementTypes={
 }
 specialElements=set(['_i','_ih','_i2','_i1','_ix','_ip','_i*','_ln','_tb']);
 compatible={
-	'object':set(['_i','_ih','_i1','_i2','_ln']),
+	'object':set(['_i','_ih','_i1','_i2','_ix','_ln']),
 	'string':set(['_ix']),
 	'number':set(['_i1_child','_i2_child']),
 	'boolean':set(['_i1_child','_i2_child']),
@@ -544,7 +524,7 @@ compatible={
 
 function isState(o){
 	for(var subkey in o){
-		if(key!=="" && !key.startsWith('_')) return true;
+		if(!key.startsWith('_')) return true;
 	}
 	return false;
 }
@@ -556,11 +536,18 @@ function getType(val){
 	return specialType || type;
 }
 
-
+function animationFrame(data,container,level){
+	if(container._type!==undefined)
+		elementTypes[container._type](data.value,container,level);
+	else{
+		container._tween.kill();
+		delete container._tween;
+	}
+}
 
 function processState(data,container,level){
-	//var keys=(data.constructor==Array)?data:Object.keys(data).sort();
-	var keys=[];
+	var child,typeofval,displaykey,keys=[];
+	//get data keys
 	if(data.constructor==Array){
 		if(data[0].constructor==Array){
 			var data2={};
@@ -573,42 +560,30 @@ function processState(data,container,level){
 			keys=data;
 			data={};
 		}
-	}else keys=Object.keys(data);//.sort();
-	//early processing directives
+	}else keys=Object.keys(data);
+	//animated changes
 	if(data.hasOwnProperty('_T')){
 		//animate values
-		//TODO:
-		//	if there's already an animation, make sure to stop it first
-		//	account for text/object, "", and null value animations
-		var curnum={},aniopt={ease:Linear.easeNone,onUpdate:processState};
+		//TODO: account for text/object, and ""/null value animations
 		for(var key in data){
-			if(typeof(data[key])==='number'){
-				if(!key.startsWith('_')){
-					if(key==="")
-						curnum[key]=container._value || 0;
-					else if(container._childmap.hasOwnProperty(key))
-						curnum[key]=container._childmap[key]._value || 0;
-					else curnum[key]=0;
-					aniopt[key]=data[key];
-				}
+			if(key in container._childmap && typeof(data[key])==='number'){
+				child=container._childmap[key];
+				if(child._tween)child._tween.kill();
+				var curnum={value:child._value||0};
+				var aniopt={ease:Linear.easeNone,
+						onUpdate:animationFrame,
+						onUpdateParams:[curnum,child,level+1],
+						value:data[key]};
+				child._tween=TweenLite.to(curnum,data._T,aniopt);
 			}
 		}
-		aniopt.onUpdateParams=[curnum,container,level];
-		//console.log(curnum,data._T,aniopt);
-		animations.push(TweenLite.to(curnum,data._T,aniopt));
 		return;
 	}
-	if(data.hasOwnProperty('_nm'))updateR(container._numspec,data._nm);
-	if(data.hasOwnProperty('_bx'))setDivOptions(container._content,data._bx);
-	if(data.hasOwnProperty('_ev'))addEvents(container._content,data._ev);
-	//if(typeofval)elementTypes[typeofval](data[key],child,level+(child===container?0:1))
-	//rest of directives
-	var child,typeofval,displaykey;
+	//non-animated changes
 	for(var i=0,key=keys[0];i<keys.length;key=keys[++i]){
 		key=''+key;
 		if(!key.startsWith('_')){
-			if(key===""){child=container;}
-			else{child=container._childmap[key];}
+			child=container._childmap[key];
 			if(data[key]===null){if(child)child._remove();}
 			else if(child && data[key]===""){child._clear();}
 			else{
@@ -616,28 +591,25 @@ function processState(data,container,level){
 				if(container._specialElement)typeofval=container._specialElement+"_child";
 				else typeofval=getType(data[key]);
 				displaykey=key.startsWith('#')?'':replaceShorthand(key.trim());
-				//displaykey=key.startsWith('#')?'':replaceShorthand(key.trimNum().trim());
 				if(child===undefined){ //new child
+					if(typeofval==='object' && data[key].hasOwnProperty("_nm") && !isState(data[key]))
+						typeofval="number";
 					child=addDivs(container._content,typeofval,level+1,key);
-					if(child._type in specialElements)child._specialElement=child._type;
-					child._specialOptions={};
+					if(child._type in specialElements){
+						child._specialElement=child._type;
+						child._specialOptions={};
+					}
 					if(typeofval!="_ln_child"){
 						child._key.innerHTML=displaykey;
-						child._numspec={};
 					}
 					container._childmap[key]=child;
-				//TODO: account for when new child is of diff type than old child
 				}else if(child._type!==typeofval && !(compatible[typeofval] && (child._type in compatible[typeofval])) && !(typeofval==='object' && !isState(data[key]))){
-					dp(['changing',child._type,typeofval]);
-					//dp(child._specialElement);
 					child._setclass(typeofval);
 					if(child._type in specialElements)child._specialElement=child._type;
 					child._specialOptions={};
 				}
-				if(child._specialElement)processOptions(child,data[key]);
-				//dp(['::',displaykey,child._type,data[key]]);
-				//processState(data[key],child,level+(child===container?0:1),child._type);
-				elementTypes[child._type](data[key],child,level+(child===container?0:1));
+				processOptions(data[key],child);
+				elementTypes[child._type](data[key],child,level+1);
 			}
 		}
 	}
@@ -645,7 +617,7 @@ function processState(data,container,level){
  
 function processData(data){
 	dp({"->":data});
-	// process special directives
+	// process special root directives
 	if(data===null){maindiv._clear();return;}
 	if(typeof(data)==="string"){
 		var txt=data;
@@ -691,7 +663,6 @@ function processData(data){
 		delete data._replace;
 	}
 	if(data.hasOwnProperty('_task')){/*TODO*/}
-	//process state
 	if(data.hasOwnProperty('_W')){
 		var waitID,wait;
 		if(typeof(data._W)=='number')wait=data._W;
@@ -732,11 +703,9 @@ function processData(data){
 			}
 		}
 	}
+	// process other special directives
+	processOptions(maindiv,data);
 	//process state
-	if(data[""]==="" || data[""]===null){
-		maindiv._clear();
-		delete data[""];
-	}
 	processState(data,maindiv,0);
 	if(data.hasOwnProperty('_pp')){
 		if(data._pp==="" || data._pp===null){

@@ -67,9 +67,9 @@ def runTrial(locations,map):
 <li> Click a blue circle to remove it from the circuit.</ul>"""})
 	send({"Map":{"#path":{"_ln":{}}}})
 	send({"Map":{"#btns":map,"_bx":dict(w=canvasWidth,h=canvasHeight,bd='solid 1px black')}})
-	#send({"Timer":{"_nm":{"rnd":1},"":SECONDS_PER_TRIAL}})
-	#send({"Timer":0,"_T":SECONDS_PER_TRIAL})
-	#send({"_W":{"Are you ready to submit your solution?":SECONDS_PER_TRIAL}})
+	send({"Timer":{"_nm":{"rnd":1,"=":SECONDS_PER_TRIAL,">=":0,"<=":SECONDS_PER_TRIAL}}})
+	send({"Timer":0,"_T":SECONDS_PER_TRIAL})
+	send({"_W":{"Are you ready to submit your solution?":SECONDS_PER_TRIAL}})
 	chosenLocs=[]
 	points=[]
 	action=recv()
