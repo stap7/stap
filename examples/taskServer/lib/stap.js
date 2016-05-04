@@ -1,8 +1,7 @@
 /*base template for STAP visualizationualization
 
 TODO for latest STAP release:
-	add processing for _vis, _tb, _i+, _i*, _., _task
-	null should remove animations (and _W?)
+	add _vis, _tb, _i+, _i*, _., _task
 */
 
 //////////////////////////////////////////////////////////////////////////////
@@ -148,10 +147,11 @@ var HOST=location.hostname || "localhost";
 //var HOST="eloi.ncsa.illinois.edu";
 
 var SVGNS="http://www.w3.org/2000/svg";
-STAP2STYLE={'x':'left','y':'top','w':'width','h':'height','r':'borderRadius','bg':'backgroundColor','bd':'borderStyle','bdw':'borderWidth','bdc':'borderColor','pad':'padding','fnt':'font','col':'color','rot':'rotation'};
-PXSTYLE=set(['x','y','w','h','r']);
- 
-var ws,maindiv,msgTimeouts={},txtReplace={},animations=[];
+var STAP2STYLE={'x':'left','y':'top','w':'width','h':'height','r':'borderRadius','bg':'backgroundColor','bd':'borderStyle','bdw':'borderWidth','bdc':'borderColor','pad':'padding','fnt':'font','col':'color','rot':'rotation'};
+var PXSTYLE=set(['x','y','w','h','r']);
+var EASE;//defined after GSAP loads
+
+var ws,maindiv,msgTimeouts={},txtReplace={};
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -235,19 +235,35 @@ function sendAction(element,val){
 		else if(element._specialOptions.onsubmit==ONSUBMIT_CLEAR)element._clear()
 	}
 }
- 
+
+function getEaseSpec(options){
+	var easeSpec=Linear.easeNone;
+	if(typeof(options)==='object'){
+		var ease=Linear;
+		if(options.ease)ease=EASE[options.ease];
+		if(options.easeout==-1)easeSpec=ease.easeIn;
+		else if(options.easeout==0)easeSpec=ease.easeInOut;
+		else easeSpec=ease.easeOut;
+	}
+	return easeSpec;
+}
+
 function setDivOptions(div,options){
 	//TODO: test all options
 	if(options.hasOwnProperty('_T')){
-		var ani=options._T;
+		var ani=options._T.s || 1,
+			newOptions={ease:getEaseSpec(options._T)};
+		if(options._T.tid){
+			newOptions.onComplete=sendAction;
+			newOptions.onCompleteParams=[options._T.tid,0];
+		}
 		delete options._T;
-		var newOptions={ease:Linear.easeNone};
 		for(var key in options){
 			//if(key=='bg')newOptions['colorProps']={'background':options[key]};
 			//else
 			newOptions[STAP2STYLE[key]]=options[key];
 		}
-		animations.push(TweenLite.to(div,ani,newOptions));
+		TweenLite.to(div,ani,newOptions);
 	}else{
 		if(options.hasOwnProperty('w')){
 			div.style.width=options.w;
@@ -537,9 +553,9 @@ function getType(val){
 }
 
 function animationFrame(data,container,level){
-	if(container._type!==undefined)
+	if(container.offsetParent){
 		elementTypes[container._type](data.value,container,level);
-	else{
+	}else{
 		container._tween.kill();
 		delete container._tween;
 	}
@@ -570,11 +586,15 @@ function processState(data,container,level){
 				child=container._childmap[key];
 				if(child._tween)child._tween.kill();
 				var curnum={value:child._value||0};
-				var aniopt={ease:Linear.easeNone,
+				var aniopt={ease:getEaseSpec(data._T),
 						onUpdate:animationFrame,
 						onUpdateParams:[curnum,child,level+1],
 						value:data[key]};
-				child._tween=TweenLite.to(curnum,data._T,aniopt);
+				if(data._T.tid){
+					aniopt.onComplete=sendAction;
+					aniopt.onCompleteParams=[data._T.tid,0];
+				}
+				child._tween=TweenLite.to(curnum,data._T.s || 1,aniopt);
 			}
 		}
 		return;
@@ -744,7 +764,8 @@ function initMarkers(){
 		</svg>';
 }
  
-function initWS(){
+function init(){
+	EASE={0:Power0,1:Power1,2:Power2,3:Power3,4:Power4,back:Back,elastic:Elastic,bounce:Bounce};
 	ws=new window.WebSocket('ws://'+HOST+':'+PORT);
 	ws.onerror=function(e){alert(e);};
 	ws.onopen=function(){maindiv._clear();dp('ws connection established.');}
@@ -769,7 +790,7 @@ function main(){
 		"lib/gsap/plugins/ColorPropsPlugin.min.js",
 		"lib/gsap/plugins/AttrPlugin.min.js",
 		"lib/gsap/plugins/TextPlugin.min.js"
-	],initWS);
+	],init);
 }
  
  

@@ -61,18 +61,24 @@ def calcDist(chosenLocs,locations):
 		return int(totDist)
 
 def runTrial(locations,map):
+	#clear screen
 	send(None)
+	#add instructions
 	send({"Instructions":"""<li> Produce the shortest possible circuit that connects each cirlce on the map.
 <li> Click a white circle to add it to the circuit.
 <li> Click a blue circle to remove it from the circuit.</ul>"""})
-	send({"Map":{"#path":{"_ln":{}}}})
-	send({"Map":{"#btns":map,"_bx":dict(w=canvasWidth,h=canvasHeight,bd='solid 1px black')}})
-	send({"Timer":{"_nm":{"rnd":1,"=":SECONDS_PER_TRIAL,">=":0,"<=":SECONDS_PER_TRIAL}}})
-	send({"Timer":0,"_T":SECONDS_PER_TRIAL})
-	send({"_W":{"Are you ready to submit your solution?":SECONDS_PER_TRIAL}})
+	#add Map to be a box with a #path object that will include lines
+	send({"Map":{"_bx":dict(w=canvasWidth,h=canvasHeight,bd='solid 1px black'),"#path":{"_ln":{}}}})
+	#add a button set (clickable locations) to Map
+	send({"Map":{"#btns":map}})
+	#set up Timer to be an integer between 0 and SECONDS_PER_TRIAL
+	send({"Timer":{"_nm":{"rnd":1,">=":0,"<=":SECONDS_PER_TRIAL,"=":SECONDS_PER_TRIAL}}})
+	#animate Timer down to 0, send back {"Are you ready to submit your solution?":0} when done.
+	send({"Timer":0,"_T":{"s":SECONDS_PER_TRIAL,"tid":"Are you ready to submit your solution?"}})
+	#capture user inputs until they click "Are you ready to submit your solution?" (or timer runs out)
+	action=recv()
 	chosenLocs=[]
 	points=[]
-	action=recv()
 	while "Are you ready to submit your solution?" not in action:
 		locNum=locKey2Num(itemKey(action["#btns"]))
 		try:
@@ -92,7 +98,6 @@ def runTrial(locations,map):
 				send({"Are you ready to submit your solution?":["_i","Submit Solution"]})
 		send({"Map":{"#path":{"#1":[p+LOCSIZE//2 for p in points]}}})
 		action=recv()
-	#stap.clearWait('submitTimer')
 	totDist=calcDist(list(chosenLocs),locations) if len(chosenLocs)==len(locations) else 10000
 	send(None)
 	send({"Length of your circuit":totDist})
@@ -112,5 +117,4 @@ def main(numlocs=NUMBER_OF_LOCATIONS):
 	send("Goodbye.")
 
 main(NUMBER_OF_LOCATIONS)
-#main(3)
 

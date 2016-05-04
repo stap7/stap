@@ -29,7 +29,7 @@ def main():
 		send({"#canvas":{"#goalline":{"_bx":dict(w=CANVASSIZE,h=GOALLINEHEIGHT,x=0,y=CANVASSIZE-GOALLINEHEIGHT,bg='red')}}})
 		send({"#btn":["_i","Start Timer"]})
 		recv()
-		send({"#canvas":{"#ball":{"_bx":{"_T":delay,"y":CANVASSIZE-GOALLINEHEIGHT-BALLSIZE}}}})
+		send({"#canvas":{"#ball":{"_bx":{"_T":{"s":delay},"y":CANVASSIZE-GOALLINEHEIGHT-BALLSIZE}}}})
 		send({"#btn":None})
 		send({"#btn":["_i","Stop Timer"]})
 		recv()

@@ -105,6 +105,10 @@ process.on('SIGINT', exitHandler.bind(null, {exit:true}));
 //catches uncaught exceptions
 process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
 
+process.on('uncaughtException', function (err) {
+  console.error(err.stack);
+  console.log("Node NOT Exiting...");
+});
 
 
 ////////////////////////////////////////
@@ -118,18 +122,28 @@ function onTask2ActorMsg(data,socket,tasklog){
 		for(var i=0;i<arrayOfLines.length;i++){
 			arrayOfLines[i]=arrayOfLines[i].trim();
 			if(arrayOfLines[i].length){
-				if(socket.write)socket.write(arrayOfLines[i]+'\r\n');
-				else socket.send(arrayOfLines[i]+'\r\n');
-				record2log(tasklog,arrayOfLines[i],0);
+				try{
+					if(socket.write)socket.write(arrayOfLines[i]+'\r\n');
+					else socket.send(arrayOfLines[i]+'\r\n');
+					record2log(tasklog,arrayOfLines[i],0);
+				}catch(e){
+					console.log('!Failed to write to socket:\n',' > ',arrayOfLines[i],'\n',e,'\nClosing connection...');
+					if(socket.end)socket.end();else socket.close();
+					console.log('Closed.');
+				}
 			}
 		}
 	}
 }
 function onActor2TaskMsg(data,taskprocess,tasklog){
-	data=data.toString().trim();
-	if(data.length){
-		taskprocess.stdin.write(data+'\r\n');
-		record2log(tasklog,data,1);
+	try{
+		data=data.toString().trim();
+		if(data.length){
+			taskprocess.stdin.write(data+'\r\n');
+			record2log(tasklog,data,1);
+		}
+	}catch(e){
+		console.log(e);
 	}
 }
 function onActorConnection(task,socket,rcvEvent,endEvent){
@@ -147,6 +161,13 @@ function onActorConnection(task,socket,rcvEvent,endEvent){
 			killSpawnedProcess(taskprocess);
 			socket.close();
 			if(tasklog)tasklog.end();
+		});
+		socket.on('error', function(err){
+			console.log(err,'Closing connection...');
+			if(socket.end)socket.end();else socket.close();
+			killSpawnedProcess(taskprocess);
+			if(task.logpath)tasklog.end();
+			console.log('Closed.');
 		});
 		socket.on(rcvEvent, function(data){onActor2TaskMsg(data,taskprocess,tasklog);});		// actor --> task
 		socket.on(endEvent, function(){killSpawnedProcess(taskprocess);if(task.logpath)tasklog.end();});
@@ -170,8 +191,10 @@ function startTaskService(task){
 		mkdir(task.logpath);
 	}
 	//Serve task over standard TCP Socket
-	if(task.serveOnTCPPort)
+	if(task.serveOnTCPPort){
 		task.tcps = CreateTcpServer(function(socket){onActorConnection(task,socket,'data','end')}).listen(task.serveOnTCPPort);
+		
+	}
 	//Serve task over WebSocket
 	if(task.serveOnWSPort){
 		task.wss = new WebSocket.Server({port: task.serveOnWSPort});
