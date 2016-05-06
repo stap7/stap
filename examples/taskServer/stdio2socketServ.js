@@ -198,8 +198,12 @@ function startTaskService(task){
 	//Serve task over WebSocket
 	if(task.serveOnWSPort){
 		task.wss = new WebSocket.Server({port: task.serveOnWSPort});
-		task.wss.on('connection', function(socket){onActorConnection(task,socket,'message','close')});
-		if(task.html)makeHtmlStapClient(task.html,task.serveOnWSPort);
+		task.wss.on('connection', function(socket){
+			onActorConnection(task,socket,'message','close')
+		});
+		task.wss.on('listening',function(){
+			if(task.html)makeHtmlStapClient(task.html,task.serveOnWSPort);
+		});
 	}
 }
 
@@ -219,8 +223,8 @@ function makeHtmlStapClient(filepath,port){
 	filesToRemove.push(filepath);
 }
 
-function startPlaybackService(){
-	var wss = new WebSocket.Server({port: PLAYBACKPORT});
+function startPlaybackService(port){
+	var wss = new WebSocket.Server({port: port});
 	wss.on('connection', function(ws){
 		var taskpath,logpath,timestamp,linenum,lines=[];
 		ws.on('message', function(msg){

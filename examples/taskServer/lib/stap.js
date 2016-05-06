@@ -1,5 +1,8 @@
 /*base template for STAP visualizationualization
 
+BUG:
+	number seems to be allowed to be out of numspec bounds
+
 TODO for latest STAP release:
 	add _vis, _tb, _i+, _i*, _., _task
 */
@@ -409,7 +412,7 @@ elementTypes={
 		//create numspec based on parents
 		var key,parent=container,
 			numspec=Object.assign({},container._numspec);
-		while(parent!=maindiv){
+		while(parent!==maindiv && parent!==ppdiv){
 			parent=parent._parentState;
 			for(key in parent._numspec)
 				if(!(key in numspec))
@@ -723,20 +726,22 @@ function processData(data){
 			}
 		}
 	}
+	if(data.hasOwnProperty('_pp')){
+		if(data._pp===null || data._pp===""){
+			ppdiv._hide();
+			ppdiv._clear();
+		}else{
+			if(maindiv._childmap["#_pp"]==undefined)
+				maindiv._childmap["#_pp"]=ppdiv;
+			data['#_pp']=data._pp;
+			ppdiv._unhide();
+		}
+		delete data._pp;
+	}
 	// process other special directives
 	processOptions(maindiv,data);
 	//process state
 	processState(data,maindiv,0);
-	if(data.hasOwnProperty('_pp')){
-		if(data._pp==="" || data._pp===null){
-			ppdiv._hide();
-			ppdiv._clear();
-		}
-		else{
-			ppdiv._unhide();
-			processState(data._pp,ppdiv,0);
-		}
-	}
 }
  
 function processMsg(msg){
@@ -779,6 +784,7 @@ function main(){
 	maindiv=addDivs(document.body,'obj',0,"__main__");
 	ppdiv=addDivs(document.body,'obj',0,"__pp__");
 	ppdiv._hide();
+	ppdiv._parentState=maindiv;
 	processData('Loading...');
 	loadURLs("https://fonts.googleapis.com/icon?family=Material+Icons");
 	loadURLs([
