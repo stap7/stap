@@ -491,8 +491,9 @@ compatible={
 
 function taskInstructions(key,displaykey,container){
 	var instructions="";
+	displaykey=displaykey?('<b>'+displaykey+'</b>'):'this value';
 	if(key in taskOptions.win){
-		instructions+="<li>When the value above is "+taskOptions.win[key]+", you win.\n";
+		instructions+="<li>When "+displaykey+" is "+taskOptions.win[key]+", you win.\n";
 		delete taskOptions.win[key];
 	}
 	if(key in taskOptions.loss){
@@ -500,38 +501,39 @@ function taskInstructions(key,displaykey,container){
 		delete taskOptions.loss[key];
 	}
 	if(key in taskOptions.end){
-		instructions+="<li>When the value above is "+taskOptions.end[key]+", the task ends.\n";
+		instructions+='<li>When '+displaykey+' is '+taskOptions.end[key]+", the task ends.\n";
 		delete taskOptions.end[key];
 	}
 	if(key in taskOptions.good){
 		if(taskOptions.good[key]=='+')
-			instructions+="<li>The higher the value above is, the better.\n";
+			instructions+="<li>The higher "+displaykey+" is, the better.\n";
 		else if(taskOptions.good[key]=='-')
-			instructions+="<li>The lower the value above is, the better.\n";
+			instructions+="<li>The lower "+displaykey+" is, the better.\n";
 		else if(typeof(taskOptions.good[key])==='string') 
-			instructions+='<li>Try to get the value above to be "'+taskOptions.good[key]+'".\n';
+			instructions+="<li>Try to get "+displaykey+' to be "'+taskOptions.good[key]+'".\n';
 		else
-			instructions+="<li>Keep the value above as close to "+taskOptions.good[key]+" as possible.\n";
+			instructions+="<li>Try to get "+displaykey+' to be '+taskOptions.good[key]+'.\n';
 		delete taskOptions.good[key];
 	}
 	if(key in taskOptions.bad){
 		if(taskOptions.bad[key]=='+')
-			instructions+="<li>Higher values here are bad.\n";
+			instructions+="<li>Avoid higher "+displaykey+" values.\n";
 		else if(taskOptions.bad[key]=='-')
-			instructions+="<li>Lower values here are bad.\n";
+			instructions+="<li>Avoid lower "+displaykey+" values.\n";
 		else if(typeof(taskOptions.bad[key])==='string') 
-			instructions+='<li>Try to make sure the value above is never "'+taskOptions.bad[key]+'".\n';
+			instructions+="<li>Avoid "+displaykey+' from being "'+taskOptions.bad[key]+'".\n';
 		else
-			instructions+="<li>Keep the value above as far from "+taskOptions.bad[key]+" as possible.\n";
+			instructions+="<li>Avoid "+displaykey+' from being '+taskOptions.bad[key]+'.\n';
 		delete taskOptions.bad[key];
 	}
 	if(instructions){
-		var idiv=addDiv(container._frame,['_task']);
-		//container._instructions.innerHTML+='<a onclick="removeInstructions(this.parentElement)" style="right:2px;position:absolute">[X]</a>'
-		idiv.innerHTML+='Instructions (click to dismiss):\n<ul>'+instructions+'</ul>';
-		container._frame.classList.add('hasInstructions');
+		var idiv=addDiv(container,['_task']);
+		idiv.innerHTML+='<b>Instructions</b> (click to dismiss):\n<ul>'+instructions+'</ul>';
+		container._key.classList.add('hasInstructions');
+		//container._key.style.cssText='margin-bottom:0px;border-left:solid 1px gray;background-color:white';
+		idiv.style.cssText='margin-top:0px;margin-left:0px;border-radius:0px 0px 5px 5px;border-top:none';
 		idiv.onclick=function(){
-			container._frame.classList.remove('hasInstructions');
+			container._key.classList.remove('hasInstructions');
 			idiv.remove();
 		};
 	}
@@ -619,6 +621,7 @@ function processState(data,container,level){
 						child._specialElement=child._type;
 						child._specialOptions={};
 					}
+					child._key.innerHTML=displaykey;
 					taskInstructions(key,displaykey,child);
 					container._childmap[key]=child;
 				}else if(child._type!==typeofval && !(compatible[typeofval] && (child._type in compatible[typeofval])) && !(typeofval==='object' && !isState(data[key]))){
@@ -626,7 +629,6 @@ function processState(data,container,level){
 					if(child._type in specialElements)child._specialElement=child._type;
 					child._specialOptions={};
 				}
-				child._key.innerHTML=displaykey;
 				processOptions(data[key],child);
 				elementTypes[child._type](data[key],child,level+1);
 			}
