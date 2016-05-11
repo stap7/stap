@@ -1,104 +1,51 @@
-/*base template for STAP visualizationualization
+/*base template for STAP visualization
+	HOST and PORT parameters should indicate location of a STAP websocket service
+
 
 BUG:
 	number seems to be allowed to be out of numspec bounds
 
 TODO for latest STAP release:
-	add _vis, _tb, _i+, _i*, _., _task
+	add _tb, _i+, _i*, _., _task
+	add start, end, cap options to _ln
 */
+
+
+required=[
+	"lib/stap.css",
+	// "https://cdn.jsdelivr.net/js-sha1/0.3.0/sha1.min.js",
+	// "https://cdnjs.cloudflare.com/ajax/libs/datejs/1.0/date.min.js",
+	// "https://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.4/TweenLite.min.js",
+	// "https://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.4/easing/EasePack.min.js",
+	// "https://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.4/plugins/AttrPlugin.min.js",
+	// "https://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.4/plugins/CSSPlugin.min.js",
+	// "https://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.4/plugins/ColorPropsPlugin.min.js",
+	// "https://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.4/plugins/TextPlugin.min.js"
+	"lib/gsap/TweenLite.min.js",
+	"lib/gsap/easing/EasePack.min.js",
+	"lib/gsap/plugins/AttrPlugin.min.js",
+	"lib/gsap/plugins/CSSPlugin.min.js",
+	"lib/gsap/plugins/ColorPropsPlugin.min.js",
+	"lib/gsap/plugins/TextPlugin.min.js"
+];
+
+
 
 //////////////////////////////////////////////////////////////////////////////
 // helper functions
 dp=function(s){console.log(typeof(s)=="string"?s:JSON.stringify(s));};
 function round2(n,r){return (Math.round(n/r) * r);}
+function sha1(r){function o(r,o){var e=r<<o|r>>>32-o;return e}function e(r){var o,e,a="";for(o=7;o>=0;o--)e=r>>>4*o&15,a+=e.toString(16);return a}function a(r){r=r.replace(/\r\n/g,"\n");for(var o="",e=0;e<r.length;e++){var a=r.charCodeAt(e);128>a?o+=String.fromCharCode(a):a>127&&2048>a?(o+=String.fromCharCode(a>>6|192),o+=String.fromCharCode(63&a|128)):(o+=String.fromCharCode(a>>12|224),o+=String.fromCharCode(a>>6&63|128),o+=String.fromCharCode(63&a|128))}return o}var t,h,n,C,c,f,d,A,u,g=new Array(80),i=1732584193,s=4023233417,S=2562383102,v=271733878,m=3285377520;r=a(r);var p=r.length,l=new Array;for(h=0;p-3>h;h+=4)n=r.charCodeAt(h)<<24|r.charCodeAt(h+1)<<16|r.charCodeAt(h+2)<<8|r.charCodeAt(h+3),l.push(n);switch(p%4){case 0:h=2147483648;break;case 1:h=r.charCodeAt(p-1)<<24|8388608;break;case 2:h=r.charCodeAt(p-2)<<24|r.charCodeAt(p-1)<<16|32768;break;case 3:h=r.charCodeAt(p-3)<<24|r.charCodeAt(p-2)<<16|r.charCodeAt(p-1)<<8|128}for(l.push(h);l.length%16!=14;)l.push(0);for(l.push(p>>>29),l.push(p<<3&4294967295),t=0;t<l.length;t+=16){for(h=0;16>h;h++)g[h]=l[t+h];for(h=16;79>=h;h++)g[h]=o(g[h-3]^g[h-8]^g[h-14]^g[h-16],1);for(C=i,c=s,f=S,d=v,A=m,h=0;19>=h;h++)u=o(C,5)+(c&f|~c&d)+A+g[h]+1518500249&4294967295,A=d,d=f,f=o(c,30),c=C,C=u;for(h=20;39>=h;h++)u=o(C,5)+(c^f^d)+A+g[h]+1859775393&4294967295,A=d,d=f,f=o(c,30),c=C,C=u;for(h=40;59>=h;h++)u=o(C,5)+(c&f|c&d|f&d)+A+g[h]+2400959708&4294967295,A=d,d=f,f=o(c,30),c=C,C=u;for(h=60;79>=h;h++)u=o(C,5)+(c^f^d)+A+g[h]+3395469782&4294967295,A=d,d=f,f=o(c,30),c=C,C=u;i=i+C&4294967295,s=s+c&4294967295,S=S+f&4294967295,v=v+d&4294967295,m=m+A&4294967295}var u=e(i)+e(s)+e(S)+e(v)+e(m);return u.toLowerCase()}
+function formatDate(e,a,r){function g(e,a){var r=e+"";for(a=a||2;r.length<a;)r="0"+r;return r}var t=["\x00","January","February","March","April","May","June","July","August","September","October","November","December"],c=["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],l=["","Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],p=["","Sun","Mon","Tue","Wed","Thu","Fri","Sat"],n=r?e.getUTCFullYear():e.getFullYear();a=a.replace(/(^|[^\\])yyyy+/g,"$1"+n),a=a.replace(/(^|[^\\])yy/g,"$1"+n.toString().substr(2,2)),a=a.replace(/(^|[^\\])y/g,"$1"+n);var u=(r?e.getUTCMonth():e.getMonth())+1;a=a.replace(/(^|[^\\])MMMM+/g,"$1"+t[0]),a=a.replace(/(^|[^\\])MMM/g,"$1"+c[0]),a=a.replace(/(^|[^\\])MM/g,"$1"+g(u)),a=a.replace(/(^|[^\\])M/g,"$1"+u);var M=r?e.getUTCDate():e.getDate();a=a.replace(/(^|[^\\])dddd+/g,"$1"+l[0]),a=a.replace(/(^|[^\\])ddd/g,"$1"+p[0]),a=a.replace(/(^|[^\\])dd/g,"$1"+g(M)),a=a.replace(/(^|[^\\])d/g,"$1"+M);var $=r?e.getUTCHours():e.getHours();a=a.replace(/(^|[^\\])HH+/g,"$1"+g($)),a=a.replace(/(^|[^\\])H/g,"$1"+$);var d=$>12?$-12:0==$?12:$;a=a.replace(/(^|[^\\])hh+/g,"$1"+g(d)),a=a.replace(/(^|[^\\])h/g,"$1"+d);var o=r?e.getUTCMinutes():e.getMinutes();a=a.replace(/(^|[^\\])mm+/g,"$1"+g(o)),a=a.replace(/(^|[^\\])m/g,"$1"+o);var s=r?e.getUTCSeconds():e.getSeconds();a=a.replace(/(^|[^\\])ss+/g,"$1"+g(s)),a=a.replace(/(^|[^\\])s/g,"$1"+s);var y=r?e.getUTCMilliseconds():e.getMilliseconds();a=a.replace(/(^|[^\\])fff+/g,"$1"+g(y,3)),y=Math.round(y/10),a=a.replace(/(^|[^\\])ff/g,"$1"+g(y)),y=Math.round(y/10),a=a.replace(/(^|[^\\])f/g,"$1"+y);var v=12>$?"AM":"PM";a=a.replace(/(^|[^\\])TT+/g,"$1"+v),a=a.replace(/(^|[^\\])T/g,"$1"+v.charAt(0));var T=v.toLowerCase();a=a.replace(/(^|[^\\])tt+/g,"$1"+T),a=a.replace(/(^|[^\\])t/g,"$1"+T.charAt(0));var h=-e.getTimezoneOffset(),f=r||!h?"Z":h>0?"+":"-";if(!r){h=Math.abs(h);var i=Math.floor(h/60),C=h%60;f+=g(i)+":"+g(C)}a=a.replace(/(^|[^\\])K/g,"$1"+f);var S=(r?e.getUTCDay():e.getDay())+1;return a=a.replace(new RegExp(l[0],"g"),l[S]),a=a.replace(new RegExp(p[0],"g"),p[S]),a=a.replace(new RegExp(t[0],"g"),t[u]),a=a.replace(new RegExp(c[0],"g"),c[u]),a=a.replace(/\\(.)/g,"$1")}
+Date.prototype.toString=function (format){return formatDate(this, format);};
 if(String.prototype.startsWith===undefined)String.prototype.startsWith=function(prefix){return this.slice(0,prefix.length)===prefix;};
 if(String.prototype.endsWith===undefined)String.prototype.endsWith=function(suffix){return this.slice(this.length-suffix.length)===suffix;};
-String.prototype.replaceAll = function(search, replacement) {
-	return this.split(search).join(replacement);
-};
-Date.prototype.format = function (format, utc){return formatDate(this, format, utc);};
-TIMEZONEOFFSET=new Date().getTimezoneOffset()* 60000
-function formatDate(date, format, utc){
-	var MMMM = ["\x00", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-	var MMM = ["\x01", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-	var dddd = ["\x02", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-	var ddd = ["\x03", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-	function ii(i, len) { var s = i + ""; len = len || 2; while (s.length < len) s = "0" + s; return s; }
- 
-	var y = utc ? date.getUTCFullYear() : date.getFullYear();
-	format = format.replace(/(^|[^\\])yyyy+/g, "$1" + y);
-	format = format.replace(/(^|[^\\])yy/g, "$1" + y.toString().substr(2, 2));
-	format = format.replace(/(^|[^\\])y/g, "$1" + y);
- 
-	var M = (utc ? date.getUTCMonth() : date.getMonth()) + 1;
-	format = format.replace(/(^|[^\\])MMMM+/g, "$1" + MMMM[0]);
-	format = format.replace(/(^|[^\\])MMM/g, "$1" + MMM[0]);
-	format = format.replace(/(^|[^\\])MM/g, "$1" + ii(M));
-	format = format.replace(/(^|[^\\])M/g, "$1" + M);
- 
-	var d = utc ? date.getUTCDate() : date.getDate();
-	format = format.replace(/(^|[^\\])dddd+/g, "$1" + dddd[0]);
-	format = format.replace(/(^|[^\\])ddd/g, "$1" + ddd[0]);
-	format = format.replace(/(^|[^\\])dd/g, "$1" + ii(d));
-	format = format.replace(/(^|[^\\])d/g, "$1" + d);
- 
-	var H = utc ? date.getUTCHours() : date.getHours();
-	format = format.replace(/(^|[^\\])HH+/g, "$1" + ii(H));
-	format = format.replace(/(^|[^\\])H/g, "$1" + H);
- 
-	var h = H > 12 ? H - 12 : H == 0 ? 12 : H;
-	format = format.replace(/(^|[^\\])hh+/g, "$1" + ii(h));
-	format = format.replace(/(^|[^\\])h/g, "$1" + h);
- 
-	var m = utc ? date.getUTCMinutes() : date.getMinutes();
-	format = format.replace(/(^|[^\\])mm+/g, "$1" + ii(m));
-	format = format.replace(/(^|[^\\])m/g, "$1" + m);
- 
-	var s = utc ? date.getUTCSeconds() : date.getSeconds();
-	format = format.replace(/(^|[^\\])ss+/g, "$1" + ii(s));
-	format = format.replace(/(^|[^\\])s/g, "$1" + s);
- 
-	var f = utc ? date.getUTCMilliseconds() : date.getMilliseconds();
-	format = format.replace(/(^|[^\\])fff+/g, "$1" + ii(f, 3));
-	f = Math.round(f / 10);
-	format = format.replace(/(^|[^\\])ff/g, "$1" + ii(f));
-	f = Math.round(f / 10);
-	format = format.replace(/(^|[^\\])f/g, "$1" + f);
- 
-	var T = H < 12 ? "AM" : "PM";
-	format = format.replace(/(^|[^\\])TT+/g, "$1" + T);
-	format = format.replace(/(^|[^\\])T/g, "$1" + T.charAt(0));
- 
-	var t = T.toLowerCase();
-	format = format.replace(/(^|[^\\])tt+/g, "$1" + t);
-	format = format.replace(/(^|[^\\])t/g, "$1" + t.charAt(0));
- 
-	var tz = -date.getTimezoneOffset();
-	var K = utc || !tz ? "Z" : tz > 0 ? "+" : "-";
-	if (!utc)
-	{
-		tz = Math.abs(tz);
-		var tzHrs = Math.floor(tz / 60);
-		var tzMin = tz % 60;
-		K += ii(tzHrs) + ":" + ii(tzMin);
-	}
-	format = format.replace(/(^|[^\\])K/g, "$1" + K);
- 
-	var day = (utc ? date.getUTCDay() : date.getDay()) + 1;
-	format = format.replace(new RegExp(dddd[0], "g"), dddd[day]);
-	format = format.replace(new RegExp(ddd[0], "g"), ddd[day]);
- 
-	format = format.replace(new RegExp(MMMM[0], "g"), MMMM[M]);
-	format = format.replace(new RegExp(MMM[0], "g"), MMM[M]);
- 
-	format = format.replace(/\\(.)/g, "$1");
- 
-	return format;
-};
+String.prototype.replaceAll=function(search,replacement){return this.split(search).join(replacement);};
 function firstkey(obj){return Object.keys(obj)[0];}
 function set(a){var o={};for(var key in a)o[a[key]]="";return o;}
 function find1common(obj1,obj2){
-	for(key in obj1)if(obj2.hasOwnProperty(key))return key;
+	for(key in obj1)
+		if(obj2.hasOwnProperty(key))return key;
 	return false;
 }
 function objectify(o){
@@ -131,7 +78,7 @@ function loadURLs(urls, callback){
 	document.getElementsByTagName('head')[0].appendChild(fileref);
 }
 //////////////////////////////////////////////////////////////////////////////
- 
+
 var BTNUP=1,
 	BTNDOWN=2,
 	CLICK=3,
@@ -147,31 +94,32 @@ var ONSUBMIT_NOTHING=1,
 
 var PORT=location.search.substr(1)||8719;
 var HOST=location.hostname || "localhost";
-//var HOST="eloi.ncsa.illinois.edu";
 
+var TIMEZONEOFFSET=new Date(0).getTimezoneOffset()* 60000;
 var SVGNS="http://www.w3.org/2000/svg";
 var STAP2STYLE={'x':'left','y':'top','w':'width','h':'height','r':'borderRadius','bg':'backgroundColor','bd':'borderStyle','bdw':'borderWidth','bdc':'borderColor','pad':'padding','fnt':'font','col':'color','rot':'rotation'};
 var PXSTYLE=set(['x','y','w','h','r']);
-var EASE;//defined after GSAP loads
+var EASE={0:'Power0',1:'Power1',2:'Power2',3:'Power3',4:'Power4',back:'Back',elastic:'Elastic',bounce:'Bounce'};
 
-var ws,maindiv,msgTimeouts={},txtReplace={};
+
+var ws,maindiv,ppdiv,taskOptions={win:{},loss:{},end:{},good:{},bad:{}},visOptions={},msgTimeouts={},txtReplace={};
 
 
 //////////////////////////////////////////////////////////////////////////////
- 
+
 function replaceShorthand(s){
 	for(var shorthand in txtReplace){
 		s=s.replaceAll(shorthand,txtReplace[shorthand]);
 	}
 	return s;
 }
- 
+
 function addDiv(container,classes){
 	var c=container.appendChild(document.createElement('div'));
 	for(var i=0;i<classes.length;++i)c.classList.add(classes[i].replace(/[^\w-_]/gi, '_'));
 	return c;
 }
- 
+
 function addDivs(container,type,level,key){
 	if(type=='_ln_child'){
 		var path=container.parentElement.svg.appendChild(document.createElementNS(SVGNS,'path'));
@@ -225,7 +173,7 @@ function addDivs(container,type,level,key){
 		return c;
 	}
 }
- 
+
 function sendAction(element,val){
 	var action={};
 	action[element.id || element]=val;
@@ -243,7 +191,7 @@ function getEaseSpec(options){
 	var easeSpec=Linear.easeNone;
 	if(typeof(options)==='object'){
 		var ease=Linear;
-		if(options.ease)ease=EASE[options.ease];
+		if(options.ease)ease=window[EASE[options.ease]];
 		if(options.easeout==-1)easeSpec=ease.easeIn;
 		else if(options.easeout==0)easeSpec=ease.easeInOut;
 		else easeSpec=ease.easeOut;
@@ -300,7 +248,7 @@ function setDivOptions(div,options){
 		else if('webkitTransform' in document.body.style)
 			div.style.setProperty('-webkit-transform','rotate('+options.rot+'deg)');*/
 }
- 
+
 function makeMarker(path,end,markerType,width){
 	if(markerType==='arrow' || markerType==='circle' || markerType==='square'){
 		path.setAttribute('marker-'+end,'url(#marker'+markerType+')');
@@ -308,7 +256,7 @@ function makeMarker(path,end,markerType,width){
 		path.setAttribute('marker-'+end,'none');
 	}
 }
- 
+
 function setPathOptions(path,options){
 	// <marker id="markerCircle" markerWidth="8" markerHeight="8" refX="5" refY="5">
 		// <circle cx="5" cy="5" r="3" style="stroke: none; fill:#000000;"/>
@@ -327,17 +275,17 @@ function setPathOptions(path,options){
 	if(options.hasOwnProperty('start'))makeMarker(path,'start',options.start);
 	if(options.hasOwnProperty('end'))makeMarker(path,'end',options.end);
 }
- 
+
 function sendText(e){
 	if(e.target.innerHTML!==e.target._oldInnerHTML){
 		if('pwd' in e.target.parentElement._specialOptions)
-			sendAction(e.target.parentElement, SHA1(e.target.parentElement._specialOptions.pwd+e.target.innerText));
+			sendAction(e.target.parentElement, sha1(e.target.parentElement._specialOptions.pwd+e.target.innerText));
 		else
 			sendAction(e.target.parentElement,e.target.innerHTML);
 		e.target._oldInnerHTML=e.target.innerHTML;
 	}
 }
- 
+
 function addEvents(container,events){
 	for(var i in events){
 		if(events[i]==CLICK){
@@ -430,7 +378,7 @@ elementTypes={
 		if(numspec.unit){
 			data=(numspec.unit=='$')?'$'+data:data+''+numspec.unit;
 		}else if(numspec.time){
-			data=new Date(1000*data).format(numspec.time);
+			data=new Date(1000*data+TIMEZONEOFFSET).toString(numspec.time);
 		}
 		if(numspec.hasOwnProperty('<=') && numspec.hasOwnProperty('>=')){
 			if(!container._progressbar){
@@ -541,6 +489,55 @@ compatible={
 	'boolean':set(['_i1_child','_i2_child']),
 }
 
+function taskInstructions(key,displaykey,container){
+	var instructions="";
+	if(key in taskOptions.win){
+		instructions+="<li>When the value above is "+taskOptions.win[key]+", you win.\n";
+		delete taskOptions.win[key];
+	}
+	if(key in taskOptions.loss){
+		instructions+="<li>When the value above is "+taskOptions.loss[key]+", you lose.\n";
+		delete taskOptions.loss[key];
+	}
+	if(key in taskOptions.end){
+		instructions+="<li>When the value above is "+taskOptions.end[key]+", the task ends.\n";
+		delete taskOptions.end[key];
+	}
+	if(key in taskOptions.good){
+		if(taskOptions.good[key]=='+')
+			instructions+="<li>The higher the value above is, the better.\n";
+		else if(taskOptions.good[key]=='-')
+			instructions+="<li>The lower the value above is, the better.\n";
+		else if(typeof(taskOptions.good[key])==='string') 
+			instructions+='<li>Try to get the value above to be "'+taskOptions.good[key]+'".\n';
+		else
+			instructions+="<li>Keep the value above as close to "+taskOptions.good[key]+" as possible.\n";
+		delete taskOptions.good[key];
+	}
+	if(key in taskOptions.bad){
+		if(taskOptions.bad[key]=='+')
+			instructions+="<li>Higher values here are bad.\n";
+		else if(taskOptions.bad[key]=='-')
+			instructions+="<li>Lower values here are bad.\n";
+		else if(typeof(taskOptions.bad[key])==='string') 
+			instructions+='<li>Try to make sure the value above is never "'+taskOptions.bad[key]+'".\n';
+		else
+			instructions+="<li>Keep the value above as far from "+taskOptions.bad[key]+" as possible.\n";
+		delete taskOptions.bad[key];
+	}
+	if(instructions){
+		var idiv=addDiv(container._frame,['_task']);
+		//container._instructions.innerHTML+='<a onclick="removeInstructions(this.parentElement)" style="right:2px;position:absolute">[X]</a>'
+		idiv.innerHTML+='Instructions (click to dismiss):\n<ul>'+instructions+'</ul>';
+		container._frame.classList.add('hasInstructions');
+		idiv.onclick=function(){
+			container._frame.classList.remove('hasInstructions');
+			idiv.remove();
+		};
+	}
+}
+
+
 function isState(o){
 	for(var subkey in o){
 		if(!key.startsWith('_')) return true;
@@ -613,7 +610,7 @@ function processState(data,container,level){
 				if(data[key]===undefined)data[key]="";
 				if(container._specialElement)typeofval=container._specialElement+"_child";
 				else typeofval=getType(data[key]);
-				displaykey=key.startsWith('#')?'':replaceShorthand(key.trim());
+				displaykey=(key.startsWith('#')||typeofval==="_ln_child")?'':replaceShorthand(key.trim());
 				if(child===undefined){ //new child
 					if(typeofval==='object' && data[key].hasOwnProperty("_nm") && !isState(data[key]))
 						typeofval="number";
@@ -622,22 +619,21 @@ function processState(data,container,level){
 						child._specialElement=child._type;
 						child._specialOptions={};
 					}
-					if(typeofval!="_ln_child"){
-						child._key.innerHTML=displaykey;
-					}
+					taskInstructions(key,displaykey,child);
 					container._childmap[key]=child;
 				}else if(child._type!==typeofval && !(compatible[typeofval] && (child._type in compatible[typeofval])) && !(typeofval==='object' && !isState(data[key]))){
 					child._setclass(typeofval);
 					if(child._type in specialElements)child._specialElement=child._type;
 					child._specialOptions={};
 				}
+				child._key.innerHTML=displaykey;
 				processOptions(data[key],child);
 				elementTypes[child._type](data[key],child,level+1);
 			}
 		}
 	}
 }
- 
+
 function processData(data){
 	dp({"->":data});
 	// process special root directives
@@ -647,10 +643,7 @@ function processData(data){
 		data={};
 		data["#"+Object.keys(maindiv._childmap).length]=txt;
 	}
-	if(data.hasOwnProperty('_error')){
-		dp({'ERROR':data._error});
-		delete data._error;
-	}
+	if(data.hasOwnProperty('_error')){dp({'ERROR':data._error});delete data._error;}
 	if(data.hasOwnProperty('_clientinfo')){
 		var reply={};
 		for(var i=0;i<data['_clientinfo'].length;++i){
@@ -685,7 +678,12 @@ function processData(data){
 		}
 		delete data._replace;
 	}
-	if(data.hasOwnProperty('_task')){/*TODO*/}
+	if(data.hasOwnProperty('_vis')){Object.assign(visOptions,data._vis);delete data._vis;}
+	if(data.hasOwnProperty('_task')){
+		for(var key in data._task)
+			Object.assign(taskOptions[key],data._task[key]);
+		delete data._task;
+	}
 	if(data.hasOwnProperty('_W')){
 		var waitID,wait;
 		if(typeof(data._W)=='number')wait=data._W;
@@ -742,62 +740,48 @@ function processData(data){
 	processOptions(maindiv,data);
 	//process state
 	processState(data,maindiv,0);
+	if(visOptions.scrolldown)window.scrollTo(0,document.body.scrollHeight);
 }
- 
+
 function processMsg(msg){
 	processData(JSON.parse(msg.data));
 }
- 
+
 function initMarkers(){
-	document.body.innerHTML='<svg width=0 height=0>\
-		<defs>\
-			<marker id="markercircle" markerWidth="2" markerHeight="2" refX="1" refY="1" markerUnits="strokeWidth">\
-				<circle cx="1" cy="1" r="1" style="stroke: none; fill:#000000;"/>\
-			</marker>\
-			<marker id="markersquare" markerWidth="2" markerHeight="2" refX="1" refY="1" orient="auto" markerUnits="strokeWidth">\
-				<rect x="0" y="0" width="2" height="2" style="stroke: none; fill:#000000;"/>\
-			</marker>\
-			<marker id="markerarrow2" markerWidth="4" markerHeight="3" refX="4" refY="1"\
-				   orient="auto" markerUnits="strokeWidth">\
-				<path d="M0,0 L0,2 L3,1 L0,0" style="fill: #000000;" />\
-			</marker>\
-			<marker id="markerarrow" markerWidth="5" markerHeight="5" refX="2" refY="2"\
-				   orient="auto" markerUnits="strokeWidth" fill-rule="currentColor">\
-				<path d="M0,0 L0,4 L4,2 L0,0"  />\
-			</marker>\
-		</defs>\
-		</svg>';
+	document.body.innerHTML=`<svg width=0 height=0>
+		<defs>
+			<marker id="markercircle" markerWidth="2" markerHeight="2" refX="1" refY="1" markerUnits="strokeWidth">
+				<circle cx="1" cy="1" r="1" style="stroke: none; fill:#000000;"/>
+			</marker>
+			<marker id="markersquare" markerWidth="2" markerHeight="2" refX="1" refY="1" orient="auto" markerUnits="strokeWidth">
+				<rect x="0" y="0" width="2" height="2" style="stroke: none; fill:#000000;"/>
+			</marker>
+			<marker id="markerarrow2" markerWidth="4" markerHeight="3" refX="4" refY="1"
+				   orient="auto" markerUnits="strokeWidth">
+				<path d="M0,0 L0,2 L3,1 L0,0" style="fill: #000000;" />
+			</marker>
+			<marker id="markerarrow" markerWidth="5" markerHeight="5" refX="2" refY="2"
+				   orient="auto" markerUnits="strokeWidth" fill-rule="currentColor">
+				<path d="M0,0 L0,4 L4,2 L0,0"  />
+			</marker>
+		</defs>
+		</svg>`;
 }
- 
-function init(){
-	EASE={0:Power0,1:Power1,2:Power2,3:Power3,4:Power4,back:Back,elastic:Elastic,bounce:Bounce};
-	ws=new window.WebSocket('ws://'+HOST+':'+PORT);
-	ws.onerror=function(e){alert(e);};
-	ws.onopen=function(){maindiv._clear();dp('ws connection established.');}
-	//ws.onclose=function(){alert('Connection closed. Goodbye.');}
-	ws.onmessage=processMsg;
-}
- 
+
+
 function main(){
-	loadURLs("lib/stap.css");
 	initMarkers();
 	maindiv=addDivs(document.body,'obj',0,"__main__");
 	ppdiv=addDivs(document.body,'obj',0,"__pp__");
 	ppdiv._hide();
 	ppdiv._parentState=maindiv;
 	processData('Loading...');
-	loadURLs("https://fonts.googleapis.com/icon?family=Material+Icons");
-	loadURLs([
-		//"https://fonts.googleapis.com/icon?family=Material+Icons",
-		"lib/sha1.js",
-		"lib/gsap/TweenLite.min.js",
-		"lib/gsap/easing/EasePack.min.js",
-		"lib/gsap/plugins/CSSPlugin.min.js",
-		"lib/gsap/plugins/ColorPropsPlugin.min.js",
-		"lib/gsap/plugins/AttrPlugin.min.js",
-		"lib/gsap/plugins/TextPlugin.min.js"
-	],init);
+	ws=new window.WebSocket('ws://'+HOST+':'+PORT);
+	ws.onerror=function(e){alert(e);};
+	ws.onopen=function(){maindiv._clear();dp('Connection established.');}
+	ws.onclose=function(){dp('Connection closed.');}
+	ws.onmessage=processMsg;
 }
- 
- 
-onload=main;
+
+
+loadURLs(required,main);

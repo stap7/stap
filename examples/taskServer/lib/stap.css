@@ -14,6 +14,7 @@ div {
     -ms-user-select: none; /* IE10+ */
 	opacity:1;
 }
+ul {margin-left: 10px;margin-right: 0px;padding-left: 15px;padding-right: 5px;}
 
 .lvl_0 {position:relative;padding:0px;margin:0px}
 
@@ -131,6 +132,10 @@ div {
 ._i2_child.key:after {content:""}
 
 ._ix.content {background:white;box-shadow: 0px 0px 5px 1px rgba(79,155,247,1);height:1em;}
+
+._task {background:white;border:solid 1px gray;border-radius:5px;font-size:.8em;font-family:Tahoma;display:block;margin-left:10%;margin-right:10%;}
+.hasInstructions {box-shadow: 0px 0px 5px 1px black;margin:5px}
+/* .hasInstructions {border:solid 1px gray;border-radius:0px 0px 5px 5px;margin:5px} */
 
 .disabled {pointer-events:none; opacity:.5; contenteditable:false}
 
