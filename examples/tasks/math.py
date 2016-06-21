@@ -30,7 +30,7 @@ while 1:
 	#send feedback
 	send( {"#feedback": ["Correct" if answer==str(x+y) else "Incorrect"] } )
 	#tell participant sw to set a timer for 500ms and then respond
-	send( {"_W":{"":.5}} )
+	send( {"_W":{"":1}} )
 	#wait for participant sw to respond
 	recv()
 	#clear the screen

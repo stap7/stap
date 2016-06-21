@@ -37,8 +37,8 @@ def main():
 	send({"_replace":{"OBJ":"Is this object a Greeble or a Groble?"}})
 	#let participant know that the task will end when the title field Trial reaches its max
 	send({"_task":{
-		"good":{'#feedback':'Correct'},
-		"bad":{'#feedback':'Incorrect'},
+		"good":{'_pp':'Correct'},
+		"bad":{'_pp':'Incorrect'},
 		"end":{'Trial':MAXTRIALS},
 	}})
 	#add trial number element
@@ -61,10 +61,10 @@ def main():
 		#check if correct
 		correctTrials.append(checkCorrect(s,response))
 		#send reward
-		send({"_pp":{'#feedback':'Correct' if correctTrials[-1] else 'Incorrect'}})
+		send({"_pp":'Correct' if correctTrials[-1] else 'Incorrect'})
 		send({"_W":{"wait":.5}})
 		recv()
-		send({"_pp":""})
+		send({"_pp":None})
 	send(None)
 	send('Thank you for your participation.')
 	send({

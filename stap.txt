@@ -15,6 +15,14 @@ Examples:
     Sample Interaction 1:
         // display "Hello World"
         -> "Hello World"
+        // display a ">" prompt with a textbox
+        -> {">":["_ix"]}
+        // user typed "hi" into the textbox
+        <- {">":"hi"}
+
+    Sample Interaction 2:
+        // display "Hello World"
+        -> "Hello World"
         // let client know that a goal in this task is to maximize coins earned
         -> {"_task":{"good":{"Coins Earned":"+"}}}
         // display two buttons
@@ -31,7 +39,7 @@ Examples:
         -> {"Coins Earned":3}
         ...
 
-    Sample Interation 2:
+    Sample Interation 3:
         // display a 100x100 box, with an element inside it that will display red lines
         -> {"click somewhere":{"_bx":{"w":100,"h":100},"_i+":[3],"#lines":{"_ln":{"c":"red"}}}}
         // user clicked in location 24,60 relative to top-left corner of the box
@@ -77,7 +85,7 @@ Definition:
 ->::= null                                                              //clear the display state
 <-::= {(<<key>>:<<actionValue>>,)*}                                     //<<key>> corresponds to an actionable item key (e.g. button panel, textbox)
 <-::= {<<waitID>>|<<tweenID>>:0}                                        //signifies that a requested timeout or animation is finished (or virtually finished for faster-than-real-time computational simulations)
-<-::= {"_error":<<text>>}                                               //error stream
+<-::= {"_error":<<text>>}                                               //error message
 <<state>>::= {(<<key>>:<<element>>,)*}                                  //unordered declaration of key/element pairs
 <<state>>::= [(<<key>>|([<<key>>,<<element>>]),)+]                      //declare key/element pairs in order; if key is specified without an element, and if this key does not exist, set its resepective element to default value (usually "", but could be {} if <<key>> is an <<option>>, or 1 if <<key>> is inside an _i, _i1, or _i2 element)
 <<element>>::= <<state>>|<<text>>|<<number>>|null                       //null signifies key deletion

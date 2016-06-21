@@ -14,7 +14,7 @@ div {
     -ms-user-select: none; /* IE10+ */
 	opacity:1;
 }
-ul {margin-left: 10px;margin-right: 0px;margin-top:0px;margin-bottom:0px;padding-left: 15px;padding-right: 5px;}
+/* ul {margin-left: 10px;margin-right: 0px;margin-top:0px;margin-bottom:0px;padding-left: 15px;padding-right: 5px;} */
 
 .lvl_0 {position:relative;padding:0px;margin:0px}
 
@@ -48,7 +48,8 @@ ul {margin-left: 10px;margin-right: 0px;margin-top:0px;margin-bottom:0px;padding
 .progressbar {display:inline;background-color:rgba(0,255,0,.5);position:absolute;height:100%;left:0px;top:0px}
 .progressval {display:inline;}
 
-._ln {margin:0;padding:0;position:absolute;border:none;left:0px;top:0px;overflow:visible}
+/* ._ln {margin:0;padding:0;position:absolute;border:none;left:0px;top:0px;overflow:visible} */
+._ln {margin:0;padding:0;overflow:visible;border-width:0px;cursor:default}
 
 /* ._tb {} */
 
@@ -134,15 +135,17 @@ ul {margin-left: 10px;margin-right: 0px;margin-top:0px;margin-bottom:0px;padding
 ._ix.content {background:white;box-shadow: 0px 0px 5px 1px rgba(79,155,247,1);height:1em;}
 
 ._task {
-	background:white;
+	position:fixed;
+	left:0px;top:0px;
+	background-color:white;
 	border:solid 1px gray;
-	border-top:solid 0px;
-	border-radius:0px 0px 5px 5px;
-	font-size:.7em;
+	border-radius:5px;
+	font-size:1em;
 	font-family:"Verdana";
 	display:block;
-	margin-top:0px;
-	margin-left:0px;
+	margin:20px;
+	padding:20px;
+	text-align:left;
 }
 .hasInstructions {margin-bottom:0px;border-left:solid 1px gray;background-color:white;border-radius:0px;}
 
@@ -151,16 +154,14 @@ ul {margin-left: 10px;margin-right: 0px;margin-top:0px;margin-bottom:0px;padding
 .xy {margin:0;padding:0;position:absolute;}
 .xy.main {position:absolute;left:0;top:0;width:0;height:0;overflow:visible}
 .xy.frame {position:absolute;left:0;top:0;width:0;height:0;overflow:visible}
-/* .xy.frame {position:absolute;left:0;top:0;right:0;bottom:0;width:100%;height:100%} */
-/* .xy.main {position:absolute;left:0;top:0;right:0;bottom:0;width:100%;height:100%} */
 
 .id___main__.frame {display:table; width:100%; height:100%;}
 .id___main__.main { width:100%; height:100%;}
 .id___main__.content {display:block; background-color:#eff8ff;  width:100%; height:100%;}
 
 .id___pp__.frame { display:table; width:100%; height:100%;left:0;top:0;position:fixed;background-color:rgba(255,255,255,0.6)}
-.id___pp__.main { display:table-cell; vertical-align:middle; text-align:center}
-.id___pp__.content { display:inline-block; background-color:#aabbcc; }
+.id___pp__.main { display:table-cell; vertical-align:middle; text-align:center;}
+.id___pp__.content { display:inline-block; background-color:#aabbcc;  padding:20px; border-radius:10px;}
 
 /* .id__title {position:fixed;left:0px;top:0px;width:100%;} */
 .id__title {background-color:white; font-size:10pt; padding:0; margin:0px; border-radius:0px; display:block; position:relative; top:-5px}

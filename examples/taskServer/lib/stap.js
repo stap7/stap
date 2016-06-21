@@ -2,12 +2,10 @@
 	HOST and PORT parameters should indicate location of a STAP websocket service
 
 
-BUG:
-	number seems to be allowed to be out of numspec bounds
-
 TODO for latest STAP release:
-	add _tb, _i+, _i*, _., _task
-	add start, end, cap options to _ln
+	add _tb, _i*
+	more input options
+	test in diff browsers
 */
 
 
@@ -34,10 +32,10 @@ required=[
 //////////////////////////////////////////////////////////////////////////////
 // helper functions
 dp=function(s){console.log(typeof(s)=="string"?s:JSON.stringify(s));};
-function round2(n,r){return (Math.round(n/r) * r);}
+function round2(n,r){return (Math.round(n/r)*r);}
 function sha1(r){function o(r,o){var e=r<<o|r>>>32-o;return e}function e(r){var o,e,a="";for(o=7;o>=0;o--)e=r>>>4*o&15,a+=e.toString(16);return a}function a(r){r=r.replace(/\r\n/g,"\n");for(var o="",e=0;e<r.length;e++){var a=r.charCodeAt(e);128>a?o+=String.fromCharCode(a):a>127&&2048>a?(o+=String.fromCharCode(a>>6|192),o+=String.fromCharCode(63&a|128)):(o+=String.fromCharCode(a>>12|224),o+=String.fromCharCode(a>>6&63|128),o+=String.fromCharCode(63&a|128))}return o}var t,h,n,C,c,f,d,A,u,g=new Array(80),i=1732584193,s=4023233417,S=2562383102,v=271733878,m=3285377520;r=a(r);var p=r.length,l=new Array;for(h=0;p-3>h;h+=4)n=r.charCodeAt(h)<<24|r.charCodeAt(h+1)<<16|r.charCodeAt(h+2)<<8|r.charCodeAt(h+3),l.push(n);switch(p%4){case 0:h=2147483648;break;case 1:h=r.charCodeAt(p-1)<<24|8388608;break;case 2:h=r.charCodeAt(p-2)<<24|r.charCodeAt(p-1)<<16|32768;break;case 3:h=r.charCodeAt(p-3)<<24|r.charCodeAt(p-2)<<16|r.charCodeAt(p-1)<<8|128}for(l.push(h);l.length%16!=14;)l.push(0);for(l.push(p>>>29),l.push(p<<3&4294967295),t=0;t<l.length;t+=16){for(h=0;16>h;h++)g[h]=l[t+h];for(h=16;79>=h;h++)g[h]=o(g[h-3]^g[h-8]^g[h-14]^g[h-16],1);for(C=i,c=s,f=S,d=v,A=m,h=0;19>=h;h++)u=o(C,5)+(c&f|~c&d)+A+g[h]+1518500249&4294967295,A=d,d=f,f=o(c,30),c=C,C=u;for(h=20;39>=h;h++)u=o(C,5)+(c^f^d)+A+g[h]+1859775393&4294967295,A=d,d=f,f=o(c,30),c=C,C=u;for(h=40;59>=h;h++)u=o(C,5)+(c&f|c&d|f&d)+A+g[h]+2400959708&4294967295,A=d,d=f,f=o(c,30),c=C,C=u;for(h=60;79>=h;h++)u=o(C,5)+(c^f^d)+A+g[h]+3395469782&4294967295,A=d,d=f,f=o(c,30),c=C,C=u;i=i+C&4294967295,s=s+c&4294967295,S=S+f&4294967295,v=v+d&4294967295,m=m+A&4294967295}var u=e(i)+e(s)+e(S)+e(v)+e(m);return u.toLowerCase()}
 function formatDate(e,a,r){function g(e,a){var r=e+"";for(a=a||2;r.length<a;)r="0"+r;return r}var t=["\x00","January","February","March","April","May","June","July","August","September","October","November","December"],c=["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],l=["","Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],p=["","Sun","Mon","Tue","Wed","Thu","Fri","Sat"],n=r?e.getUTCFullYear():e.getFullYear();a=a.replace(/(^|[^\\])yyyy+/g,"$1"+n),a=a.replace(/(^|[^\\])yy/g,"$1"+n.toString().substr(2,2)),a=a.replace(/(^|[^\\])y/g,"$1"+n);var u=(r?e.getUTCMonth():e.getMonth())+1;a=a.replace(/(^|[^\\])MMMM+/g,"$1"+t[0]),a=a.replace(/(^|[^\\])MMM/g,"$1"+c[0]),a=a.replace(/(^|[^\\])MM/g,"$1"+g(u)),a=a.replace(/(^|[^\\])M/g,"$1"+u);var M=r?e.getUTCDate():e.getDate();a=a.replace(/(^|[^\\])dddd+/g,"$1"+l[0]),a=a.replace(/(^|[^\\])ddd/g,"$1"+p[0]),a=a.replace(/(^|[^\\])dd/g,"$1"+g(M)),a=a.replace(/(^|[^\\])d/g,"$1"+M);var $=r?e.getUTCHours():e.getHours();a=a.replace(/(^|[^\\])HH+/g,"$1"+g($)),a=a.replace(/(^|[^\\])H/g,"$1"+$);var d=$>12?$-12:0==$?12:$;a=a.replace(/(^|[^\\])hh+/g,"$1"+g(d)),a=a.replace(/(^|[^\\])h/g,"$1"+d);var o=r?e.getUTCMinutes():e.getMinutes();a=a.replace(/(^|[^\\])mm+/g,"$1"+g(o)),a=a.replace(/(^|[^\\])m/g,"$1"+o);var s=r?e.getUTCSeconds():e.getSeconds();a=a.replace(/(^|[^\\])ss+/g,"$1"+g(s)),a=a.replace(/(^|[^\\])s/g,"$1"+s);var y=r?e.getUTCMilliseconds():e.getMilliseconds();a=a.replace(/(^|[^\\])fff+/g,"$1"+g(y,3)),y=Math.round(y/10),a=a.replace(/(^|[^\\])ff/g,"$1"+g(y)),y=Math.round(y/10),a=a.replace(/(^|[^\\])f/g,"$1"+y);var v=12>$?"AM":"PM";a=a.replace(/(^|[^\\])TT+/g,"$1"+v),a=a.replace(/(^|[^\\])T/g,"$1"+v.charAt(0));var T=v.toLowerCase();a=a.replace(/(^|[^\\])tt+/g,"$1"+T),a=a.replace(/(^|[^\\])t/g,"$1"+T.charAt(0));var h=-e.getTimezoneOffset(),f=r||!h?"Z":h>0?"+":"-";if(!r){h=Math.abs(h);var i=Math.floor(h/60),C=h%60;f+=g(i)+":"+g(C)}a=a.replace(/(^|[^\\])K/g,"$1"+f);var S=(r?e.getUTCDay():e.getDay())+1;return a=a.replace(new RegExp(l[0],"g"),l[S]),a=a.replace(new RegExp(p[0],"g"),p[S]),a=a.replace(new RegExp(t[0],"g"),t[u]),a=a.replace(new RegExp(c[0],"g"),c[u]),a=a.replace(/\\(.)/g,"$1")}
-Date.prototype.toString=function (format){return formatDate(this, format);};
+Date.prototype.toString=function(format){return formatDate(this,format);};
 if(String.prototype.startsWith===undefined)String.prototype.startsWith=function(prefix){return this.slice(0,prefix.length)===prefix;};
 if(String.prototype.endsWith===undefined)String.prototype.endsWith=function(suffix){return this.slice(this.length-suffix.length)===suffix;};
 String.prototype.replaceAll=function(search,replacement){return this.split(search).join(replacement);};
@@ -85,7 +83,10 @@ var BTNUP=1,
 	DBLCLICK=4,
 	MOVE=8,
 	MOUSEENTER=16,
-	MOUSELEAVE=32;
+	MOUSELEAVE=32,
+	KEYDOWN=64,
+	KEYUP=128,
+	KEYPRESS=192;
 
 var ONSUBMIT_NOTHING=1,
 	ONSUBMIT_DISABLE=0,
@@ -98,11 +99,12 @@ var HOST=location.hostname || "localhost";
 var TIMEZONEOFFSET=new Date(0).getTimezoneOffset()* 60000;
 var SVGNS="http://www.w3.org/2000/svg";
 var STAP2STYLE={'x':'left','y':'top','w':'width','h':'height','r':'borderRadius','bg':'backgroundColor','bd':'borderStyle','bdw':'borderWidth','bdc':'borderColor','pad':'padding','fnt':'font','col':'color','rot':'rotation'};
+var STAP2STROKE={f:'fill',c:'stroke',w:'stroke-width',start:'marker-start',end:'marker-end',cap:'stroke-linecap',dash:'stroke-dasharray'};
 var PXSTYLE=set(['x','y','w','h','r']);
 var EASE={0:'Power0',1:'Power1',2:'Power2',3:'Power3',4:'Power4',back:'Back',elastic:'Elastic',bounce:'Bounce'};
 
 
-var ws,maindiv,ppdiv,taskOptions={win:{},loss:{},end:{},good:{},bad:{}},visOptions={},msgTimeouts={},txtReplace={};
+var ws,maindiv,ppdiv,markerdefs,elements={},taskOptions={win:{},loss:{},end:{},good:{},bad:{}},visOptions={},msgTimeouts={},txtReplace={};
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -121,16 +123,13 @@ function addDiv(container,classes){
 }
 
 function addDivs(container,type,level,key){
+	var c;
 	if(type=='_ln_child'){
-		var path=container.parentElement.svg.appendChild(document.createElementNS(SVGNS,'path'));
-		path._type='_ln_child';
-		path.setAttribute('stroke-width',1);
-		path.setAttribute('stroke','black');
-		path.setAttribute('fill','none');
-		return path;
+		c=container.parentElement._svgg.appendChild(document.createElementNS(SVGNS,'path'));
+		c._type='_ln_child';
 	}else{
 		var cf=addDiv(container,[type,'lvl_'+level,'id_'+key,'frame']);
-		var c=addDiv(cf,[type,'lvl_'+level,'id_'+key,'main']);
+		c=addDiv(cf,[type,'lvl_'+level,'id_'+key,'main']);
 		c._frame=cf;
 		c._parentState=container.parentElement;
 		c._key=addDiv(c,[type,'lvl_'+level,'id_'+key,'key']);
@@ -170,21 +169,9 @@ function addDivs(container,type,level,key){
 			c._content.classList.add(cls);
 			c._type=cls;
 		};
-		return c;
 	}
-}
-
-function sendAction(element,val){
-	var action={};
-	action[element.id || element]=val;
-	ws.send(JSON.stringify(action));
-	dp({'<-':action});
-	//console.log(element,element._specialOptions);
-	//dp(typeof(element));
-	if(typeof(element)==="object" && "onsubmit" in element._specialOptions){
-		if(element._specialOptions.onsubmit==ONSUBMIT_DISABLE)element.classList.add('disabled');
-		else if(element._specialOptions.onsubmit==ONSUBMIT_CLEAR)element._clear()
-	}
+	elements[key]=c;
+	return c;
 }
 
 function getEaseSpec(options){
@@ -197,6 +184,64 @@ function getEaseSpec(options){
 		else easeSpec=ease.easeOut;
 	}
 	return easeSpec;
+}
+
+function getMarker(type,color){
+	var id,d;
+	if(type==='arrow' || type==='circle' || type==='square'){
+		id='marker.'+type+'.'+color;
+		if(!document.getElementById(id)){
+			var m=markerdefs.appendChild(document.createElementNS(SVGNS,'marker'));
+			m.id=id;
+			m.setAttribute('orient','auto');
+			m.setAttribute('markerUnits','strokeWidth');
+			m.setAttribute('refX','1');
+			if(type==='arrow'){
+				m.setAttribute('viewBox','0 0 10 10');
+				m.setAttribute('refY','5');
+				m.setAttribute('markerWidth','4');
+				m.setAttribute('markerHeight','3');
+				d=m.appendChild(document.createElementNS(SVGNS,'path'));
+				d.setAttribute('d',"M 0 0 L 10 5 L 0 10 z");
+			}else{
+				m.setAttribute('refY','1');
+				m.setAttribute('markerWidth','2');
+				m.setAttribute('markerHeight','2');
+				if(type==='square'){
+					d=m.appendChild(document.createElementNS(SVGNS,'rect'));
+					d.setAttribute('x','0');
+					d.setAttribute('y','0');
+					d.setAttribute('width','2');
+					d.setAttribute('height','2');
+				}else if(type==='circle'){
+					d=m.appendChild(document.createElementNS(SVGNS,'circle'));
+					d.setAttribute('cx','1');
+					d.setAttribute('cy','1');
+					d.setAttribute('r','1');
+				}
+			}
+			d.setAttribute('fill',color);
+		}
+		id='url(#'+id+')';
+	}
+	else id='';
+	return id;
+}
+
+function setPathOptions(path,options){
+	if(options.hasOwnProperty('w'))path.setAttribute('stroke-width',options.w);
+	if(options.hasOwnProperty('c')){
+		path.setAttribute('stroke',options.c);
+		if(!options.hasOwnProperty('start') && path.getAttribute('marker-start'))
+			path.setAttribute('marker-start',getMarker(path.getAttribute('marker-start').split('.')[1],options.c));
+		if(!options.hasOwnProperty('end') && path.getAttribute('marker-end'))
+			path.setAttribute('marker-end',getMarker(path.getAttribute('marker-end').split('.')[1],options.c));
+	}
+	if(options.hasOwnProperty('f'))path.setAttribute('fill',options.f);
+	if(options.hasOwnProperty('cap'))path.setAttribute('stroke-linecap',options.cap);
+	if(options.hasOwnProperty('dash'))path.setAttribute('stroke-dasharray',options.dash);
+	if(options.hasOwnProperty('start'))path.setAttribute('marker-start',getMarker(options.start,path.getAttribute('stroke')));
+	if(options.hasOwnProperty('end'))path.setAttribute('marker-end',getMarker(options.end,path.getAttribute('stroke')));
 }
 
 function setDivOptions(div,options){
@@ -218,11 +263,15 @@ function setDivOptions(div,options){
 	}else{
 		if(options.hasOwnProperty('w')){
 			div.style.width=options.w;
-			//div.svg.setAttribute('width',options.w);
+			if(div.parentElement._svg){
+				div.parentElement._svg.setAttribute('width',options.w);
+			}
 		}
 		if(options.hasOwnProperty('h')){
 			div.style.height=options.h;
-			//div.svg.setAttribute('height',options.h);
+			if(div.parentElement._svg){
+				div.parentElement._svg.setAttribute('height',options.h);
+			}
 		}
 		if(options.hasOwnProperty('x'))div.style.left=options.x;
 		if(options.hasOwnProperty('y')){
@@ -249,31 +298,17 @@ function setDivOptions(div,options){
 			div.style.setProperty('-webkit-transform','rotate('+options.rot+'deg)');*/
 }
 
-function makeMarker(path,end,markerType,width){
-	if(markerType==='arrow' || markerType==='circle' || markerType==='square'){
-		path.setAttribute('marker-'+end,'url(#marker'+markerType+')');
-	}else{
-		path.setAttribute('marker-'+end,'none');
+function sendAction(element,val){
+	var action={};
+	action[element.id || element]=val;
+	ws.send(JSON.stringify(action));
+	dp({'<-':action});
+	//console.log(element,element._specialOptions);
+	//dp(typeof(element));
+	if(typeof(element)==="object" && "onsubmit" in element._specialOptions){
+		if(element._specialOptions.onsubmit==ONSUBMIT_DISABLE)element.classList.add('disabled');
+		else if(element._specialOptions.onsubmit==ONSUBMIT_CLEAR)element._clear()
 	}
-}
-
-function setPathOptions(path,options){
-	// <marker id="markerCircle" markerWidth="8" markerHeight="8" refX="5" refY="5">
-		// <circle cx="5" cy="5" r="3" style="stroke: none; fill:#000000;"/>
-	// </marker>
- 
-	// <marker id="markerArrow" markerWidth="13" markerHeight="13" refX="2" refY="6"
-		   // orient="auto">
-		// <path d="M2,2 L2,11 L10,6 L2,2" style="fill: #000000;" />
-	// </marker>
-	var width=options.w || 1;
-	path.setAttribute('stroke-width',width);
-	path.setAttribute('stroke',options.c || 'black');
-	path.setAttribute('fill',options.f || 'none');
-	if(options.hasOwnProperty('cap'))path.setAttribute('stroke-linecap',options.cap);
-	if(options.hasOwnProperty('dash'))path.setAttribute('stroke-dasharray',options.dash);
-	if(options.hasOwnProperty('start'))makeMarker(path,'start',options.start);
-	if(options.hasOwnProperty('end'))makeMarker(path,'end',options.end);
 }
 
 function sendText(e){
@@ -303,6 +338,7 @@ function addEvents(container,events){
 				var rect = container.getBoundingClientRect();
 				sendAction(container.parentElement.id,[BTNDOWN,e.clientX-rect.left,e.clientY-rect.top]);
 			};
+		}else if(events[i]==BTNUP){
 			container.onmouseup=function(e){
 				var rect = container.getBoundingClientRect();
 				sendAction(container.parentElement.id,[BTNUP,e.clientX-rect.left,e.clientY-rect.top]);
@@ -310,7 +346,7 @@ function addEvents(container,events){
 		}else if(events[i]==MOVE){
 			container.onmousemove=function(e){
 				var rect = container.getBoundingClientRect();
-				sendAction(container.parentElement.id,[e.clientX-rect.left,e.clientY-rect.top]);
+				sendAction(container.parentElement.id,[MOVE,e.clientX-rect.left,e.clientY-rect.top]);
 			};
 		}else if(events[i]==MOUSEENTER){
 			container.onmouseenter=function(e){
@@ -321,6 +357,21 @@ function addEvents(container,events){
 			container.onmouseleave=function(e){
 				var rect = container.getBoundingClientRect();
 				sendAction(container.parentElement.id,[MOUSELEAVE,e.clientX-rect.left,e.clientY-rect.top]);
+			};
+		}else if(events[i]==KEYDOWN){
+			container.onkeydown=function(e){
+				var rect = container.getBoundingClientRect();
+				sendAction(container.parentElement.id,[KEYDOWN,e.keyCode]);
+			};
+		}else if(events[i]==KEYUP){
+			container.onkeyup=function(e){
+				var rect = container.getBoundingClientRect();
+				sendAction(container.parentElement.id,[KEYUP,e.keyCode]);
+			};
+		}else if(events[i]==KEYPRESS){
+			container.onkeypress=function(e){
+				var rect = container.getBoundingClientRect();
+				sendAction(container.parentElement.id,[KEYPRESS,e.keyCode]);
 			};
 		}
 	}
@@ -342,8 +393,10 @@ specialElementOption={
 function processOptions(data,container){
 	if(data.hasOwnProperty('_nm'))Object.assign(container._numspec,data._nm);
 	if(data.hasOwnProperty('_bx'))setDivOptions(container._content,data._bx);
-	if(data.hasOwnProperty('_ev'))addEvents(container._content,data._ev);
-	if(container._specialElement && container._type in data){
+	if(data.hasOwnProperty('_i+'))addEvents(container._content,data['_i+']);
+	if(typeof(data['_ln'])=='object' && Object.keys(data['_ln']).length)
+		setPathOptions(container._svgg,data._ln);
+	else if(container._specialElement && container._type in data){
 		for(var key in data[container._type]){
 			if(key in specialElementOption)
 				specialElementOption[key](container,data[container._specialElement][key]);
@@ -358,7 +411,8 @@ elementTypes={
 	'object':processState,
 	'number':function(data,container,level){
 		//create numspec based on parents
-		var key,parent=container,
+		var key,
+			parent=container,
 			numspec=Object.assign({},container._numspec);
 		while(parent!==maindiv && parent!==ppdiv){
 			parent=parent._parentState;
@@ -374,6 +428,8 @@ elementTypes={
 				data=data.toFixed((''+numspec.rnd).split('.')[1].length);
 			}
 		}
+		if(('<=' in numspec) && data>numspec['<='])data=numspec['<='];
+		if(('>=' in numspec) && data<numspec['>='])data=numspec['>='];
 		container._value=data;
 		if(numspec.unit){
 			data=(numspec.unit=='$')?'$'+data:data+''+numspec.unit;
@@ -433,7 +489,6 @@ elementTypes={
 		};
 	},
 	'_i1_child':function(data,container){
-		//TODO: if(data===1)container._key.setAttribute("_selected",1);
 		var parentState=container._parentState;
 		function selectItem(){
 			var r={};
@@ -466,22 +521,33 @@ elementTypes={
 	},
 	'_i*':function(data,container){},
 	'_ln':function(data,container,level){
-		if(container.svg===undefined){
-			container.svg=container.appendChild(document.createElementNS(SVGNS,'svg'));
-			container.svg.cssText="position:absolute;left:0px;top:0px;width:100%;height:100%";
-			container.svg.setAttribute('width','1000');
-			container.svg.setAttribute('height','1000');
+		if(container._svg===undefined){
+			container._svg=container._content.appendChild(document.createElementNS(SVGNS,'svg'));
+			container._svg.cssText="position:absolute;left:0px;top:0px;width:100%;height:100%";
+			container._svg.setAttribute('width',container._content.style.width);
+			container._svg.setAttribute('height',container._content.style.height);
+			container._svgg=container._svg.appendChild(document.createElementNS(SVGNS,'g'));
+			container._svgg.setAttribute('stroke-width',1);
+			container._svgg.setAttribute('stroke','black');
+			container._svgg.setAttribute('fill','none');
 		}
 		processState(data,container,level);
 	},
 	'_ln_child':function(data,container){
 		if(data.constructor==Array){
 			container.setAttribute('d',"M"+data);
+			if(container.parentElement.getAttribute('width')==""){
+				if(container.parentElement.parentElement.style.width)
+					container._svg.setAttribute('width',container.style.width);
+				var bbox=container.getBBox();
+				container.parentElement.setAttribute('width',bbox.x+bbox.width);
+				container.parentElement.setAttribute('height',bbox.y+bbox.height);
+			}
 		}
 	},
 	'_tb':function(data,container){},
 }
-specialElements=set(['_i','_ih','_i2','_i1','_ix','_ip','_i*','_ln','_tb']);
+specialElements=set(['_i','_ih','_i2','_i1','_ix','_i*','_ln','_tb']);
 compatible={
 	'object':set(['_i','_ih','_i1','_i2','_ix','_ln']),
 	'string':set(['_ix']),
@@ -489,51 +555,51 @@ compatible={
 	'boolean':set(['_i1_child','_i2_child']),
 }
 
-function taskInstructions(key,displaykey,container){
+function taskInstructions(taskOptions){
 	var instructions="";
-	displaykey=displaykey?('<b>'+displaykey+'</b>'):'this value';
-	if(key in taskOptions.win){
-		instructions+="<li>When "+displaykey+" is "+taskOptions.win[key]+", you win.\n";
-		delete taskOptions.win[key];
+	function keyFormat(key){return key=="_pp"?"the value in popup":"<b>"+key+"</b>";}
+	for(key in taskOptions.win){
+		if(!key.startsWith('#'))
+			instructions+="<li>When "+keyFormat(key)+" is "+taskOptions.win[key]+", you win.\n";
 	}
-	if(key in taskOptions.loss){
-		instructions+="<li>When the value above is "+taskOptions.loss[key]+", you lose.\n";
-		delete taskOptions.loss[key];
+	for(key in taskOptions.loss){
+		if(!key.startsWith('#'))
+			instructions+="<li>When "+keyFormat(key)+" is "+taskOptions.loss[key]+", you lose.\n";
 	}
-	if(key in taskOptions.end){
-		instructions+='<li>When '+displaykey+' is '+taskOptions.end[key]+", the task ends.\n";
-		delete taskOptions.end[key];
+	for(key in taskOptions.end){
+		if(!key.startsWith('#'))
+			instructions+='<li>When '+keyFormat(key)+' is '+taskOptions.end[key]+", the task ends.\n";
 	}
-	if(key in taskOptions.good){
-		if(taskOptions.good[key]=='+')
-			instructions+="<li>The higher "+displaykey+" is, the better.\n";
-		else if(taskOptions.good[key]=='-')
-			instructions+="<li>The lower "+displaykey+" is, the better.\n";
-		else if(typeof(taskOptions.good[key])==='string') 
-			instructions+="<li>Try to get "+displaykey+' to be "'+taskOptions.good[key]+'".\n';
-		else
-			instructions+="<li>Try to get "+displaykey+' to be '+taskOptions.good[key]+'.\n';
-		delete taskOptions.good[key];
+	for(key in taskOptions.good){
+		if(!key.startsWith('#')){
+			if(taskOptions.good[key]=='+')
+				instructions+="<li>The higher "+keyFormat(key)+" is, the better.\n";
+			else if(taskOptions.good[key]=='-')
+				instructions+="<li>The lower "+keyFormat(key)+" is, the better.\n";
+			else if(typeof(taskOptions.good[key])==='string'){
+				if(taskOptions.good[key].toLowerCase().trim()!=='correct')
+					instructions+="<li>Try to get "+keyFormat(key)+' to be "'+taskOptions.good[key]+'".\n';
+			}else
+				instructions+="<li>Try to get "+keyFormat(key)+' to be '+taskOptions.good[key]+'.\n';
+		}
 	}
-	if(key in taskOptions.bad){
-		if(taskOptions.bad[key]=='+')
-			instructions+="<li>Avoid higher "+displaykey+" values.\n";
-		else if(taskOptions.bad[key]=='-')
-			instructions+="<li>Avoid lower "+displaykey+" values.\n";
-		else if(typeof(taskOptions.bad[key])==='string') 
-			instructions+="<li>Avoid "+displaykey+' from being "'+taskOptions.bad[key]+'".\n';
-		else
-			instructions+="<li>Avoid "+displaykey+' from being '+taskOptions.bad[key]+'.\n';
-		delete taskOptions.bad[key];
+	for(key in taskOptions.bad){
+		if(!key.startsWith('#')){
+			if(taskOptions.bad[key]=='+')
+				instructions+="<li>Avoid higher "+keyFormat(key)+" values.\n";
+			else if(taskOptions.bad[key]=='-')
+				instructions+="<li>Avoid lower "+keyFormat(key)+" values.\n";
+			else if(typeof(taskOptions.bad[key])==='string'){
+				if(taskOptions.bad[key].toLowerCase().trim()!=='incorrect')
+					instructions+="<li>Avoid "+keyFormat(key)+' from being "'+taskOptions.bad[key]+'".\n';
+			}else
+				instructions+="<li>Avoid "+keyFormat(key)+' from being '+taskOptions.bad[key]+'.\n';
+		}
 	}
 	if(instructions){
-		var idiv=addDiv(container,['_task']);
-		idiv.innerHTML+='<b>Instructions</b> (click to dismiss):\n<ul>'+instructions+'</ul>';
-		container._key.classList.add('hasInstructions');
-		//container._key.style.cssText='margin-bottom:0px;border-left:solid 1px gray;background-color:white';
-		idiv.style.cssText='margin-top:0px;margin-left:0px;border-radius:0px 0px 5px 5px;border-top:none';
+		var idiv=addDiv(document.body,['_task']);
+		idiv.innerHTML+='<span style="font-size:1.1em"><b>Instructions</b> (click to dismiss):</span>\n\n<ul>'+instructions+'</ul>';
 		idiv.onclick=function(){
-			container._key.classList.remove('hasInstructions');
 			idiv.remove();
 		};
 	}
@@ -621,8 +687,7 @@ function processState(data,container,level){
 						child._specialElement=child._type;
 						child._specialOptions={};
 					}
-					child._key.innerHTML=displaykey;
-					taskInstructions(key,displaykey,child);
+					if(displaykey)child._key.innerHTML=displaykey;
 					container._childmap[key]=child;
 				}else if(child._type!==typeofval && !(compatible[typeofval] && (child._type in compatible[typeofval])) && !(typeofval==='object' && !isState(data[key]))){
 					child._setclass(typeofval);
@@ -682,8 +747,9 @@ function processData(data){
 	}
 	if(data.hasOwnProperty('_vis')){Object.assign(visOptions,data._vis);delete data._vis;}
 	if(data.hasOwnProperty('_task')){
-		for(var key in data._task)
-			Object.assign(taskOptions[key],data._task[key]);
+		// for(var key in data._task)
+			// Object.assign(taskOptions[key],data._task[key]);
+		taskInstructions(data._task);
 		delete data._task;
 	}
 	if(data.hasOwnProperty('_W')){
@@ -741,6 +807,16 @@ function processData(data){
 	// process other special directives
 	processOptions(maindiv,data);
 	//process state
+	if(data.hasOwnProperty('_.'))
+		for(var key in data['_.']){
+			if(elements[key].offsetParent){
+				var d={};
+				d[key]=data['_.'][key];
+				processState(d,elements[key]._parentState,0);
+			}else{
+				delete elements[key];
+			}
+		}
 	processState(data,maindiv,0);
 	if(visOptions.scrolldown)window.scrollTo(0,document.body.scrollHeight);
 }
@@ -749,31 +825,10 @@ function processMsg(msg){
 	processData(JSON.parse(msg.data));
 }
 
-function initMarkers(){
-	document.body.innerHTML=`<svg width=0 height=0>
-		<defs>
-			<marker id="markercircle" markerWidth="2" markerHeight="2" refX="1" refY="1" markerUnits="strokeWidth">
-				<circle cx="1" cy="1" r="1" style="stroke: none; fill:#000000;"/>
-			</marker>
-			<marker id="markersquare" markerWidth="2" markerHeight="2" refX="1" refY="1" orient="auto" markerUnits="strokeWidth">
-				<rect x="0" y="0" width="2" height="2" style="stroke: none; fill:#000000;"/>
-			</marker>
-			<marker id="markerarrow2" markerWidth="4" markerHeight="3" refX="4" refY="1"
-				   orient="auto" markerUnits="strokeWidth">
-				<path d="M0,0 L0,2 L3,1 L0,0" style="fill: #000000;" />
-			</marker>
-			<marker id="markerarrow" markerWidth="5" markerHeight="5" refX="2" refY="2"
-				   orient="auto" markerUnits="strokeWidth" fill-rule="currentColor">
-				<path d="M0,0 L0,4 L4,2 L0,0"  />
-			</marker>
-		</defs>
-		</svg>`;
-}
-
 
 function main(){
-	initMarkers();
 	maindiv=addDivs(document.body,'obj',0,"__main__");
+	markerdefs=document.body.appendChild(document.createElementNS(SVGNS,'svg')).appendChild(document.createElementNS(SVGNS,'defs'));
 	ppdiv=addDivs(document.body,'obj',0,"__pp__");
 	ppdiv._hide();
 	ppdiv._parentState=maindiv;

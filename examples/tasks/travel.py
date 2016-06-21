@@ -13,7 +13,7 @@ def itemKey(d): return next(iter(d.items()))[0]
 
 TRIALS = 10
 NUMBER_OF_LOCATIONS = 10
-SECONDS_PER_TRIAL = 60
+SECONDS_PER_TRIAL = 600
 
 MAXX = 400
 MAXY = 300
@@ -68,7 +68,7 @@ def runTrial(locations,map):
 <li> Click a white circle to add it to the circuit.
 <li> Click a blue circle to remove it from the circuit.</ul>"""})
 	#add Map to be a box with a #path object that will include lines
-	send({"Map":{"_bx":dict(w=canvasWidth,h=canvasHeight,bd='solid 1px black'),"#path":{"_ln":{}}}})
+	send({"Map":{"_bx":dict(w=canvasWidth,h=canvasHeight,bd='solid 1px black'),"#path":{"_ln":{},"_bx":{"x":0,"y":0,"w":canvasWidth,"h":canvasHeight,"bd":"solid 1px green"}}}})
 	#add a button set (clickable locations) to Map
 	send({"Map":{"#btns":map}})
 	#set up Timer to be an integer between 0 and SECONDS_PER_TRIAL

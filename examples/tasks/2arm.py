@@ -34,7 +34,7 @@ for trial in range(1,TRIALS+1):
 	send({'_W':{'#wait':.5}})
 	recv()
 	#close popup
-	send({'_pp':''})
+	send({'_pp':None})
 
 #display goodbye message in popup
 send({'_pp':['Thank you for your participation.']})
