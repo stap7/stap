@@ -3,6 +3,7 @@
 
 
 TODO for latest STAP release:
+	resort according to new key order
 	add _tb, _i*
 	more input options
 	test in diff browsers
@@ -99,8 +100,6 @@ var HOST=location.hostname || "localhost";
 var TIMEZONEOFFSET=new Date(0).getTimezoneOffset()* 60000;
 var SVGNS="http://www.w3.org/2000/svg";
 var STAP2STYLE={'x':'left','y':'top','w':'width','h':'height','r':'borderRadius','bg':'backgroundColor','bd':'borderStyle','bdw':'borderWidth','bdc':'borderColor','pad':'padding','fnt':'font','col':'color','rot':'rotation'};
-var STAP2STROKE={f:'fill',c:'stroke',w:'stroke-width',start:'marker-start',end:'marker-end',cap:'stroke-linecap',dash:'stroke-dasharray'};
-var PXSTYLE=set(['x','y','w','h','r']);
 var EASE={0:'Power0',1:'Power1',2:'Power2',3:'Power3',4:'Power4',back:'Back',elastic:'Elastic',bounce:'Bounce'};
 
 
@@ -545,7 +544,34 @@ elementTypes={
 			}
 		}
 	},
-	'_tb':function(data,container){},
+	'_tb':function(data,container,level){
+		var key,i;
+		if(!container._tb){
+			container._tb=container._content.appendChild(document.createElement('table'));
+			container._tb.appendChild(document.createElement('tr')); //header row
+		}
+		for(key in data)if(!key.startsWith('_')){
+			if(!container._childmap[key]){
+				container._childmap[key]=[];
+				container._tb.children[0].appendChild(document.createElement('th')).innerHTML=key;
+				//todo: account for hidden keys
+			}
+			for(i=0;i<data[key].length;++i){
+				while(container._tb.children.length<=(i+1))
+					container._tb.appendChild(document.createElement('tr'));
+				while(container._tb.children[0].children.length>container._tb.children[i+1].children.length){
+					container._childmap[container._tb.children[0].children[container._tb.children[i+1].children.length].innerText][i]=container._tb.children[i+1].appendChild(document.createElement('td'));
+				}
+				container._childmap[key][i].innerHTML=data[key][i];
+				//todo:
+				//	maybe _tb option can be headernames and rownames will be 
+				//	can we do processState on data[key]?
+				//		each series will need _content, _specialElement, and _childmap
+				//	or get type and do elementType[type] for each cell
+			}
+			//processState(objectify(data[key]),,);
+		}
+	}
 }
 specialElements=set(['_i','_ih','_i2','_i1','_ix','_i*','_ln','_tb']);
 compatible={

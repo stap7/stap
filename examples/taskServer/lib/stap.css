@@ -14,6 +14,16 @@ div {
     -ms-user-select: none; /* IE10+ */
 	opacity:1;
 }
+table,th,td {
+	border:1px solid black;
+	border-collapse:collapse;
+	border-spacing: 0px;
+}
+th,td {
+/* 	margin-top: -1px;
+	margin-left:-1px;
+ */	padding:2px;
+}
 /* ul {margin-left: 10px;margin-right: 0px;margin-top:0px;margin-bottom:0px;padding-left: 15px;padding-right: 5px;} */
 
 .lvl_0 {position:relative;padding:0px;margin:0px}
