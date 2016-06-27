@@ -100,10 +100,11 @@ var HOST=location.hostname || "localhost";
 var TIMEZONEOFFSET=new Date(0).getTimezoneOffset()* 60000;
 var SVGNS="http://www.w3.org/2000/svg";
 var STAP2STYLE={'x':'left','y':'top','w':'width','h':'height','r':'borderRadius','bg':'backgroundColor','bd':'borderStyle','bdw':'borderWidth','bdc':'borderColor','pad':'padding','fnt':'font','col':'color','rot':'rotation'};
+var STAP2CSS={'bd':'border','pad':'padding','w':'width','h':'height','bg':'background-color','bdw':'border-width','bdc':'border-color'};
 var EASE={0:'Power0',1:'Power1',2:'Power2',3:'Power3',4:'Power4',back:'Back',elastic:'Elastic',bounce:'Bounce'};
 
 
-var ws,maindiv,ppdiv,markerdefs,elements={},taskOptions={win:{},loss:{},end:{},good:{},bad:{}},visOptions={},msgTimeouts={},txtReplace={};
+var ws,maindiv,ppdiv,markerdefs,stylesheet,tables=0,elements={},taskOptions={win:{},loss:{},end:{},good:{},bad:{}},visOptions={},msgTimeouts={},txtReplace={};
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -283,7 +284,7 @@ function setDivOptions(div,options){
 		}
 		if(options.hasOwnProperty('r'))div.style.borderRadius=options.r+'px';
 		if(options.hasOwnProperty('bg'))div.style.backgroundColor=options.bg;
-		if(options.hasOwnProperty('bd'))div.style.border=options.bd;
+		if(options.hasOwnProperty('bd'))div.style.borderStyle=options.bd;
 		if(options.hasOwnProperty('bdw'))div.style.borderWidth=options.bdw;
 		if(options.hasOwnProperty('bdc'))div.style.borderColor=options.bdc;
 		if(options.hasOwnProperty('pad'))div.style.padding=options.pad;
@@ -545,37 +546,58 @@ elementTypes={
 		}
 	},
 	'_tb':function(data,container,level){
-		var key,i;
+		var key;
 		if(!container._tb){
 			container._tb=container._content.appendChild(document.createElement('table'));
-			container._tb.appendChild(document.createElement('tr')); //header row
+			container._tb.id='tb_'+tables;
+			stylesheet.insertRule('#tb_'+tables+' td {}',tables);
+			container._tb.cssrule=stylesheet.rules[tables]; //TODO: add style to this rule
+			++tables;
+			//TODO: commit and get rid of all this stylesheet and table counter stuff
+			//TODO: probly don't need tables counter
+			//TODO: header row
+			// container._tb.appendChild(document.createElement('tr')); //header row
 		}
-		for(key in data)if(!key.startsWith('_')){
-			if(!container._childmap[key]){
-				container._childmap[key]=[];
-				container._tb.children[0].appendChild(document.createElement('th')).innerHTML=key;
-				//todo: account for hidden keys
-			}
-			for(i=0;i<data[key].length;++i){
-				while(container._tb.children.length<=(i+1))
-					container._tb.appendChild(document.createElement('tr'));
-				while(container._tb.children[0].children.length>container._tb.children[i+1].children.length){
-					container._childmap[container._tb.children[0].children[container._tb.children[i+1].children.length].innerText][i]=container._tb.children[i+1].appendChild(document.createElement('td'));
+		for(key in data){
+			if(!key.startsWith('_')){
+				if(!container._childmap[key]){
+					container._childmap[key]=container._tb.appendChild(document.createElement('tr'));
+					container._childmap[key]._childmap={};
+					container._childmap[key]._parentState=container;
+					container._childmap[key]._content=container._childmap[key];
+					//todo: account for displayable keys (i.e. row names)
 				}
-				container._childmap[key][i].innerHTML=data[key][i];
-				//todo:
-				//	maybe _tb option can be headernames and rownames will be 
-				//	can we do processState on data[key]?
-				//		each series will need _content, _specialElement, and _childmap
-				//	or get type and do elementType[type] for each cell
+				processOptions(data[key],container._childmap[key]);
+				elementTypes._tb_child(data[key],container._childmap[key],level+1);
 			}
-			//processState(objectify(data[key]),,);
+		}
+		if(typeof(data._tb)==='object'){
+			if(data._tb.head && container._tb.children[0])container._tb.children[0].style.borderBottom='solid 2px gray'
+			// if(data._tb.hasOwnProperty('w'))container._tb.setAttribute('width',data._tb.w);
+			// if(data._tb.hasOwnProperty('h'))container._tb.setAttribute('height',data._tb.h);
+			// if(data._tb.hasOwnProperty('w'))container._tb.setAttribute('width',data._tb.w);
+			// if(data._tb.hasOwnProperty('bd'))container._tb.cssrule.style.borderStyle=data._tb.bd;
+			// if(data._tb.hasOwnProperty('bdc'))container._tb.cssrule.style.borderColor=data._tb.bdc;
+			// if(data._tb.hasOwnProperty('bdw'))container._tb.cssrule.style.borderWidth=data._tb.bdw;
+			// if(data._tb.hasOwnProperty('pad'))container._tb.cssrule.style.padding=data._tb.pad;
+		}
+	},
+	'_tb_child':function(data,container,level){
+		var val={"#":""}
+		for(var i=0;i<data.length;++i){
+			if(!container._childmap[i]){
+				container._childmap[i]=container.appendChild(document.createElement('td'));
+				container._childmap[i]._childmap={};
+				container._childmap[i]._content=container._childmap[i];
+			}
+			val['#']=data[i];
+			processState(val,container._childmap[i],level+1);
 		}
 	}
 }
 specialElements=set(['_i','_ih','_i2','_i1','_ix','_i*','_ln','_tb']);
 compatible={
-	'object':set(['_i','_ih','_i1','_i2','_ix','_ln']),
+	'object':set(['_i','_ih','_i1','_i2','_ix','_ln','_tb']),
 	'string':set(['_ix']),
 	'number':set(['_i1_child','_i2_child']),
 	'boolean':set(['_i1_child','_i2_child']),
@@ -721,6 +743,7 @@ function processState(data,container,level){
 					child._specialOptions={};
 				}
 				processOptions(data[key],child);
+				dp(child._type);
 				elementTypes[child._type](data[key],child,level+1);
 			}
 		}
@@ -854,6 +877,10 @@ function processMsg(msg){
 
 function main(){
 	maindiv=addDivs(document.body,'obj',0,"__main__");
+	var style = document.createElement("style");
+	style.appendChild(document.createTextNode(""));// WebKit hack
+	document.head.appendChild(style);
+	stylesheet=style.sheet;
 	markerdefs=document.body.appendChild(document.createElementNS(SVGNS,'svg')).appendChild(document.createElementNS(SVGNS,'defs'));
 	ppdiv=addDivs(document.body,'obj',0,"__pp__");
 	ppdiv._hide();

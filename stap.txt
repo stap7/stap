@@ -1,10 +1,10 @@
 STAP (Simple Task-Actor Protocol)
 
-	STAP is a machine-readable format for specifying user-interface changes.
-	Main focus of STAP is in providing symmetric task experience for human and computational users alike.
-	In its focus to make human software usable by machine agents, STAP aims to eliminate non-task-essential design choices (e.g. font type/size may be irrelevant for may task types), leaving those to be optionally specified via customizable templates (e.g. CSS).
-	STAP messages adhere to JSON formatting, and can thus be deserialized with any standard JSON library.
-	
+    STAP is a machine-readable format for specifying user-interface changes.
+    Main focus of STAP is in providing symmetric task experience for human and computational users alike.
+    In its focus to make human software usable by machine agents, STAP aims to eliminate non-task-essential design choices (e.g. font type/size may be irrelevant for may task types), leaving those to be optionally specified via customizable templates (e.g. CSS).
+    STAP messages adhere to JSON formatting, and can thus be deserialized with any standard JSON library.
+    
 
 ///////////////////////////////////////////////////////////////////
 Examples:
@@ -113,7 +113,7 @@ Definition:
 <<option>>::= "_ix":{(<<inputOption>>,)*}                               //text input; e.g. <<key>>:["_ix"], user sends {<<key>>:<<text value>>} to task when text value is changed, task sw can alter text in existing textbox by using <<key>>:<<text>>, or <<key>>:{"_ix":{},"#0":<<text>>} (this latter version is a convinient way to specify default text when _ix is defined)
 <<option>>::= "_i\*":[<<number>>,<<number>>]                            //element is a set of directional hold-down buttons; [<<number>>,<<number>>] signify the number of direction buttons and starting direction in degrees (e.g. [4,0] signifies N/S/E/W); button-down (onmousedown or ontouchstart) returns {<<key>>:{degrees,1}}, button-up (onmouseup or ontouchend) returns {<<key>>:{degrees,2}}, e.g. <<key>>:{"_i*":[4,0]} will send back {<<key>>:{"0":2}}, {<<key>>:{<<key>>:{"90",2}}}, {<<key>>:{"180":2}}, {<<key>>:{"270":2} for N/S/E/W button-down events, respectively
 <<option>>::= "_ln":{(<<strokeOption>>,)*}                              //all elements in this state are lines/paths; expected state content: (<<key>>:[<<number>>,<<number>> (,<<number>>,<<number>>)+],)* pairs to signify line points, or <<key>>:<<text>> pairs to signify SVG path strings (e.g. <<key>>:"M150 0 75 200 225 200 Z")
-<<option>>::= "_tb":{(<<tableOption>>,)*}                               //all elements in this state are series (columns) in a table; expected state content: <<key>>:<<array>> pairs, where each <<array>> is a series of values  (i.e. column); e.g. {"_tb":{},"name":["John","Mary"],"gender":["male","female"]}
+<<option>>::= "_tb":{(<<tableOption>>,)*}                               //all elements in this state are rows in a table; expected state content: <<key>>:<<array>> pairs, where each <<array>> is a row of values; e.g. {"My Table":{"_tb":{},"#1":["John","male"],"#2":["Mary","female"]}}; alternatively, a 2dim array can be passed after the element is declared as a table; e.g. {"My Table":{"_tb":{}}} ... {"My Table":[["John","male"],["Mary","female"]]}
 **any state**
 <<option>>::= "_T":<<aniOptions>>                                       //signifies that values in the state are set via animation (Tween), not instantly; e.g. {"X":100,"_T":2} signifies that "X" is incremented/decremented till it reaches 100 over the span of 2 seconds; {<<key>>:null,"_T":2} signifies key removal is animated over 2 second span; {<<key>>:"","_T":2} signifies that key value is cleared over 2 second span; {<<key>>:"hello","_T":2} signifies that key value is cleared and then replaced with "hello" over a 2 second span
 <<option>>::= "_nm":{(<<numOption>>,)*}                                 //these are numeric options (e.g. min, max, flt precision), and apply to element where _nm directive is found, as well as all sub-elements
@@ -128,6 +128,7 @@ Definition:
 <<conds>>::=        {(<<key>>:<<text>>|<<number>>,)*}
 <<actionValue>>::=  ** must be one of the values that is allowed for the respective input type (e.g. _bn action value is always 3, _tx action value is <<text>>) **
 <<waitID>>::=       ** any number or string **
+<<tableOption>>::=  "head":1|0                                          //if this value is 1, first row is treated as the header row (default value is 0)
 <<strokeOption>>::= "f":(<<color>>|"none")                              //similar to SVG fill
 <<strokeOption>>::= "c":(<<color>>|"none")                              //similar to SVG stroke
 <<strokeOption>>::= "w":<<number>>                                      //similar to SVG stroke-width
@@ -150,7 +151,7 @@ Definition:
 <<divOption>>::=    "r":<<number>>                                      //rounded corner radius (ex: create a circle w/ radius=10 -> {"_bx":{"w":20,"h":20,"r":10}})
 <<divOption>>::=    "rot":<<number>>                                    //rotation
 <<divOption>>::=    "bg":<<cssBackground>>                              //background
-<<divOption>>::=    "bd":<<cssBorder>>                                  //border style or full border spec
+<<divOption>>::=    "bd":<<cssBorder>>                                  //border style
 <<divOption>>::=    "bdc":<<color>>                                     //border color
 <<divOption>>::=    "bdw":<<number>>                                    //border width
 <<divOption>>::=    "pad":<<cssPadding>>                                //padding
@@ -174,7 +175,7 @@ Definition:
 <<eventType>>::=    192                                                 //keypress event; sends [192,<<keycode>>]
 <<color>>::=        ** see CSS color specification, e.g. http://www.w3schools.com/cssref/css_colors.asp **
 <<cssBackground>>::=** see CSS background specification, e.g. http://www.w3schools.com/cssref/css3_pr_background.asp **
-<<cssBorder>>::=    ** see CSS border specification, e.g. http://www.w3schools.com/cssref/pr_border.asp **
+<<cssBorder>>::=    ** see CSS border style specification, e.g. http://www.w3schools.com/cssref/pr_border.asp **
 <<cssFont>>::=      ** see CSS font specification, e.g. http://www.w3schools.com/cssref/pr_font_font.asp **
 <<strokeDash>>::=   ** see SVG stroke-dasharray specification, e.g. https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-dasharray **
 <<keycode>>::=      ** javascript key code, e.g. http://www.cambiaresearch.com/articles/15/javascript-char-codes-key-codes **
@@ -190,4 +191,12 @@ Definition:
 // <<eventType>>::=    "drag"                                              //same as 2 (mousedown) but allows element to be dragged with mouse/finger
 // <<eventType>>::=    10                                                  //same as "drag" but also reports back all movement locations relative to top-left of the screen
 // allow w/h (and any pixel) specification in terms of screen% and aspect ratios, e.g. w:90%, h:.5w
+// <<tableOption>>::=  "rowgroup":{(<<text>>:[(<<key>>,)+],)+}             //row grouping; <<text>> corresponds to group name, each <<key>> corresponds to known row <<key>>
+// <<tableOption>>::=  "colgroup":{(<<text>>:[(<<number>>,)+],)+}          //columng grouping; <<text>> corresponds to group name, each <<number>> corresponds to columnn number
+// <<tableOption>>::=  "colw":[(<<number>>,)+]                             //array of column widths for a table
+// <<tableOption>>::=  "rowh":[(<<number>>,)+]                             //array of row heights for a table
+// <<tableOption>>::=  "bd":<<cssBorder>>                                  //cell border style
+// <<tableOption>>::=  "bdc":<<color>>                                     //cell border color
+// <<tableOption>>::=  "bdw":<<number>>                                    //cell border width
+// <<tableOption>>::=  "pad":<<cssPadding>>                                //cell padding
 
