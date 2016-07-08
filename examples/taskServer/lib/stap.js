@@ -3,9 +3,9 @@
 
 
 TODO for latest STAP release:
-	resort according to new key order
-	add _tb, _i*
-	more input options
+	re-sort according to new key order
+	add input options
+	test _tb
 	test in diff browsers
 */
 
@@ -32,7 +32,7 @@ required=[
 
 //////////////////////////////////////////////////////////////////////////////
 // helper functions
-dp=function(s){console.log(typeof(s)=="string"?s:JSON.stringify(s));};
+function dp(s){console.log(typeof(s)=="string"?s:JSON.stringify(s));};
 function round2(n,r){return (Math.round(n/r)*r);}
 function sha1(r){function o(r,o){var e=r<<o|r>>>32-o;return e}function e(r){var o,e,a="";for(o=7;o>=0;o--)e=r>>>4*o&15,a+=e.toString(16);return a}function a(r){r=r.replace(/\r\n/g,"\n");for(var o="",e=0;e<r.length;e++){var a=r.charCodeAt(e);128>a?o+=String.fromCharCode(a):a>127&&2048>a?(o+=String.fromCharCode(a>>6|192),o+=String.fromCharCode(63&a|128)):(o+=String.fromCharCode(a>>12|224),o+=String.fromCharCode(a>>6&63|128),o+=String.fromCharCode(63&a|128))}return o}var t,h,n,C,c,f,d,A,u,g=new Array(80),i=1732584193,s=4023233417,S=2562383102,v=271733878,m=3285377520;r=a(r);var p=r.length,l=new Array;for(h=0;p-3>h;h+=4)n=r.charCodeAt(h)<<24|r.charCodeAt(h+1)<<16|r.charCodeAt(h+2)<<8|r.charCodeAt(h+3),l.push(n);switch(p%4){case 0:h=2147483648;break;case 1:h=r.charCodeAt(p-1)<<24|8388608;break;case 2:h=r.charCodeAt(p-2)<<24|r.charCodeAt(p-1)<<16|32768;break;case 3:h=r.charCodeAt(p-3)<<24|r.charCodeAt(p-2)<<16|r.charCodeAt(p-1)<<8|128}for(l.push(h);l.length%16!=14;)l.push(0);for(l.push(p>>>29),l.push(p<<3&4294967295),t=0;t<l.length;t+=16){for(h=0;16>h;h++)g[h]=l[t+h];for(h=16;79>=h;h++)g[h]=o(g[h-3]^g[h-8]^g[h-14]^g[h-16],1);for(C=i,c=s,f=S,d=v,A=m,h=0;19>=h;h++)u=o(C,5)+(c&f|~c&d)+A+g[h]+1518500249&4294967295,A=d,d=f,f=o(c,30),c=C,C=u;for(h=20;39>=h;h++)u=o(C,5)+(c^f^d)+A+g[h]+1859775393&4294967295,A=d,d=f,f=o(c,30),c=C,C=u;for(h=40;59>=h;h++)u=o(C,5)+(c&f|c&d|f&d)+A+g[h]+2400959708&4294967295,A=d,d=f,f=o(c,30),c=C,C=u;for(h=60;79>=h;h++)u=o(C,5)+(c^f^d)+A+g[h]+3395469782&4294967295,A=d,d=f,f=o(c,30),c=C,C=u;i=i+C&4294967295,s=s+c&4294967295,S=S+f&4294967295,v=v+d&4294967295,m=m+A&4294967295}var u=e(i)+e(s)+e(S)+e(v)+e(m);return u.toLowerCase()}
 function formatDate(e,a,r){function g(e,a){var r=e+"";for(a=a||2;r.length<a;)r="0"+r;return r}var t=["\x00","January","February","March","April","May","June","July","August","September","October","November","December"],c=["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],l=["","Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],p=["","Sun","Mon","Tue","Wed","Thu","Fri","Sat"],n=r?e.getUTCFullYear():e.getFullYear();a=a.replace(/(^|[^\\])yyyy+/g,"$1"+n),a=a.replace(/(^|[^\\])yy/g,"$1"+n.toString().substr(2,2)),a=a.replace(/(^|[^\\])y/g,"$1"+n);var u=(r?e.getUTCMonth():e.getMonth())+1;a=a.replace(/(^|[^\\])MMMM+/g,"$1"+t[0]),a=a.replace(/(^|[^\\])MMM/g,"$1"+c[0]),a=a.replace(/(^|[^\\])MM/g,"$1"+g(u)),a=a.replace(/(^|[^\\])M/g,"$1"+u);var M=r?e.getUTCDate():e.getDate();a=a.replace(/(^|[^\\])dddd+/g,"$1"+l[0]),a=a.replace(/(^|[^\\])ddd/g,"$1"+p[0]),a=a.replace(/(^|[^\\])dd/g,"$1"+g(M)),a=a.replace(/(^|[^\\])d/g,"$1"+M);var $=r?e.getUTCHours():e.getHours();a=a.replace(/(^|[^\\])HH+/g,"$1"+g($)),a=a.replace(/(^|[^\\])H/g,"$1"+$);var d=$>12?$-12:0==$?12:$;a=a.replace(/(^|[^\\])hh+/g,"$1"+g(d)),a=a.replace(/(^|[^\\])h/g,"$1"+d);var o=r?e.getUTCMinutes():e.getMinutes();a=a.replace(/(^|[^\\])mm+/g,"$1"+g(o)),a=a.replace(/(^|[^\\])m/g,"$1"+o);var s=r?e.getUTCSeconds():e.getSeconds();a=a.replace(/(^|[^\\])ss+/g,"$1"+g(s)),a=a.replace(/(^|[^\\])s/g,"$1"+s);var y=r?e.getUTCMilliseconds():e.getMilliseconds();a=a.replace(/(^|[^\\])fff+/g,"$1"+g(y,3)),y=Math.round(y/10),a=a.replace(/(^|[^\\])ff/g,"$1"+g(y)),y=Math.round(y/10),a=a.replace(/(^|[^\\])f/g,"$1"+y);var v=12>$?"AM":"PM";a=a.replace(/(^|[^\\])TT+/g,"$1"+v),a=a.replace(/(^|[^\\])T/g,"$1"+v.charAt(0));var T=v.toLowerCase();a=a.replace(/(^|[^\\])tt+/g,"$1"+T),a=a.replace(/(^|[^\\])t/g,"$1"+T.charAt(0));var h=-e.getTimezoneOffset(),f=r||!h?"Z":h>0?"+":"-";if(!r){h=Math.abs(h);var i=Math.floor(h/60),C=h%60;f+=g(i)+":"+g(C)}a=a.replace(/(^|[^\\])K/g,"$1"+f);var S=(r?e.getUTCDay():e.getDay())+1;return a=a.replace(new RegExp(l[0],"g"),l[S]),a=a.replace(new RegExp(p[0],"g"),p[S]),a=a.replace(new RegExp(t[0],"g"),t[u]),a=a.replace(new RegExp(c[0],"g"),c[u]),a=a.replace(/\\(.)/g,"$1")}
@@ -40,6 +40,23 @@ Date.prototype.toString=function(format){return formatDate(this,format);};
 if(String.prototype.startsWith===undefined)String.prototype.startsWith=function(prefix){return this.slice(0,prefix.length)===prefix;};
 if(String.prototype.endsWith===undefined)String.prototype.endsWith=function(suffix){return this.slice(this.length-suffix.length)===suffix;};
 String.prototype.replaceAll=function(search,replacement){return this.split(search).join(replacement);};
+function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+  var angleInRadians = (angleInDegrees-90) * Math.PI / 180.0;
+  return {
+    x: centerX + (radius * Math.cos(angleInRadians)),
+    y: centerY + (radius * Math.sin(angleInRadians))
+  };
+}
+function describeArc(x, y, radius, startAngle, endAngle, start){
+    var startingPt = polarToCartesian(x, y, radius, endAngle);
+    var endingPt = polarToCartesian(x, y, radius, startAngle);
+    var arcSweep = endAngle - startAngle <= 180 ? "0" : "1";
+    var d = [
+        start?"M":"L", startingPt.x, startingPt.y, 
+        "A", radius, radius, 0, arcSweep, 0, endingPt.x, endingPt.y
+    ].join(" ");
+    return d+' ';       
+}
 function firstkey(obj){return Object.keys(obj)[0];}
 function set(a){var o={};for(var key in a)o[a[key]]="";return o;}
 function find1common(obj1,obj2){
@@ -519,7 +536,63 @@ elementTypes={
 			container._content.onkeypress=function(e){if(e.keyCode==13){sendText(e);return false;}};
 		}
 	},
-	'_i*':function(data,container){},
+	'_i*':function(data,container){
+		if('_i*' in data){
+			var arc,angle,halfArc,svgElement;
+			if(container._svg===undefined){
+				container._svg=container._content.appendChild(document.createElementNS(SVGNS,'svg'));
+				container._svg.cssText="position:absolute;left:0px;top:0px;width:50;height:50";
+				container._svg.setAttribute('width',50);
+				container._svg.setAttribute('height',50);
+				container._svgg=container._svg.appendChild(document.createElementNS(SVGNS,'g'));
+				container._svga=container._svg.appendChild(document.createElementNS(SVGNS,'g'));
+				container._svga.setAttribute('stroke','none');
+				container._svga.setAttribute('fill','black');
+			}else{
+				while (container._svgg.firstChild)
+					container._svgg.removeChild(container._svgg.firstChild);
+				while (container._svga.firstChild)
+					container._svga.removeChild(container._svga.firstChild);
+			}
+			arc=360/data['_i*'][0];
+			halfArc=arc/2; //6 degree buffer between buttons
+			for(angle=data['_i*'][1];angle<(data['_i*'][1]+360);angle+=arc){
+				svgElement=container._svgg.appendChild(document.createElementNS(SVGNS,'path'));
+				svgElement.setAttribute('d','M 25 25 '+describeArc(25,25,25,angle-halfArc,angle+halfArc,false)+'Z');
+				svgElement._angle=angle;
+				svgElement.classList.add('_i__child');
+				//TODO: account for multi-touch where two irrespective mouseups can occur
+				var mouseupF=function(){
+						container._mousedown.setAttribute('_selected',0);
+						sendAction(container,[1,container._mousedown._angle]);
+						container._mousedown=undefined;
+						document.onmouseup=undefined;
+				};
+				svgElement.onmouseover=function(e){
+					if(container._mousedown!==undefined && container._mousedown!==this._angle){
+						container._mousedown.setAttribute('_selected',0);
+						this.setAttribute('_selected',1);
+						container._mousedown=this;
+						sendAction(container,[2,this._angle]);
+					}
+				};
+				svgElement.onmousedown=function(){
+					this.setAttribute('_selected',1);
+					container._mousedown=this;
+					sendAction(container,[2,this._angle]);
+					document.onmouseup=mouseupF;
+				};
+				svgElement=container._svga.appendChild(document.createElementNS(SVGNS,'polygon'));
+				svgElement.setAttribute('points','23,5 27,5 25,1');
+				svgElement.setAttribute('transform',"rotate("+angle+" 25 25)");
+			}
+			svgElement=container._svg.appendChild(document.createElementNS(SVGNS,'circle'));
+			svgElement.setAttribute('cx',25);
+			svgElement.setAttribute('cy',25);
+			svgElement.setAttribute('r',5);
+			svgElement.setAttribute('fill','white');
+		}
+	},
 	'_ln':function(data,container,level){
 		if(container._svg===undefined){
 			container._svg=container._content.appendChild(document.createElementNS(SVGNS,'svg'));
@@ -546,40 +619,46 @@ elementTypes={
 		}
 	},
 	'_tb':function(data,container,level){
-		var key;
+		var displaykey;
 		if(!container._tb){
 			container._tb=container._content.appendChild(document.createElement('table'));
-			container._tb.id='tb_'+tables;
-			stylesheet.insertRule('#tb_'+tables+' td {}',tables);
-			container._tb.cssrule=stylesheet.rules[tables]; //TODO: add style to this rule
-			++tables;
-			//TODO: commit and get rid of all this stylesheet and table counter stuff
-			//TODO: probly don't need tables counter
-			//TODO: header row
-			// container._tb.appendChild(document.createElement('tr')); //header row
+			container._displayablekeys=0;
+			container.setAttribute('_keycol',0);
+			// container._keycolcss=stylesheet.rules[stylesheet.insertRule('',stylesheet.rules.length)];
 		}
-		for(key in data){
+		for(var key in data){
 			if(!key.startsWith('_')){
-				if(!container._childmap[key]){
-					container._childmap[key]=container._tb.appendChild(document.createElement('tr'));
-					container._childmap[key]._childmap={};
-					container._childmap[key]._parentState=container;
-					container._childmap[key]._content=container._childmap[key];
-					//todo: account for displayable keys (i.e. row names)
+				if(data[key]===null && container._childmap[key]){
+					if(container._childmap[key]._key.innerHTML)
+						if(--container._displayablekeys===0)
+							container._tb.setAttribute('_keycol',0);
+							container.setAttribute('_keycol',0);
+					container._childmap[key].remove();
+					delete container._childmap[key];
+				}else{
+					if(!container._childmap[key]){
+						container._childmap[key]=container._tb.appendChild(document.createElement('tr'));
+						container._childmap[key]._childmap={};
+						container._childmap[key]._parentState=container;
+						container._childmap[key]._content=container._childmap[key];
+						container._childmap[key]._key=container._childmap[key].appendChild(document.createElement('td'));
+						container._childmap[key]._key.setAttribute('_keycol',1);
+						displaykey=key.startsWith('#')?'':replaceShorthand(key.trim());
+						if(displaykey){
+							container._childmap[key]._key.innerHTML=displaykey;
+							container._displayablekeys++;
+							container._tb.setAttribute('_keycol',1);
+							container.setAttribute('_keycol',1);
+						}
+					}
+					processOptions(data[key],container._childmap[key]);
+					elementTypes._tb_child(data[key],container._childmap[key],level+1);
 				}
-				processOptions(data[key],container._childmap[key]);
-				elementTypes._tb_child(data[key],container._childmap[key],level+1);
 			}
 		}
 		if(typeof(data._tb)==='object'){
-			if(data._tb.head && container._tb.children[0])container._tb.children[0].style.borderBottom='solid 2px gray'
-			// if(data._tb.hasOwnProperty('w'))container._tb.setAttribute('width',data._tb.w);
-			// if(data._tb.hasOwnProperty('h'))container._tb.setAttribute('height',data._tb.h);
-			// if(data._tb.hasOwnProperty('w'))container._tb.setAttribute('width',data._tb.w);
-			// if(data._tb.hasOwnProperty('bd'))container._tb.cssrule.style.borderStyle=data._tb.bd;
-			// if(data._tb.hasOwnProperty('bdc'))container._tb.cssrule.style.borderColor=data._tb.bdc;
-			// if(data._tb.hasOwnProperty('bdw'))container._tb.cssrule.style.borderWidth=data._tb.bdw;
-			// if(data._tb.hasOwnProperty('pad'))container._tb.cssrule.style.padding=data._tb.pad;
+			if(data._tb.head && container._tb.children[0])container._tb.children[0].style.borderBottom='solid 2px gray';
+			else container._tb.children[0].style.borderBottom='';
 		}
 	},
 	'_tb_child':function(data,container,level){
@@ -597,7 +676,7 @@ elementTypes={
 }
 specialElements=set(['_i','_ih','_i2','_i1','_ix','_i*','_ln','_tb']);
 compatible={
-	'object':set(['_i','_ih','_i1','_i2','_ix','_ln','_tb']),
+	'object':set(['_i','_ih','_i1','_i2','_ix','_ln','_tb','_tb_child']),
 	'string':set(['_ix']),
 	'number':set(['_i1_child','_i2_child']),
 	'boolean':set(['_i1_child','_i2_child']),

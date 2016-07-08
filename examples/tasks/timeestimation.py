@@ -1,4 +1,4 @@
-import json,random
+import json,random,sys
 if 'raw_input' in vars(__builtins__): input = raw_input		#Fix for Python 2.x raw_input
 
 
@@ -13,7 +13,7 @@ ENDZONEHEIGHT = 3 * BALLSIZE
 GOALLINEHEIGHT = 2
 
 
-def send(d): print(json.dumps(d))
+def send(d): print(json.dumps(d)); sys.stdout.flush()
 def recv(): return json.loads(input())
 
 

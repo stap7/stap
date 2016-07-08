@@ -1,4 +1,4 @@
-import json, random
+import json, random,sys
 if 'raw_input' in vars(__builtins__): input = raw_input		#Fix for Python 2.x raw_input
 
 
@@ -17,7 +17,7 @@ VAL2VIS=[random.randrange(2),random.randrange(2),random.randrange(2)]
 CATEGORY_NAMES=["Greeble","Groble"]; random.shuffle(CATEGORY_NAMES)
 ##############################################################################
 
-def send(d): print(json.dumps(d))
+def send(d): print(json.dumps(d)); sys.stdout.flush()
 def recv(): return json.loads(input())
 
 def itemKey(d): return next(iter(d.items()))[0]

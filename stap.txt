@@ -1,4 +1,5 @@
 STAP (Simple Task-Actor Protocol)
+version 4.2
 
     STAP is a machine-readable format for specifying user-interface changes.
     Main focus of STAP is in providing symmetric task experience for human and computational users alike.
@@ -86,6 +87,7 @@ Definition:
 <-::= {(<<key>>:<<actionValue>>,)*}                                     //<<key>> corresponds to an actionable item key (e.g. button panel, textbox)
 <-::= {<<waitID>>|<<tweenID>>:0}                                        //signifies that a requested timeout or animation is finished (or virtually finished for faster-than-real-time computational simulations)
 <-::= {"_error":<<text>>}                                               //error message
+<-::= {"_ver":<<number>>}                                               //version of STAP expected by client software
 <<state>>::= {(<<key>>:<<element>>,)*}                                  //unordered declaration of key/element pairs
 <<state>>::= [(<<key>>|([<<key>>,<<element>>]),)+]                      //declare key/element pairs in order; if key is specified without an element, and if this key does not exist, set its resepective element to default value (usually "", but could be {} if <<key>> is an <<option>>, or 1 if <<key>> is inside an _i, _i1, or _i2 element)
 <<element>>::= <<state>>|<<text>>|<<number>>|null                       //null signifies key deletion
@@ -95,6 +97,7 @@ Definition:
 <<key>>::= ** if <<key>> is one of <<option>> keys below, it is a special directive to be processed prior to display **
 **root-level only**
 <<option>>::= "_error":<<text>>                                         //error messages
+<<option>>::= "_ver":<<number>>                                         //may be sent once before task begins; version of the STAP used by task software
 <<option>>::= "_template":<<url>>                                       //may be sent once before task begins; may be ignored by computational agents; url of a custom visualization template for STAP messages (e.g. CSS or JS file); may be used multiple times to load multiple template files
 <<option>>::= "_unloadwarn":<<text>>                                    //may be sent once before task begins; may be ignored by computational agents; text to display in case participant is accidentally or intentionally closing the STAP display page or navigating away from it (e.g. "Navigating away from this page will pause your task session, your progress will be saved. Use your participant ID next time to resume.")
 <<option>>::= "_task":{"(win)|(loss)|(end)":<<conds>>}                  //may be sent once before task begins; win, loss, and neutral task-end conditions; 
@@ -111,7 +114,7 @@ Definition:
 <<option>>::= "_i1":{(<<inputOption>>,)*}                               //all elements in this state are exclusive choices (e.g. radiobuttons, select); when item is selected, the return value is 1 (same as button-down), when item is explicitly deselected, return value is 2 (same as button-up); when a new item is selected, previously selected value is assumed to be deselected implicitly; optionally, the first <<key>> in this element that has value 1 is the default selected item; e.g. {"_i1":{},"Male":2,"Female":2}
 <<option>>::= "_i2":{(<<inputOption>>,)*}                               //all elements in this state are boolean choices (e.g. multiple checkboxes or multi-select); when item is selected/on, the return value is 2 (same as button-down), when item is deselected/off, return value is 1 (same as button-up); for each <<key>> in this element, the value (2 or 1) is the default value; e.g. {"_i2":{},"Ford":1,"GM":1,"Subaru":2,"Tesla":2}
 <<option>>::= "_ix":{(<<inputOption>>,)*}                               //text input; e.g. <<key>>:["_ix"], user sends {<<key>>:<<text value>>} to task when text value is changed, task sw can alter text in existing textbox by using <<key>>:<<text>>, or <<key>>:{"_ix":{},"#0":<<text>>} (this latter version is a convinient way to specify default text when _ix is defined)
-<<option>>::= "_i\*":[<<number>>,<<number>>]                            //element is a set of directional hold-down buttons; [<<number>>,<<number>>] signify the number of direction buttons and starting direction in degrees (e.g. [4,0] signifies N/S/E/W); button-down (onmousedown or ontouchstart) returns {<<key>>:{degrees,1}}, button-up (onmouseup or ontouchend) returns {<<key>>:{degrees,2}}, e.g. <<key>>:{"_i*":[4,0]} will send back {<<key>>:{"0":2}}, {<<key>>:{<<key>>:{"90",2}}}, {<<key>>:{"180":2}}, {<<key>>:{"270":2} for N/S/E/W button-down events, respectively
+<<option>>::= "_i\*":{(<<navOption>>,)*}                                //element is a set of directional hold-down buttons; by default it has 4 directions, North, East, South, and West; button-down (onmousedown or ontouchstart) events send {<<key>>:[2,<<direction>>]} to client software and button-up (onmouseup or ontouchend) send {<<key>>:[1,<<direction>>]}, where <<direction>> is a number between 0 and the number of directions, e.g. a N/E/S/W control defined as <<key>>:{"_i*":{}} would send back {<<key>>:[2,0]}, {<<key>>:[2,1]}, {<<key>>:[2,2]}, {<<key>>:[2,3]} for N/E/S/W button-down events, respectively; only one direction may be pressed down at a time, thus a button-down event for North direction that follows a button-down event for East direction signifies not only that North is selected, but also that East is no longer selected
 <<option>>::= "_ln":{(<<strokeOption>>,)*}                              //all elements in this state are lines/paths; expected state content: (<<key>>:[<<number>>,<<number>> (,<<number>>,<<number>>)+],)* pairs to signify line points, or <<key>>:<<text>> pairs to signify SVG path strings (e.g. <<key>>:"M150 0 75 200 225 200 Z")
 <<option>>::= "_tb":{(<<tableOption>>,)*}                               //all elements in this state are rows in a table; expected state content: <<key>>:<<array>> pairs, where each <<array>> is a row of values; e.g. {"My Table":{"_tb":{},"#1":["John","male"],"#2":["Mary","female"]}}; alternatively, a 2dim array can be passed after the element is declared as a table; e.g. {"My Table":{"_tb":{}}} ... {"My Table":[["John","male"],["Mary","female"]]}
 **any state**
@@ -128,7 +131,7 @@ Definition:
 <<conds>>::=        {(<<key>>:<<text>>|<<number>>,)*}
 <<actionValue>>::=  ** must be one of the values that is allowed for the respective input type (e.g. _bn action value is always 3, _tx action value is <<text>>) **
 <<waitID>>::=       ** any number or string **
-<<tableOption>>::=  "head":1|0                                          //if this value is 1, first row is treated as the header row (default value is 0)
+<<tableOption>>::=  "head":0|1                                          //if this value is 1, first row is treated as the header row (default value is 0)
 <<strokeOption>>::= "f":(<<color>>|"none")                              //similar to SVG fill
 <<strokeOption>>::= "c":(<<color>>|"none")                              //similar to SVG stroke
 <<strokeOption>>::= "w":<<number>>                                      //similar to SVG stroke-width
@@ -140,6 +143,8 @@ Definition:
 <<inputOption>>::=  "lines":<<number>>                                  //if action is _ix, i1, or i2, this specifies number of visible lines or items
 <<inputOption>>::=  "maxchars":<<number>>                               //if action is _ix, this specifies max number of characters
 <<inputOption>>::=  "pwd":<<text>>                                      //if action is _ix, this turns the field into a password field, and <<text>> specifies salt to add to the password string before using SHA1 to hash it before sending (salt must be consistent for a given user; see https://en.wikipedia.org/wiki/Salt_(cryptography))
+<<navOption>>::=    "n":<<number>>                                      //number of directional hold-down buttons in the _i* control; e.g. "_i*":{"n":2} creates a control that has 2 buttons (North and South), "_i*":{"n":8} creates a control that has 8 buttons (N,NE,E,SE,S,SW,W,NW)
+<<navOption>>::=    "start":<<number>>                                  //angle of the starting directional hold-down button in the _i* control; e.g. "_i*":{"n":4,"start":45} creates a control that has NE, SE, SW, NW hold-down buttons
 <<numOption>>::=    "time":<<timeFormat>>                               //exclusive with "unit" option; convert number of seconds since 1970/01/01 00:00 into datetime format such as "dddd h:mmtt d MMM yyyy", "M/d/y", "HH:mm:ss", "hh:mm:ss", "yy/M/d", "ddd MMM d h:mm"
 <<numOption>>::=    "unit":<<text>>                                     //exclusive with "time" option; unit for the number (e.g. "$", "%", " m/sec", "kg")
 <<numOption>>::=    "rnd":<<number>>                                    //round to the nearest <<number>>; e.g. {"_nm":{"rnd":.01}, "x":57.1} should be interpreted as x=57.10, {"_nm":{"rnd":5}, "x":57.1} should be interpreted as x=55

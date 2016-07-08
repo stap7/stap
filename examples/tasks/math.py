@@ -1,7 +1,7 @@
-import json,random
+import json,random,sys
 if 'raw_input' in vars(__builtins__): input = raw_input		#Fix for Python 2.x raw_input
 
-def send(d): print(json.dumps(d))
+def send(d): print(json.dumps(d)); sys.stdout.flush()
 def recv(): return json.loads(input())
 
 #instructions for what is considered positive and negative feedback
@@ -28,7 +28,7 @@ while 1:
 	#clear the screen
 	send( None )
 	#send feedback
-	send( {"#feedback": ["Correct" if answer==str(x+y) else "Incorrect"] } )
+	send( {"#feedback": ("Correct" if answer==str(x+y) else "Incorrect") } )
 	#tell participant sw to set a timer for 500ms and then respond
 	send( {"_W":{"":1}} )
 	#wait for participant sw to respond
@@ -46,7 +46,7 @@ while 1:
 # "<-":{"Answer":"10"}
 # "<-":{"#submit":{"Submit":3}}
 # "->":null
-# "->":{"#feedback":["Incorrect"]}
+# "->":{"#feedback":"Incorrect"}
 # "->":{"_W":{"":0.5}}
 # "<-":{"":0}
 # "->":null
@@ -56,7 +56,7 @@ while 1:
 # "<-":{"Answer":"10"}
 # "<-":{"#submit":{"Submit":3}}
 # "->":null
-# "->":{"#feedback":["Correct"]}
+# "->":{"#feedback":"Correct"}
 # "->":{"_W":{"":0.5}}
 # "<-":{"":0}
 # "->":null

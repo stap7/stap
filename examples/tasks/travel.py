@@ -2,18 +2,18 @@
 
 '''
 
-import json,random
+import json,random,sys
 if 'raw_input' in vars(__builtins__): input = raw_input		#Fix for Python 2.x raw_input
 
 
-def send(d): print(json.dumps(d))
+def send(d): print(json.dumps(d)); sys.stdout.flush()
 def recv(): return json.loads(input())
 def itemKey(d): return next(iter(d.items()))[0]
 
 
 TRIALS = 10
 NUMBER_OF_LOCATIONS = 10
-SECONDS_PER_TRIAL = 600
+SECONDS_PER_TRIAL = 60
 
 MAXX = 400
 MAXY = 300
@@ -46,7 +46,7 @@ def locKey2Num(locKey): return int(locKey[1:])
 def makeMap(locs):
 	map={"_bx":dict(w=canvasWidth,h=canvasHeight,x=0,y=0),"_i":{}}
 	for locNum,loc in enumerate(locs):
-		map[locNum2Key(locNum)]={"_bx":dict(w=LOCSIZE,h=LOCSIZE,x=loc[0],y=loc[1],bd='solid 1px black',bg='white',r=LOCSIZE//2)}
+		map[locNum2Key(locNum)]={"_bx":dict(w=LOCSIZE,h=LOCSIZE,x=loc[0],y=loc[1],bd='solid',bg='white',r=LOCSIZE//2)}
 	return map
 
 def calcDist(chosenLocs,locations):

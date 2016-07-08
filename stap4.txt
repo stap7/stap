@@ -19,7 +19,7 @@ ACTOR->TASK protocol                                                            
 <<displayUpdate>>::=    <<buttonsKey>>:{"_i":{} (,<<buttonText>>:1)*}                   //button panel
 <<displayUpdate>>::=    <<textInputKey>>:{"_ix":{}}                                     //text input
 <<state>>::=            {(<<displayUpdate>>,)*}
-<<waitID>>::=           <<key>>
+<<waitID>>::=           ** any number or string **
 <<textInputKey>>::=     <<key>>
 <<buttonsKey>>::=       <<key>>
 <<buttonText>>::=       <<key>>
