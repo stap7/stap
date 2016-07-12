@@ -538,7 +538,7 @@ elementTypes={
 	},
 	'_i*':function(data,container){
 		if('_i*' in data){
-			var arc,angle,halfArc,svgElement;
+			var i,angle,startAngle,arc,halfArc,svgElement;
 			if(container._svg===undefined){
 				container._svg=container._content.appendChild(document.createElementNS(SVGNS,'svg'));
 				container._svg.cssText="position:absolute;left:0px;top:0px;width:50;height:50";
@@ -554,32 +554,39 @@ elementTypes={
 				while (container._svga.firstChild)
 					container._svga.removeChild(container._svga.firstChild);
 			}
-			arc=360/data['_i*'][0];
+			arc=360/(data['_i*'].n||4);
 			halfArc=arc/2; //6 degree buffer between buttons
-			for(angle=data['_i*'][1];angle<(data['_i*'][1]+360);angle+=arc){
+			startAngle=data['_i*'].start||0;
+			for(i=0;i<(data['_i*'].n||4);++i){
+				angle=startAngle+arc*i;
 				svgElement=container._svgg.appendChild(document.createElementNS(SVGNS,'path'));
 				svgElement.setAttribute('d','M 25 25 '+describeArc(25,25,25,angle-halfArc,angle+halfArc,false)+'Z');
-				svgElement._angle=angle;
+				svgElement._angle=i;
 				svgElement.classList.add('_i__child');
 				//TODO: account for multi-touch where two irrespective mouseups can occur
+				var sendnav=function(buttonState){
+					var sendback={};
+					sendback[container._mousedown._angle]=buttonState;
+					sendAction(container,sendback);
+				}
 				var mouseupF=function(){
-						container._mousedown.setAttribute('_selected',0);
-						sendAction(container,[1,container._mousedown._angle]);
-						container._mousedown=undefined;
-						document.onmouseup=undefined;
+					container._mousedown.setAttribute('_selected',0);
+					sendnav(1);
+					container._mousedown=undefined;
+					document.onmouseup=undefined;
 				};
 				svgElement.onmouseover=function(e){
 					if(container._mousedown!==undefined && container._mousedown!==this._angle){
 						container._mousedown.setAttribute('_selected',0);
 						this.setAttribute('_selected',1);
 						container._mousedown=this;
-						sendAction(container,[2,this._angle]);
+						sendnav(2);
 					}
 				};
 				svgElement.onmousedown=function(){
 					this.setAttribute('_selected',1);
 					container._mousedown=this;
-					sendAction(container,[2,this._angle]);
+					sendnav(2);
 					document.onmouseup=mouseupF;
 				};
 				svgElement=container._svga.appendChild(document.createElementNS(SVGNS,'polygon'));

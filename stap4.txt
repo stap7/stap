@@ -1,4 +1,5 @@
 STAP4 (Simple Task-Actor Protocol 4 basic directives: _task, _W, _i, _ix)
+version 4.2
 
 
 TASK->ACTOR protocol                                                                    //task commands and updates to virtual display
@@ -15,10 +16,10 @@ ACTOR->TASK protocol                                                            
 
 <<wait>>::=             "_W":<<number>>                                                 //wait <<number>> of seconds before processing rest of display updates
 <<wait>>::=             "_W":{<<waitID>>:<<number>>}                                    //wait <<number>> of seconds, then process rest of display updates and respond to server with: {<<waitID>>:0}
+<<state>>::=            {(<<displayUpdate>>,)*}
 <<displayUpdate>>::=    <<key>>:<<state>>|<<text>>|<<number>>|(null)                    //null signifies key deletion
 <<displayUpdate>>::=    <<buttonsKey>>:{"_i":{} (,<<buttonText>>:1)*}                   //button panel
 <<displayUpdate>>::=    <<textInputKey>>:{"_ix":{}}                                     //text input
-<<state>>::=            {(<<displayUpdate>>,)*}
 <<waitID>>::=           ** any number or string **
 <<textInputKey>>::=     <<key>>
 <<buttonsKey>>::=       <<key>>
