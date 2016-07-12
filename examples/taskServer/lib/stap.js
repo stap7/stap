@@ -537,6 +537,7 @@ elementTypes={
 		}
 	},
 	'_i*':function(data,container){
+		if(data.constructor==Array)data=set(data);
 		if('_i*' in data){
 			var i,angle,startAngle,arc,halfArc,svgElement;
 			if(container._svg===undefined){
