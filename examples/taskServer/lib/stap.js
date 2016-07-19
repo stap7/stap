@@ -7,10 +7,14 @@ TODO for latest STAP release:
 	add input options
 	test _tb
 	test in diff browsers
+
+TODO futureproof:
+	account for multi-touch where two irrespective mouseups can occur
+
 */
 
 
-required=[
+var required=[
 	"lib/stap.css",
 	// "https://cdn.jsdelivr.net/js-sha1/0.3.0/sha1.min.js",
 	// "https://cdnjs.cloudflare.com/ajax/libs/datejs/1.0/date.min.js",
@@ -121,7 +125,8 @@ var STAP2CSS={'bd':'border','pad':'padding','w':'width','h':'height','bg':'backg
 var EASE={0:'Power0',1:'Power1',2:'Power2',3:'Power3',4:'Power4',back:'Back',elastic:'Elastic',bounce:'Bounce'};
 
 
-var ws,maindiv,ppdiv,markerdefs,stylesheet,tables=0,elements={},taskOptions={win:{},loss:{},end:{},good:{},bad:{}},visOptions={},msgTimeouts={},txtReplace={};
+var ws,maindiv,ppdiv,markerdefs,stylesheet,tables=0,
+	elements={},taskOptions={win:{},loss:{},end:{},good:{},bad:{}},visOptions={},msgTimeouts={},txtReplace={};
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -556,7 +561,7 @@ elementTypes={
 					container._svga.removeChild(container._svga.firstChild);
 			}
 			arc=360/(data['_i*'].n||4);
-			halfArc=arc/2; //6 degree buffer between buttons
+			halfArc=arc/2;
 			startAngle=data['_i*'].start||0;
 			for(i=0;i<(data['_i*'].n||4);++i){
 				angle=startAngle+arc*i;
