@@ -204,4 +204,4 @@ Definition:
 // <<tableOption>>::=  "bdc":<<color>>                                     //cell border color
 // <<tableOption>>::=  "bdw":<<number>>                                    //cell border width
 // <<tableOption>>::=  "pad":<<cssPadding>>                                //cell padding
-
+// <<aniOption>>::=    ???? .... collision detection

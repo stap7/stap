@@ -712,11 +712,12 @@ function taskInstructions(taskOptions){
 	}
 	for(key in taskOptions.good){
 		if(!key.startsWith('#')){
-			if(taskOptions.good[key]=='+')
-				instructions+="<li>The higher "+keyFormat(key)+" is, the better.\n";
-			else if(taskOptions.good[key]=='-')
+			if(taskOptions.good[key]=='+'){
+				if(key.toLowerCase().trim()!=='score')
+					instructions+="<li>The higher "+keyFormat(key)+" is, the better.\n";
+			}else if(taskOptions.good[key]=='-'){
 				instructions+="<li>The lower "+keyFormat(key)+" is, the better.\n";
-			else if(typeof(taskOptions.good[key])==='string'){
+			}else if(typeof(taskOptions.good[key])==='string'){
 				if(taskOptions.good[key].toLowerCase().trim()!=='correct')
 					instructions+="<li>Try to get "+keyFormat(key)+' to be "'+taskOptions.good[key]+'".\n';
 			}else
@@ -835,7 +836,6 @@ function processState(data,container,level){
 					child._specialOptions={};
 				}
 				processOptions(data[key],child);
-				dp(child._type);
 				elementTypes[child._type](data[key],child,level+1);
 			}
 		}
@@ -972,8 +972,8 @@ function main(){
 	var style = document.createElement("style");
 	style.appendChild(document.createTextNode(""));// WebKit hack
 	document.head.appendChild(style);
-	stylesheet=style.sheet;
 	markerdefs=document.body.appendChild(document.createElementNS(SVGNS,'svg')).appendChild(document.createElementNS(SVGNS,'defs'));
+	markerdefs.parentElement.style.height='0px';
 	ppdiv=addDivs(document.body,'obj',0,"__pp__");
 	ppdiv._hide();
 	ppdiv._parentState=maindiv;
