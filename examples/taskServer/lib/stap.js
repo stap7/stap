@@ -489,6 +489,11 @@ elementTypes={
 			r[container.id]=CLICK;
 			container.onclick=function(){sendAction(container._parentState,r);};
 		}
+		if(data==CLICK){
+			console.log('here');
+			container.classList.add('active');
+			setTimeout(function(){container.classList.remove('active')},250);
+		}
 	},
 	'_ih_child':function(data,container){
 		container._content.innerHTML=data;

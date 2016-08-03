@@ -23,13 +23,15 @@ Usage:
                                 requires dashed parameters, e.g. "foo.exe -a")
    portSpec:
      -t, --serveOnTCPPort port  serve stdioExec over TCP port
-     -w, --serveOnWSPort port [-h,--html path]
+     -w, --serveOnWSPort port [-h,--html htmlpath]
                                 serve stdioExec over WebSocket port,
-                                optionally make html file at path (for STAP
-                                WebSocket service)
+                                [make html file at htmlpath (for STAP
+                                WebSocket service)]
    logFolder:
-     -l, --logpath path         log all server-client interactions in
+     -l, --logpath path [-p, --playback htmlpath]
+                                log all server-client interactions in
                                 separate logfiles in the specified path folder
+                                [make html file at htmlpath for playback]
 `;
 
 
@@ -42,7 +44,8 @@ var childProcess = require('child_process'),
 
 var WIN=process.env.comspec && process.env.comspec.search("cmd.exe")>-1,
 	spawnedProcesses=[],
-	filesToRemove=[];
+	filesToRemove=[],
+	playbackStartedOnPort=false;
 
 
 
@@ -64,6 +67,11 @@ function mkdir(pathname) {
 function newFilePath(folder,extension){
 	//TODO: make sure filepath doesnt exist
 	return path.join(folder,(new Date()).toJSON().replaceAll(':','-')+'.'+extension);
+}
+
+function wait( sleepDuration ){
+    var now = new Date().getTime();
+    while(new Date().getTime() < now + sleepDuration){ /* do nothing */ } 
 }
 
 function run(cmd){
@@ -187,13 +195,14 @@ function startTaskService(task){
 		});
 	}
 	if(task.logpath){
-		//task.datapath=path.join(DATADIR,taskName)
 		mkdir(task.logpath);
+		if(task.playback){
+			startPlaybackService(task.playback,(task.t || task.w)+2000,task.logpath);
+		}
 	}
 	//Serve task over standard TCP Socket
 	if(task.serveOnTCPPort){
 		task.tcps = CreateTcpServer(function(socket){onActorConnection(task,socket,'data','end')}).listen(task.serveOnTCPPort);
-		
 	}
 	//Serve task over WebSocket
 	if(task.serveOnWSPort){
@@ -223,20 +232,19 @@ function makeHtmlStapClient(filepath,port){
 	filesToRemove.push(filepath);
 }
 
-function startPlaybackService(port){
+function startPlaybackService(playbackHTML,port,taskpath){
 	var wss = new WebSocket.Server({port: port});
+	console.log('trying playback on ',port);
+	wss.on('error',function(){
+		startPlaybackService(playbackHTML,port+1,taskpath);
+	});
 	wss.on('connection', function(ws){
-		var taskpath,logpath,timestamp,linenum,lines=[];
+		var logpath,timestamp,linenum,lines=[];
+		makeHtmlStapClient(playbackHTML,port);
 		ws.on('message', function(msg){
 			console.log(msg);
 			data=JSON.parse(msg);
-			if(!taskpath && data['Tasks']){
-				var task=Object.keys(data['Tasks'])[0];
-				taskpath=path.join(DATADIR,task);
-				ws.send(JSON.stringify(null));
-				ws.send(JSON.stringify({Task:task}));
-				ws.send(JSON.stringify({'#logfiles':['_i'].concat(fs.readdirSync(taskpath))}));
-			}else if(data['#logfiles']){
+			if(data['#logfiles']){
 				if(!logpath){
 					var logfile=Object.keys(data['#logfiles'])[0];
 					logpath=path.join(taskpath,logfile);
@@ -254,17 +262,21 @@ function startPlaybackService(port){
 					function nextLine(line){
 						try{
 							console.log(line);
-							if(line[1]=='1')
-								ws.send('{"_A":'+line[2]+'}');
-							else
+							var curtime;
+							if(line[1]=='1'){
+								ws.send('{"_.":'+line[2]+'}');
+							}else{
 								ws.send(line[2]);
+							}
 							while((linenum+1)<lines.length && lines[linenum+1].trim()==""){
 								++linenum;
 							}
 							if((++linenum)<lines.length){
 								var nextln=lines[linenum].split('\t');
 								nextln[0]=parseInt(nextln[0]);
-								setTimeout(function(){nextLine(nextln);},nextln[0]-line[0]);
+								if(nextln[1]=='1')nextln[0]=Math.max(line[0],nextln[0]-250);
+								setTimeout(function(){nextLine(nextln);},
+									Math.max(0,nextln[0]-line[0]));
 							}else{
 								ws.close();
 							}
@@ -280,11 +292,11 @@ function startPlaybackService(port){
 				});
 			}
 		});
-		ws.on('close', function(){
-			linenum=lines.length;
-		});
-		ws.send(JSON.stringify("Logfile Playback"));
-		ws.send(JSON.stringify({'Tasks':['_i'].concat(fs.readdirSync(path.join('.','data')))}));
+		ws.on('close', function(){linenum=lines.length;});
+		ws.on('error', function(){linenum=lines.length;});
+		ws.send("Logfile Playback");
+		ws.send(taskpath);
+		ws.send(JSON.stringify({'#logfiles':['_i'].concat(fs.readdirSync(taskpath))}));
 	});
 }
 
@@ -297,7 +309,8 @@ function main(){
 				w:'serveOnWSPort',
 				t:'serveOnTCPPort',
 				l:'logpath',
-				h:'html'
+				h:'html',
+				p:'playback'
 			},
 		});
 	if(args._.length===1)args._=args._[0].split(" ");
@@ -306,9 +319,11 @@ function main(){
 	else if(!exeExists(args._[0]))
 		console.log(args._[0]+' is not a recognized command.\n Use --help for usage.');
 	else if(!args.w && !args.t)
-		console.log('Must specify either the TCP or the WebSocket port or both.\n Use --help for usage.')
+		console.log('Must specify either the TCP or the WebSocket port or both.\n Use --help for usage.');
 	else if(args.h && !args.w)
-		console.log('Must specify the WebSocket port if you use the -h,--html option to create a WebSocket client HTML page.\n Use --help for usage.')
+		console.log('Must specify the WebSocket port if you use the -h,--html option to create a WebSocket client HTML page.\n Use --help for usage.');
+	else if(args.p && !args.l)
+		console.log('If you are creating a webpage for playback, you must also use the -l,--logpath option to specify a path for logfiles.');
 	else
 		startTaskService(args);
 }
