@@ -188,6 +188,7 @@ Definition:
 
 
 //Potential future additions:
+// <-::= {"_s":<<number>>}                                                 //simulated skipped time; only used by computational participants
 // <<conds>>::= [([<<cond>>+],)+]                                          //assume OR for all items in outer list, assume AND for all items in inner list
 // <<cond>>::= "<<key>> (==|!=|<|>) <<text>>|<<number>>",                  //boolean statement signifying a potential game-end condition
 // <<inputOption>>::=  "keys":([(<<keycode>>,)*])|{(<<key>>:<<keycode>>,)*}//keyboard shortcuts assigned to each input element (e.g. use 13 for carriage return, 65 for A, 37 for left arrow key)

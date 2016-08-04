@@ -220,6 +220,7 @@ function startTaskService(task){
 
 ////////////////////////////////////////
 function makeHtmlStapClient(filepath,port){
+	console.log('creating',filepath,port);
 	var indexPage=fs.createWriteStream(filepath);
 	indexPage.write(`<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 		<meta name="apple-mobile-web-app-capable" content="yes">
@@ -232,15 +233,17 @@ function makeHtmlStapClient(filepath,port){
 	filesToRemove.push(filepath);
 }
 
+
 function startPlaybackService(playbackHTML,port,taskpath){
 	var wss = new WebSocket.Server({port: port});
-	console.log('trying playback on ',port);
 	wss.on('error',function(){
 		startPlaybackService(playbackHTML,port+1,taskpath);
 	});
+	wss.on('listening', function(){
+		makeHtmlStapClient(playbackHTML,port);
+	});
 	wss.on('connection', function(ws){
 		var logpath,timestamp,linenum,lines=[];
-		makeHtmlStapClient(playbackHTML,port);
 		ws.on('message', function(msg){
 			console.log(msg);
 			data=JSON.parse(msg);
