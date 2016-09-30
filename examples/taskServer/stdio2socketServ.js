@@ -76,7 +76,7 @@ function wait( sleepDuration ){
 
 function run(cmd){
 	var p;
-	console.log('starting',cmd);
+	console.log((new Date())+' starting ['+cmd+']');
 	if(WIN)p=childProcess.spawn(process.env.comspec,['/c'].concat(cmd));
 	else p=childProcess.spawn(cmd[0],cmd.slice(1));
 	spawnedProcesses.push(p);
@@ -85,7 +85,7 @@ function run(cmd){
 }
 
 function killSpawnedProcess(p){
-	console.log('killing aborted process ['+p.runline+']');
+	console.log((new Date())+' killing aborted process ['+p.runline+']');
 	spawnedProcesses.splice(spawnedProcesses.indexOf(p), 1);
 	if(WIN)childProcess.spawn("taskkill", ["/pid", p.pid, '/f', '/t']);
 	else p.kill();
@@ -103,7 +103,7 @@ function exitHandler(options, err) {
 	while(filesToRemove.length)
 		fs.unlinkSync(filesToRemove.pop());
     //if (options.cleanup) console.log('clean');
-    if (err) console.log(err.stack);
+    if (err) console.log((new Date())+'\n'+err.stack);
     if (options.exit) process.exit();
 }
 //do something when app is closing
@@ -115,7 +115,7 @@ process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
 
 process.on('uncaughtException', function (err) {
   console.error(err.stack);
-  console.log("Node NOT Exiting...");
+  console.log((new Date())+'\n'+"Node NOT exiting...");
 });
 
 
@@ -135,9 +135,9 @@ function onTask2ActorMsg(data,socket,tasklog){
 					else socket.send(arrayOfLines[i]+'\r\n');
 					record2log(tasklog,arrayOfLines[i],0);
 				}catch(e){
-					console.log('!Failed to write to socket:\n',' > ',arrayOfLines[i],'\n',e,'\nClosing connection...');
+					console.log((new Date())+'\n'+'!Failed to write to socket:\n',' > ',arrayOfLines[i],'\n',e,'\nClosing connection...');
 					if(socket.end)socket.end();else socket.close();
-					console.log('Closed.');
+					console.log((new Date())+'\n'+'Closed.');
 				}
 			}
 		}
@@ -167,7 +167,7 @@ function onActorConnection(task,socket,rcvEvent,endEvent){
 		taskprocess.stderr.on("data", function(data){
 			console.error("------- Error in \""+task._+"\"\n"+data.toString()+"\n=======");
 			killSpawnedProcess(taskprocess);
-			socket.close();
+			if(socket.end)socket.end();else socket.close();
 			if(tasklog)tasklog.end();
 		});
 		socket.on('error', function(err){
@@ -175,13 +175,13 @@ function onActorConnection(task,socket,rcvEvent,endEvent){
 			if(socket.end)socket.end();else socket.close();
 			killSpawnedProcess(taskprocess);
 			if(task.logpath)tasklog.end();
-			console.log('Closed.');
+			console.log((new Date())+'\n'+'Closed.');
 		});
 		socket.on(rcvEvent, function(data){onActor2TaskMsg(data,taskprocess,tasklog);});		// actor --> task
 		socket.on(endEvent, function(){killSpawnedProcess(taskprocess);if(task.logpath)tasklog.end();});
 		taskprocess.on("close", function(){if(socket.end)socket.end();else socket.close();if(task.logpath)tasklog.end();});
 	}catch(e){
-		console.log(e);
+		console.log((new Date())+'\n'+e);
 	}
 }
 function startTaskService(task){
@@ -264,7 +264,7 @@ function startPlaybackService(playbackHTML,port,taskpath){
 					linenum=0;
 					function nextLine(line){
 						try{
-							console.log(line);
+							//console.log(line);
 							var curtime;
 							if(line[1]=='1'){
 								ws.send('{"_.":'+line[2]+'}');
@@ -286,7 +286,7 @@ function startPlaybackService(playbackHTML,port,taskpath){
 						}catch(e){
 							taskpath=undefined;
 							ws.close();
-							console.log(e);
+							console.log((new Date())+'\n'+e);
 						}
 					}
 					var line=lines[linenum].split('\t');

@@ -1,11 +1,27 @@
 STAP (Simple Task-Actor Protocol)
-version 4.21
+version 5.0
 
     STAP is a machine-readable format for specifying user-interface changes.
     Main focus of STAP is in providing symmetric task experience for human and computational users alike.
     In its focus to make human software usable by machine agents, STAP aims to eliminate non-task-essential design choices (e.g. font type/size may be irrelevant for may task types), leaving those to be optionally specified via customizable templates (e.g. CSS).
     STAP messages adhere to JSON formatting, and can thus be deserialized with any standard JSON library.
     
+    Deploying a STAP application is similar to deploying a web application, where STAP is employed in place of HTML.
+    Much like HTML, STAP is a means for serializing task interface display and interactions.
+    Unlike HTML documents, STAP messages are incremental updates to the display (the implication is that STAP applications require task-side push ability (e.g. using websockets), or continuous user-side requests).
+    Whereas HTML is focused on hypertext look and feel, STAP is focused on function and structure of task interface.
+    Thus, STAP employs many fewer directives than there are tags in HTML.
+
+        STAP DIRECTIVE      HTML EQUIVALENT
+        _tb                 <table>
+        _ln                 <path> element inside <svg>
+        _i                  set of <input type=button> (or <button> or <a> or <div> or <span>) elements that send onclick events
+        _ih                 set of <input type=button> (or <button> or <a> or <div> or <span>) elements that send onmousedown and onmouseup events
+        _i1                 set of <option> elements inside <select>, or set of <input type="radio"> elements sharing a name
+        _i2                 set of <option> elements inside <select multiple>, or set of <input type="checkbox"> elements
+        _ix                 <input> or <textarea> or <input type=password>
+        _i*                 no HTML equivalent
+
 
 ///////////////////////////////////////////////////////////////////
 Examples:
@@ -18,8 +34,8 @@ Examples:
         -> "Hello World"
         // display a ">" prompt with a textbox
         -> {">":["_ix"]}
-        // user typed "hi" into the textbox
-        <- {">":"hi"}
+        // user typed "hi" into the textbox after 30.8s
+        <- [30800,">","hi"]
 
     Sample Interaction 2:
         // display "Hello World"
@@ -28,14 +44,14 @@ Examples:
         -> {"_task":{"good":{"Coins Earned":"+"}}}
         // display two buttons
         -> {"choose a button":["_i","Button 1","Button 2"]}
-        // first button was clicked
-        <- {"choose a button":{"Button 1":3}}
+        // first button was clicked after 2.307sec
+        <- [2307,"choose a button",{"Button 1":3}]
         // give client reward, "Coins Earned"=7
         -> {"Coins Earned":7}
         // wait 2 seconds and remove the coins earned display
-        -> {"_W":2,"Coins Earned":null}
+        -> {"_S":4307,"Coins Earned":null}
         // second button was clicked
-        <- {"choose a button":{"Button 2":3}}
+        <- [5422,"choose a button",{"Button 2":3}]
         // give reward
         -> {"Coins Earned":3}
         ...
@@ -44,15 +60,15 @@ Examples:
         // display a 100x100 box, with an element inside it that will display red lines
         -> {"click somewhere":{"_bx":{"w":100,"h":100},"_i+":[3],"#lines":{"_ln":{"c":"red"}}}}
         // user clicked in location 24,60 relative to top-left corner of the box
-        <- {"click somewhere":[3,24,60]}
+        <- [1570,"click somewhere",[3,24,60]]
         // draw a line from middle of the box to where user clicked
         -> {"_.":{"#lines":{"#0":[50,50,24,60]}}}
         // user clicked in location 91,10 relative to top-left corner of the box
-        <- {"click somewhere":[3,91,10]}
+        <- [2307,"click somewhere",[3,91,10]]
         // draw a line from middle of the box to where user clicked
         -> {"_.":{"#lines":{"#1":[50,50,91,10]}}}
         // user clicked in location 31,33 relative to top-left corner of the box
-        <- {"click somewhere":[3,31,33]}
+        <- [2555,"click somewhere",[3,31,33]]
         // draw a line from middle of the box to where user clicked
         -> {"_.":{"#lines":{"#2":[50,50,31,33]}}}
         ...
@@ -60,16 +76,16 @@ Examples:
 
     Input       Sampe Control definition (->)                             Sample Actions (<-)
     -------------------------------------------------------------------------------------------------------------------
-    button      {"#abc":{"_i":{},"press me":1}}                           {"#abc":{"press me":3}}
+    button      {"#abc":{"_i":{},"press me":1}}                           [1012,"#abc",{"press me":3}]
     button      {"#abc":["_i","press me"]}
-    holddown    {"#abc":{"_ih":{},"hold me":1}}                           {"#abc":{"hold me":2}} {"#abc":{"hold me":1}}
+    holddown    {"#abc":{"_ih":{},"hold me":1}}                           [1012,"#abc":{"hold me":2}] [1323,"#abc":{"hold me":1}]
     holddown    {"#abc":["_ih","hold me"]}
-    select      {"#abc":{"_i1":{},"male":1,"female":1}}                   {"#abc":{"male":2}} {"#abc":{"female":2}} {"#abc":{"female":1}}
+    select      {"#abc":{"_i1":{},"male":1,"female":1}}                   [1012,"#abc":{"male":2}] [1323,"#abc",{"female":2}] [1703,"#abc",{"female":1}]
     select      {"#abc":["_i1","subaru","tesla"]}
-    onoff       {"#abc":{"_i2":{},"subaru":1,"tesla":1}}                  {"#abc":{"male":2}} {"#abc":{"female":2}} {"#abc":{"male":1}} {"#abc":{"female":1}}
+    onoff       {"#abc":{"_i2":{},"subaru":1,"tesla":1}}                  [1012,"#abc",{"male":2}] [1323,"#abc":{"female":2}] [1703,"#abc",{"male":1}] [2301,"#abc",{"female":1}]
     onoff       {"#abc":["_i2","subaru","tesla"]}
-    text        {"#abc":{"_ix":{}}}                                       {"#abc":"hello world"} 
-    events      {"#abc":{"_i+":[2,16],...}}                               {"#abc":[2,x,y]} {"#abc":[16,x,y]}
+    text        {"#abc":{"_ix":{}}}                                       [1012,"#abc","hello world"]
+    events      {"#abc":{"_i+":[2,16],...}}                               [1012,"#abc",[2,x,y]] [1323,"#abc",[16,x,y]]
 
 
 
@@ -81,20 +97,28 @@ Definition:
     <- ::= Message sent to task software from participant software
 
 ->::= <<state>>                                                         //edit current display state recursively with values in <<state>>
-->::= <<text>>                                                          //shorthand for {"#<<X>>":<<text>>} where <<X>> starts at zero and is incremented with each message, e.g. "hello world" "goodbye world" is equivalent to {"#0":"hello world"} {"#1":"goodbye world"}
+->::= <<text>>                                                          //shorthand for {"_a":<<text>>} where _a is the append directive; e.g. "hello world" "goodbye world" is equivalent to {"_a":"hello world"} {"_a":"goodbye world"}, and will append "hello world" and then "goodbye world" text strings to the virtual display
 ->::= {"_.":{<<key>>:<<element>>}}                                      //find first occurrence of <<key>> in existing hierarchy, edit its value based on <<element>>
 ->::= null                                                              //clear the display state
-<-::= {(<<key>>:<<actionValue>>,)*}                                     //<<key>> corresponds to an actionable item key (e.g. button panel, textbox)
-<-::= {<<waitID>>|<<tweenID>>:0}                                        //signifies that a requested timeout or animation is finished (or virtually finished for faster-than-real-time computational simulations)
-<-::= {"_error":<<text>>}                                               //error message
-<-::= {"_ver":<<number>>}                                               //version of STAP expected by client software
+
+<-::= [<<ums>>,<<key>>,<<actionValue>>]                                 //<<key>> corresponds to an actionable item key (e.g. button panel, textbox)
+<-::= [<<ums>>,<<tweenID>>,0]                                           //signifies that a requested timeout or animation is finished (or virtually finished for faster-than-real-time computational simulations)
+<-::= [<<ums>>,"_R",<<msgID>>]                                          //receipt of msg; signifies that task->actor msg with the specified <<msgID>> has been processed
+<-::= [<<ums>>,"_error",<<text>>]                                       //error message
+<-::= [<<ums>>,"_ver",<<number>>]                                       //version of STAP expected by client software
+
+<<ums>>::= <<number>>                                                   //time in milliseconds since the inintiation of user software (e.g. onload event)
+<<msgID>>::= <<number>>                                                 //integer indicating task->actor message number, starting at 1
 <<state>>::= {(<<key>>:<<element>>,)*}                                  //unordered declaration of key/element pairs
 <<state>>::= [(<<key>>|([<<key>>,<<element>>]),)+]                      //declare key/element pairs in order; if key is specified without an element, and if this key does not exist, set its resepective element to default value (usually "", but could be {} if <<key>> is an <<option>>, or 1 if <<key>> is inside an _i, _i1, or _i2 element)
 <<element>>::= <<state>>|<<text>>|<<number>>|null                       //null signifies key deletion
+<<element>>::= ** if key is one of the <<option>> keys below, the respective <<element>> must adhere to the <<option>> description **
 <<text>>::= ** see JSON string specification, e.g. http://json.org **
 <<number>>::= ** see JSON number specification, e.g. http://json.org **
-<<key>>::= ** legal JSON string; empty-string not allowed; if <<key>> string begins with #, it is hidden; if <<key>> begins with "_" the the <<key>>:<<element>> pair is hidden **
-<<key>>::= ** if <<key>> is one of <<option>> keys below, it is a special directive to be processed prior to display **
+<<key>>::= ** legal JSON string; empty-string not allowed **            //if <<key>> string begins with #, it is hidden; if <<key>> begins with "_" the the <<key>>:<<element>> pair is hidden; if <<key>> is one of <<option>> keys below, it is a special directive to be processed prior to display
+<<actionValue>>::=  ** must be one of the values that is allowed for the respective input type (e.g. _ix action value is <<text>>) **
+<<tweenID>>::= <<text>>|<<number>>                                      //animation ID, see <<aniOption>> description below for more detail
+
 **root-level only**
 <<option>>::= "_error":<<text>>                                         //error messages
 <<option>>::= "_ver":<<number>>                                         //may be sent once before task begins; version of the STAP used by task software
@@ -105,9 +129,11 @@ Definition:
 <<option>>::= "_replace":{(<<text>>:<<html>>,)+}                        //may be sent once before task begins; may be ignored by computational agents; replace shorthand text with longer text/html (can be used for special characters, icons, sound, images, movies, etc.); used to save bandwidth/processing and make things nice looking in gui, rather than to add meaningful information (e.g. to replace certain words with icon equivalents); Example:  {"_replace":{":)":"<img src=smiley.gif>"}} would signify that whenever ":)" is found in text, it is to be replaced with the smiley.gif image
 <<option>>::= "_clientinfo":[(<<clientInfo>>,)*]                        //may be sent once before task begins; request information about the participant; participant replies to this request as such: {"_clientinfo":<<json>>}, e.g. {"_clientinfo":{"ip":"129.84.2.65","url":"http://localhost:8080/stap.html","screen":{"availWidth":1524,"availHeight":900,"width":1600,"height":900,"colorDepth":24,"pixelDepth":24,"availLeft":0,"availTop":0,"orientation":{"angle":0}},"userAgent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36"}}
 <<option>>::= "_vis":{"scrolldown":1|0}                                 //may be sent once before task begins; "_vis":{"scrolldown":1} signifies that the display automatically scrolls down to show the latest key:element added to the display state
-<<option>>::= "_W":<<number>>                                           //wait flag, used to delay the processing of the current state; <<number>> signifies seconds to wait
-<<option>>::= "_W":{<<waitID>>:<<number>>}?                             //interactive wait flag, used to delay the processing of the current state and send message back to task sw when message is being processed; <<waitID>> sets a name for the timer, <<number>> signifies seconds to wait; when timer is up, message gets processed by actor, and a response is sent back to sw in the format {<<waitID>>:0}; following references to the same <<waitID>> either reset the timer, or, if null, destroy the queued message (e.g. "_W":{"0":10} will delay msg processing by 10s, "_W":{"0":.5} will reset the delay on that same msg to 500ms, and "_W":{"0":null} will destroy that msg
 <<option>>::= "_pp":<<state>>                                           //popup
+<<option>>::= "_R":0|1                                                  //receipt flag; "_R":0 indicates that a receipt is required for the current msg, "_R":1 indicates that a receipt is required for every msg; receipt from user sw will be initiated on the completion of message processing, and will be in the format [<<ums>>,"_R",<<msgID>>]
+<<option>>::= "_S":<<ums>>                                              //start time flag; used to delay the processing of the current state until user time is has reached specified <<ums>>
+<<option>>::= "_S":[<<msgID>>,null|<<ums>>]                             //start time reset; used to update to prior _S directive, either to reset a timer, or, if null, destroy the queued message; e.g., if the 10th task->actor msg included "_S":10000, requesting a delay of msg processing until usertime is at 10s, "_S":[10,5000] will reset the delay on that same msg till user-time is 5s, and "_U":[10,null] will destroy that msg
+<<option>>::= "_Z":0|1                                                  //end of stream flag; "_Z":0 indicates that there are no more display updates until user input; "_Z":1 indicates that user input is required after every task-message (this is similar to HTTP, where no server push occurs until a new GET/POST message from client); receipt and error messages do not count as user input; _Z is only useful in synchronous user-pull communication setup (e.g. HTTP, AJAX)
 **special states**                                                      //state that contains one of these directive is NOT expected to contain <<key>>:<<element>> pairs, rather only <<key>>:<<number>>|<<text>>, and <<key>>:[...] pairs, depending on the <<option>>
 <<option>>::= "_i":{(<<inputOption>>,)*}                                //clickable buttons, e.g. <<key>>:{"_i":{},"button 1":1,"button 2":1} creates two buttons, will sends back {<<key>>:{"button 1":3}} or {<<key>>:{"button 2":3}} when one of those buttons is clicked
 <<option>>::= "_ih":{(<<inputOption>>,)*}                               //hold-down buttons, e.g. <<key>>:{"_ih":{},"button 1":1,"button 2":1} creates two buttons, will sends back {<<key>>:{"button 1":2}} when first button is pressed down, and {<<key>>:{"button 1":1}} when it lets go
@@ -118,10 +144,12 @@ Definition:
 <<option>>::= "_ln":{(<<strokeOption>>,)*}                              //all elements in this state are lines/paths; expected state content: (<<key>>:[<<number>>,<<number>> (,<<number>>,<<number>>)+],)* pairs to signify line points, or <<key>>:<<text>> pairs to signify SVG path strings (e.g. <<key>>:"M150 0 75 200 225 200 Z")
 <<option>>::= "_tb":{(<<tableOption>>,)*}                               //all elements in this state are rows in a table; expected state content: <<key>>:<<array>> pairs, where each <<array>> is a row of values; e.g. {"My Table":{"_tb":{},"#1":["John","male"],"#2":["Mary","female"]}}; alternatively, a 2dim array can be passed after the element is declared as a table; e.g. {"My Table":{"_tb":{}}} ... {"My Table":[["John","male"],["Mary","female"]]}
 **any state**
-<<option>>::= "_T":<<aniOptions>>                                       //signifies that values in the state are set via animation (Tween), not instantly; e.g. {"X":100,"_T":2} signifies that "X" is incremented/decremented till it reaches 100 over the span of 2 seconds; {<<key>>:null,"_T":2} signifies key removal is animated over 2 second span; {<<key>>:"","_T":2} signifies that key value is cleared over 2 second span; {<<key>>:"hello","_T":2} signifies that key value is cleared and then replaced with "hello" over a 2 second span
+<<option>>::= "_a":<<state>>|<<text>>|<<number>>                        //_a is the append directive; this directive is shorthand for "#<<X>>":<<state>>|<<text>>|<<number>> where <<X>> starts at zero and is incremented with each message, e.g. {"_a":"hello world"} {"_a":"goodbye world"} is equivalent to {"#0":"hello world"} {"#1":"goodbye world"}
 <<option>>::= "_nm":{(<<numOption>>,)*}                                 //these are numeric options (e.g. min, max, flt precision), and apply to element where _nm directive is found, as well as all sub-elements
 <<option>>::= "_bx":{(<<divOption>>,)*}                                 //box formatting options, useful where visualization is task-relevant
-<<option>>::= "_i\+":[(<<eventType>>,)*]                                //capture/send element events like keyspresses and mouse movements; this list is concatenated w/ previously specified events; {"_i+":null} will clear event capturing on the element
+<<option>>::= "_i\+":[(<<eventType>>,)*]                                //capture/send element events like keyspresses and mouse movements; this list is concatenated w/ previously specified events; {"_i+":null} will clear event capturing on the element; each _i+ event return value is a JS array (see specifics in the <<eventType>> spec below)
+<<option>>::= "_T":<<aniOptions>>                                       //signifies that values in the state are set via animation (Tween), not instantly; e.g. {"X":100,"_T":2} signifies that "X" is incremented/decremented till it reaches 100 over the span of 2 seconds; {<<key>>:null,"_T":2} signifies key removal is animated over 2 second span; {<<key>>:"","_T":2} signifies that key value is cleared over 2 second span; {<<key>>:"hello","_T":2} signifies that key value is cleared and then replaced with "hello" over a 2 second span
+
 <<url>>::=          ** legal url **
 <<html>>::=         ** legal text/html **
 <<clientInfo>>::=   "url"
@@ -129,8 +157,6 @@ Definition:
 <<clientInfo>>::=   "userAgent"
 <<clientInfo>>::=   "screen"
 <<conds>>::=        {(<<key>>:<<text>>|<<number>>,)*}
-<<actionValue>>::=  ** must be one of the values that is allowed for the respective input type (e.g. _bn action value is always 3, _tx action value is <<text>>) **
-<<waitID>>::=       ** any number or string **
 <<tableOption>>::=  "head":0|1                                          //if this value is 1, first row is treated as the header row (default value is 0)
 <<strokeOption>>::= "f":(<<color>>|"none")                              //similar to SVG fill
 <<strokeOption>>::= "c":(<<color>>|"none")                              //similar to SVG stroke
@@ -151,6 +177,7 @@ Definition:
 <<numOption>>::=    "<=":<<number>>                                     //minimum value
 <<numOption>>::=    ">=":<<number>>                                     //maximum value
 <<numOption>>::=    "=":<<number>>                                      //default/starting value
+<<divOption>>::=    "autoscroll":1|0                                    //
 <<divOption>>::=    "w":<<number>>, "h":<<number>>                      //width/height of the box
 <<divOption>>::=    "x":<<number>>, "y":<<number>>                      //position of left-top corner of the graphics area
 <<divOption>>::=    "r":<<number>>                                      //rounded corner radius (ex: create a circle w/ radius=10 -> {"_bx":{"w":20,"h":20,"r":10}})
@@ -187,7 +214,10 @@ Definition:
 , ::=               ** commas trailing the last pair in an object or the last element in an array must be trimmed, see JSON members/elements specification, e.g. http://json.org **
 
 
+/////////////////////////////////////////////////////////////////////////////////////////
 //Potential future additions:
+// <<option>>::= "_a":<<element>>                                          //append <<element>> to state
+// <<divOption>>::=    "autoscroll":1|0                                    //{"autoscroll":1} signifies that the display automatically scrolls down to show the latest key:element added to the state
 // <-::= {"_s":<<number>>}                                                 //simulated skipped time; only used by computational participants
 // <<conds>>::= [([<<cond>>+],)+]                                          //assume OR for all items in outer list, assume AND for all items in inner list
 // <<cond>>::= "<<key>> (==|!=|<|>) <<text>>|<<number>>",                  //boolean statement signifying a potential game-end condition
@@ -206,3 +236,13 @@ Definition:
 // <<tableOption>>::=  "bdw":<<number>>                                    //cell border width
 // <<tableOption>>::=  "pad":<<cssPadding>>                                //cell padding
 // <<aniOption>>::=    ???? .... collision detection
+
+**Notes:
+
+could expand _R flag to send receipts on start of processing too, it'd come back as [<<ums>>,"_S",<<msgID>>]
+or maybe start/stop times could be sent together: [<<ums>>,"_R",<<msgID>>,<<ums>>]
+could maybe have separate _R and _S flags for requesting start/stop receipts?
+_S should probly be used instead of current _W, but maybe _W could be kept too?
+in either case, the sync flag should probly be _Q or _Z or something, not _S
+
+**

@@ -100,7 +100,7 @@ th,td {
 ._i_child.key:after {content:""}
 
 /* hold-down buttons */
-._ih {display:inline-block}
+/* ._ih {display:inline-block}
 ._ih.sep {width:5px}
 ._ih.content {
 	padding:.5em;
@@ -117,6 +117,26 @@ th,td {
     color:red;
     box-shadow: 0 0 5px -1px rgba(0,0,0,0.6);
 }
+ */
+/* buttons */
+._ih_child {display:inline-block}
+._ih_child.sep {width:5px}
+._ih_child.key {
+	padding:.5em;
+    color:#444;
+    border:1px solid #CCC;
+    background:#DDD;
+    box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+    cursor:pointer;
+    vertical-align:middle;
+    /* max-width: 100px; */
+    text-align: center;
+}
+._ih_child.key:active, ._btn.content.active, .active ._i_child.key {
+    color:red;
+    box-shadow: 0 0 5px -1px rgba(0,0,0,0.6);
+}
+._ih_child.key:after {content:""}
 
 ._i1.content {display:inline-block}
 ._i1_child {padding:0px}

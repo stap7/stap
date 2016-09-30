@@ -125,11 +125,15 @@ var STAP2CSS={'bd':'border','pad':'padding','w':'width','h':'height','bg':'backg
 var EASE={0:'Power0',1:'Power1',2:'Power2',3:'Power3',4:'Power4',back:'Back',elastic:'Elastic',bounce:'Bounce'};
 
 
-var ws,maindiv,ppdiv,markerdefs,stylesheet,tables=0,
+var ws,startTime,maindiv,ppdiv,markerdefs,stylesheet,tables=0,focused=false,msgID=0,
 	elements={},taskOptions={win:{},loss:{},end:{},good:{},bad:{}},visOptions={},msgTimeouts={},txtReplace={};
 
 
 //////////////////////////////////////////////////////////////////////////////
+
+function ums(){return (new Date()).getTime()-startTime;}
+
+function waitTime(t){return t-ums();}
 
 function replaceShorthand(s){
 	for(var shorthand in txtReplace){
@@ -321,26 +325,22 @@ function setDivOptions(div,options){
 }
 
 function sendAction(element,val){
-	var action={};
-	action[element.id || element]=val;
-	ws.send(JSON.stringify(action));
-	dp({'<-':action});
-	//console.log(element,element._specialOptions);
-	//dp(typeof(element));
-	if(typeof(element)==="object" && "onsubmit" in element._specialOptions){
-		if(element._specialOptions.onsubmit==ONSUBMIT_DISABLE)element.classList.add('disabled');
-		else if(element._specialOptions.onsubmit==ONSUBMIT_CLEAR)element._clear()
+	var action=JSON.stringify([ums(),element.id || element,val]);
+	ws.send(action);
+	dp('<- '+action);
+	if(typeof(element)==="object" && "oninput" in element._specialOptions){
+		if(element._specialOptions.oninput===ONSUBMIT_DISABLE)element.classList.add('disabled');
+		else if(element._specialOptions.oninput===ONSUBMIT_CLEAR)element._clear()
+		else if(typeof(element._specialOptions.oninput)==='string')element.innerHTML=element._specialOptions.oninput;
 	}
 }
 
 function sendText(e){
-	if(e.target.innerHTML!==e.target._oldInnerHTML){
-		if('pwd' in e.target.parentElement._specialOptions)
-			sendAction(e.target.parentElement, sha1(e.target.parentElement._specialOptions.pwd+e.target.innerText));
-		else
-			sendAction(e.target.parentElement,e.target.innerHTML);
-		e.target._oldInnerHTML=e.target.innerHTML;
-	}
+	if('pwd' in e.target.parentElement._specialOptions)
+		sendAction(e.target.parentElement, sha1(e.target.parentElement._specialOptions.pwd+e.target.innerText));
+	else
+		sendAction(e.target.parentElement,e.target.innerHTML);
+	e.target._oldInnerHTML=e.target.innerHTML;
 }
 
 function addEvents(container,events){
@@ -490,15 +490,25 @@ elementTypes={
 			container.onclick=function(){sendAction(container._parentState,r);};
 		}
 		if(data==CLICK){
-			console.log('here');
 			container.classList.add('active');
 			setTimeout(function(){container.classList.remove('active')},250);
 		}
 	},
 	'_ih_child':function(data,container){
-		container._content.innerHTML=data;
-		container._content.onmousedown=function(){sendAction(container,BTNDOWN);};
-		container._content.onmouseup=function(){sendAction(container,BTNUP);};
+		if(data.hasOwnProperty('_bx'))setDivOptions(container._content,data._bx);
+		if(!container.onclick){
+			var r1={},r2={};
+			r1[container.id]=BTNUP;
+			r2[container.id]=BTNDOWN;
+			container.onmousedown=function(){sendAction(container._parentState,r2);};
+			container.onmouseup=function(){sendAction(container._parentState,r1);};
+		}
+		if(data==BTNDOWN){
+			container.classList.add('active');
+		}
+		if(data==BTNUP){
+			container.classList.remove('active');
+		}
 	},
 	'_i2_child':function(data,container){
 		//TODO: allow SHFT and long-hold to start multi-select process
@@ -536,15 +546,18 @@ elementTypes={
 		container.onclick=selectItem;
 	},
 	'_ix':function(data,container){
+		//TODO: account for multi-line, being able to repeatedly send the same text, etc
 		if(typeof(data)==="object"){
 			if("#0" in data)container._content.innerHTML=replaceShorthand(data["#0"]);
 			//processOptions(data,container);
 		}else container._content.innerHTML=replaceShorthand(data);
 		if(container._content.getAttribute('contenteditable')===null){
+			container._content.setAttribute('autofocus',true);
 			container._content.setAttribute('contenteditable',true);
 			container._content.onblur=sendText;
 			container._content.onkeypress=function(e){if(e.keyCode==13){sendText(e);return false;}};
 		}
+		if(!focused){focus=true;container._content.focus();}
 	},
 	'_i*':function(data,container){
 		if(data.constructor==Array)data=set(data);
@@ -848,9 +861,10 @@ function processState(data,container,level){
 }
 
 function processData(data){
-	dp({"->":data});
 	// process special root directives
-	if(data===null){maindiv._clear();return;}
+	var sendReceipt=false;
+	if(data===null){++msgID;maindiv._clear();return;}
+	if(!data.hasOwnProperty('_id'))data._id=++msgID;
 	if(typeof(data)==="string"){
 		var txt=data;
 		data={};
@@ -898,17 +912,19 @@ function processData(data){
 		taskInstructions(data._task);
 		delete data._task;
 	}
-	if(data.hasOwnProperty('_W')){
+	if(data.hasOwnProperty('_S')){
 		var waitID,wait;
-		if(typeof(data._W)=='number')wait=data._W;
-		else{
-			waitID=firstkey(data._W);
-			wait=data._W[waitID];
+		if(typeof(data._S)=='number'){
+			waitID=data._id;
+			wait=waitTime(data._S);
+		}else{
+			waitID=data._S[0];
+			wait=waitTime(data._S[1]);
 		}
 		//dp('WAIT '+waitID+'  '+ wait+'  '+ JSON.stringify(data));
-		delete data._W;
+		delete data._S;
 		if(waitID===undefined){
-			setTimeout(function(){processData(data);}, wait*1000);
+			setTimeout(function(){processData(data);}, wait);
 			return;
 		}else{
 			if(msgTimeouts[waitID]){
@@ -923,8 +939,7 @@ function processData(data){
 						var data=msgTimeouts[waitID].data;
 						delete msgTimeouts[waitID];
 						processData(data);
-						sendAction(waitID,0);
-					}, wait*1000);
+					}, wait);
 				}
 			}else{
 				msgTimeouts[waitID]={};
@@ -932,11 +947,14 @@ function processData(data){
 				msgTimeouts[waitID].timer=setTimeout(function(){
 					delete msgTimeouts[waitID];
 					processData(data);
-					sendAction(waitID,0);
-				}, wait*1000);
+				}, wait);
 				return;
 			}
 		}
+	}
+	if(data.hasOwnProperty('_R')){
+		sendReceipt=true;
+		delete data._R;
 	}
 	if(data.hasOwnProperty('_pp')){
 		if(data._pp===null || data._pp===""){
@@ -953,7 +971,7 @@ function processData(data){
 	// process other special directives
 	processOptions(maindiv,data);
 	//process state
-	if(data.hasOwnProperty('_.'))
+	if(data.hasOwnProperty('_.')){
 		for(var key in data['_.']){
 			if(elements[key].offsetParent){
 				var d={};
@@ -963,11 +981,14 @@ function processData(data){
 				delete elements[key];
 			}
 		}
+	}
 	processState(data,maindiv,0);
 	if(visOptions.scrolldown)window.scrollTo(0,document.body.scrollHeight);
+	if(sendReceipt)sendAction("_R",data._id);
 }
 
 function processMsg(msg){
+	dp('-> '+msg.data);
 	processData(JSON.parse(msg.data));
 }
 
@@ -988,6 +1009,7 @@ function main(){
 	ws.onopen=function(){maindiv._clear();dp('Connection established.');}
 	ws.onclose=function(){dp('Connection closed.');}
 	ws.onmessage=processMsg;
+	startTime=(new Date()).getTime();
 }
 
 

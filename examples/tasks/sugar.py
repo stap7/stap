@@ -1,6 +1,6 @@
 '''Sugar Production Factory task (Berry & Broadbent, 1984)'''
 
-import json,random,sys
+import json,sys,random
 if 'raw_input' in vars(__builtins__): input = raw_input		#Fix for Python 2.x raw_input
 def send(d): print(json.dumps(d)); sys.stdout.flush()
 def recv(): return json.loads(input())
@@ -33,7 +33,7 @@ try:
 		#update trial number
 		send({'Day':trial})
 		#get participant action
-		workers = int(next(iter(recv()['Workers'])))
+		workers = int(next(iter(recv()[2])))
 		currentProduction=getProduction(workers,currentProduction)
 		#display new production level (via animation)
 		send({'Current Sugar Production':currentProduction,'_T':{'s':.5,'ease':2}})

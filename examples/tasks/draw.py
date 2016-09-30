@@ -1,6 +1,6 @@
 '''Draw'''
 
-import json,random,sys
+import json,sys,random
 if 'raw_input' in vars(__builtins__): input = raw_input		#Fix for Python 2.x raw_input
 
 MOUSEUP=1
@@ -8,7 +8,7 @@ MOUSEDOWN=2
 MOUSEMOVE=8
 
 def send(d): print(json.dumps(d)); sys.stdout.flush()
-def recv(): return next(iter(json.loads(input()).items()))
+def recv(): return json.loads(input())
 
 
 WIDTH = 400
@@ -22,7 +22,7 @@ points=[]
 pathnum=0
 key=None
 while key!='#done':
-	key,val=recv()
+	ums,key,val=recv()
 	if key==instructions:
 		e,x,y=val
 		if points and e==MOUSEMOVE:
@@ -36,4 +36,3 @@ while key!='#done':
 
 send(None)
 send('Goodbye.')
-

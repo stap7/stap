@@ -9,7 +9,7 @@ PIPE_BLOCK_SIZE = CANVAS_H / PIPE_BLOCKS
 FLAPPY_W = PIPE_BLOCK_SIZE
 FLAPPY_H = PIPE_BLOCK_SIZE
 FLAPPY_X = 100
-SEC_TO_STEP = .005
+MS_TO_STEP = 5
 STEPS_TO_ADD_PIPE = 250
 
 
@@ -32,7 +32,7 @@ def addPipe():
 
 
 def main():
-	alive,score,y,step,pipes,removepipes=True,0,0,0,[],[]
+	alive,ums,score,y,step,pipes,removepipes=True,0,0,0,0,[],[]
 	send({
 		'_task':{'good':{'Score':'+'}},
 		'Score':0})
@@ -60,11 +60,11 @@ def main():
 		while removepipes:
 			del pipes[removepipes.pop()]
 		send({"#canvas":canvasUpdate})
-		send({"_W":{"a":SEC_TO_STEP}})
-		r=recv()
-		while "#btn" in r:
+		send({"_S":ums+MS_TO_STEP,"_R":0})
+		ums,key,_=recv()
+		while key=="#btn":
 			y-=50
-			r=recv()
+			ums,key,_=recv()
 		if y+FLAPPY_H>=CANVAS_H:
 			alive=False
 	send('Thank you. Goodbye.')

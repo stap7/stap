@@ -1,4 +1,6 @@
-import json, random,sys
+"""Classic Shepard, Hovland, & Jenkins (1961) categorization task."""
+
+import json,sys,random
 if 'raw_input' in vars(__builtins__): input = raw_input		#Fix for Python 2.x raw_input
 
 
@@ -20,7 +22,7 @@ CATEGORY_NAMES=["Greeble","Groble"]; random.shuffle(CATEGORY_NAMES)
 def send(d): print(json.dumps(d)); sys.stdout.flush()
 def recv(): return json.loads(input())
 
-def itemKey(d): return next(iter(d.items()))[0]
+def itemKey(d): return next(iter(d))
 
 def checkCorrect(s,r): return (s in CURRENT_CONDITION) == CATEGORY_NAMES.index(r)
 
@@ -57,12 +59,13 @@ def main():
 		#add the stimulus to the canvas
 		send({"OBJ":stimulus(s)})
 		#collect response
-		response = itemKey(recv()["#btns"])
+		ums,_,response = recv()
 		#check if correct
-		correctTrials.append(checkCorrect(s,response))
+		correctTrials.append(checkCorrect(s,itemKey(response)))
 		#send reward
 		send({"_pp":'Correct' if correctTrials[-1] else 'Incorrect'})
-		send({"_W":{"wait":.5}})
+		#wait 500ms
+		send({"_S":ums+500,"_R":0})
 		recv()
 		send({"_pp":None})
 	send(None)

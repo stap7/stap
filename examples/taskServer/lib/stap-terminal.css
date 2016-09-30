@@ -1,4 +1,4 @@
-body {font-size: 16px; font-family: "Consolas"; background-color:white; color:#dddddd}
+body {font-size: 16px; font-family: "courier"; background-color:black; color:#dddddd}
 div {
 	position:inherit;
 	display:block;
@@ -15,7 +15,7 @@ div {
 	opacity:1;
 }
 
-.lvl_0 {position:relative;padding:0px;margin:0px}
+.lvl_0 {position:relative;padding:0px;margin:0px;margin-bottom:1em;}
 
 .sep {display:inline-block;width:0px;height:.5em;padding:0px;}
 .key {padding:5px; }
@@ -152,11 +152,18 @@ div {
 ._ln {margin:0;padding:0;position:absolute;border:none;left:0px;top:0px;overflow:visible}
 
 
-._ix.content {background:white;box-shadow: 0px 0px 5px 1px rgba(79,155,247,1);height:1em;}
+._ix {position: relative; display:table-cell; }
+._ix.frame {position:fixed; display:table; width:99%; bottom:2px; margin-left:0px; padding-left:0px}
+._ix.main {display:table-row}
+._ix.key {width:1px}
+._ix.sep {width:5px}
+._ix.content {height:1em;background-color:inherit; color:inherit; box-shadow:none; }
+._ix:active {box-shadow:none}
 
 .id___main__.frame {display:table; width:100%; height:100%;}
 .id___main__.main { width:100%; height:100%;}
-.id___main__.content {display:block; background-color:#222222;  width:100%; height:100%;}
+.id___main__.content {display:block; width:100%; height:100%; background-color:black}
+
 
 .id___pp__.frame { display:table; width:100%; height:100%;left:0;top:0;position:fixed;background-color:rgba(255,255,255,0.6)}
 .id___pp__.main { display:table-cell; vertical-align:middle; text-align:center}

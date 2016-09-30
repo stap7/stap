@@ -1,14 +1,13 @@
-'''Traveling Salesman Task
+'''Traveling Salesman Task'''
 
-'''
-
-import json,random,sys
-if 'raw_input' in vars(__builtins__): input = raw_input		#Fix for Python 2.x raw_input
+import json,sys,random
+try: input = raw_input		#Fix for Python 2.x raw_input
+except NameError: pass
 
 
 def send(d): print(json.dumps(d)); sys.stdout.flush()
 def recv(): return json.loads(input())
-def itemKey(d): return next(iter(d.items()))[0]
+def itemKey(d): return next(iter(d))
 
 
 TRIALS = 10
@@ -76,11 +75,11 @@ def runTrial(locations,map):
 	#animate Timer down to 0, send back {"Are you ready to submit your solution?":0} when done.
 	send({"Timer":0,"_T":{"s":SECONDS_PER_TRIAL,"tid":"Are you ready to submit your solution?"}})
 	#capture user inputs until they click "Are you ready to submit your solution?" (or timer runs out)
-	action=recv()
+	ums,key,val=recv()
 	chosenLocs=[]
 	points=[]
-	while "Are you ready to submit your solution?" not in action:
-		locNum=locKey2Num(itemKey(action["#btns"]))
+	while key!="Are you ready to submit your solution?":
+		locNum=locKey2Num(itemKey(val))
 		try:
 			chosenLocsIndx=chosenLocs.index(locNum)
 			if len(chosenLocs)==len(locations):
@@ -97,7 +96,7 @@ def runTrial(locations,map):
 				points+=points[:2]
 				send({"Are you ready to submit your solution?":["_i","Submit Solution"]})
 		send({"Map":{"#path":{"#1":[p+LOCSIZE//2 for p in points]}}})
-		action=recv()
+		ums,key,val=recv()
 	totDist=calcDist(list(chosenLocs),locations) if len(chosenLocs)==len(locations) else 10000
 	send(None)
 	send({"Length of your circuit":totDist})

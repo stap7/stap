@@ -9,6 +9,7 @@ def send(d): print(json.dumps(d)); sys.stdout.flush()
 def recv(): return json.loads(input())
 
 
+
 TRIALS = 20
 REWARDS = [.7,.3]
 random.shuffle(REWARDS)
@@ -29,11 +30,12 @@ def main():
 		#update trial number
 		send({'Trial':trial})
 		#get participant action
-		buttonNum = 0 if ('Button 1' in recv()['Click a button']) else 1
+		ums,_,val=recv()
+		buttonNum = 0 if ('Button 1' in val) else 1
 		#display reward in popup
 		send({'_pp':{'Reward':getReward(buttonNum)}})
 		#wait 0.5 seconds
-		send({'_W':{'#wait':.5}})
+		send({'_S':ums+500,'_R':0})
 		recv()
 		#close popup
 		send({'_pp':None})
