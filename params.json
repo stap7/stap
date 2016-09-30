@@ -1,6 +1,6 @@
 {
   "name": "STAP",
   "tagline": "Simple Task-Actor Protocol",
-  "body": "![](http://halle.psy.cmu.edu/stap/pres/stap-icon.png)\r\n\r\n[![](https://i.vimeocdn.com/video/586445092_640.webp)](https://vimeo.com/178711219 \"Why we need a standard task-actor API.\")\r\n",
+  "body": "![](http://cogai.org/stap/stap-icon.png)\r\n\r\n[![](https://i.vimeocdn.com/video/586445092_640.webp)](https://vimeo.com/178711219 \"Why we need a standard task-actor API.\")\r\n",
   "note": "Don't delete this file! It's used internally to help with page regeneration."
 }
