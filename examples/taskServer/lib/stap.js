@@ -125,7 +125,7 @@ var STAP2CSS={'bd':'border','pad':'padding','w':'width','h':'height','bg':'backg
 var EASE={0:'Power0',1:'Power1',2:'Power2',3:'Power3',4:'Power4',back:'Back',elastic:'Elastic',bounce:'Bounce'};
 
 
-var ws,startTime,maindiv,ppdiv,markerdefs,stylesheet,tables=0,focused=false,msgID=0,
+var ws,startTime,maindiv,ppdiv,markerdefs,stylesheet,tables=0,focused=false,msgID=0,sendReceipt=false,
 	elements={},taskOptions={win:{},loss:{},end:{},good:{},bad:{}},visOptions={},msgTimeouts={},txtReplace={};
 
 
@@ -559,9 +559,9 @@ elementTypes={
 		}
 		if(!focused){focus=true;container._content.focus();}
 	},
-	'_i*':function(data,container){
+	'_i^':function(data,container){
 		if(data.constructor==Array)data=set(data);
-		if('_i*' in data){
+		if('_i^' in data){
 			var i,angle,startAngle,arc,halfArc,svgElement;
 			if(container._svg===undefined){
 				container._svg=container._content.appendChild(document.createElementNS(SVGNS,'svg'));
@@ -578,10 +578,10 @@ elementTypes={
 				while (container._svga.firstChild)
 					container._svga.removeChild(container._svga.firstChild);
 			}
-			arc=360/(data['_i*'].n||4);
+			arc=360/(data['_i^'].n||4);
 			halfArc=arc/2;
-			startAngle=data['_i*'].start||0;
-			for(i=0;i<(data['_i*'].n||4);++i){
+			startAngle=data['_i^'].start||0;
+			for(i=0;i<(data['_i^'].n||4);++i){
 				angle=startAngle+arc*i;
 				svgElement=container._svgg.appendChild(document.createElementNS(SVGNS,'path'));
 				svgElement.setAttribute('d','M 25 25 '+describeArc(25,25,25,angle-halfArc,angle+halfArc,false)+'Z');
@@ -705,7 +705,7 @@ elementTypes={
 		}
 	}
 }
-specialElements=set(['_i','_ih','_i2','_i1','_ix','_i*','_ln','_tb']);
+specialElements=set(['_i','_ih','_i2','_i1','_ix','_i^','_ln','_tb']);
 compatible={
 	'object':set(['_i','_ih','_i1','_i2','_ix','_ln','_tb','_tb_child']),
 	'string':set(['_ix']),
@@ -804,6 +804,14 @@ function processState(data,container,level){
 			data={};
 		}
 	}else keys=Object.keys(data);
+	if(keys.indexOf('_*')>-1){
+		dp(Object.keys(container._childmap));
+		for(var key in container._childmap){
+			dp(key);
+			keys.push(key);
+			data[key]=data['_*'];
+		}
+	}
 	//animated changes
 	if(data.hasOwnProperty('_T')){
 		//animate values
@@ -829,6 +837,10 @@ function processState(data,container,level){
 	//non-animated changes
 	for(var i=0,key=keys[0];i<keys.length;key=keys[++i]){
 		key=''+key;
+		if(key==='_a'){ //append element without a specified key
+			key="#"+Object.keys(container._childmap).length;
+			data[key]=data['_a'];
+		}
 		if(!key.startsWith('_')){
 			child=container._childmap[key];
 			if(data[key]===null){if(child)child._remove();}
@@ -851,6 +863,7 @@ function processState(data,container,level){
 				}else if(child._type!==typeofval && !(compatible[typeofval] && (child._type in compatible[typeofval])) && !(typeofval==='object' && !isState(data[key]))){
 					child._setclass(typeofval);
 					if(child._type in specialElements)child._specialElement=child._type;
+					else child._specialElement=undefined;
 					child._specialOptions={};
 				}
 				processOptions(data[key],child);
@@ -861,130 +874,126 @@ function processState(data,container,level){
 }
 
 function processData(data){
-	// process special root directives
-	var sendReceipt=false;
-	if(data===null){++msgID;maindiv._clear();return;}
-	if(!data.hasOwnProperty('_id'))data._id=++msgID;
-	if(typeof(data)==="string"){
-		var txt=data;
-		data={};
-		data["#"+Object.keys(maindiv._childmap).length]=txt;
-	}
-	if(data.hasOwnProperty('_error')){dp({'ERROR':data._error});delete data._error;}
-	if(data.hasOwnProperty('_clientinfo')){
-		var reply={};
-		for(var i=0;i<data['_clientinfo'].length;++i){
-			if(data['_clientinfo'][i]=='url'){
-				reply['url']=objectify(location);
-			}else if(data['_clientinfo'][i]=='screen'){
-				reply['screen']=objectify(screen);
-			}else if(data['_clientinfo'][i]=='ip'){
-				reply['ip']=''; //TODO: fix this
-			}else if(data['_clientinfo'][i]=='userAgent'){
-				reply['userAgent']=clientInformation.userAgent;
+	if(data===null){
+		processData({'_*':null});
+	}else if(typeof(data)==="string"){
+		processData({'_a':data});
+	}else if(typeof(data)==="object"){
+		// process special root directives
+		if(!data.hasOwnProperty('_id'))data._id=++msgID;
+		if(data.hasOwnProperty('_error')){dp({'ERROR':data._error});delete data._error;}
+		if(data.hasOwnProperty('_clientinfo')){
+			var reply={};
+			for(var i=0;i<data['_clientinfo'].length;++i){
+				if(data['_clientinfo'][i]=='url'){
+					reply['url']=objectify(location);
+				}else if(data['_clientinfo'][i]=='screen'){
+					reply['screen']=objectify(screen);
+				}else if(data['_clientinfo'][i]=='ip'){
+					reply['ip']=''; //TODO: fix this
+				}else if(data['_clientinfo'][i]=='userAgent'){
+					reply['userAgent']=clientInformation.userAgent;
+				}
 			}
+			sendAction('_clientinfo',reply);
 		}
-		sendAction('_clientinfo',reply);
-	}
-	if(data.hasOwnProperty('_template')){
-		var url=data._template;
-		delete data._template;
-		loadURLs(url,function(){processData(data);});
-		return;
-	}
-	if(data.hasOwnProperty('_unloadwarn')){
-		var txt=data._unloadwarn;
-		delete data._unloadwarn;
-		if(txt==null)onbeforeunload=null;
-		else onbeforeunload=function(){return txt;};
-	}
-	if(data.hasOwnProperty('_replace')){
-		for(key in data._replace){
-			if(data._replace[key]===null)delete txtReplace[key];
-			else txtReplace[key]=data._replace[key];
-		}
-		delete data._replace;
-	}
-	if(data.hasOwnProperty('_vis')){Object.assign(visOptions,data._vis);delete data._vis;}
-	if(data.hasOwnProperty('_task')){
-		// for(var key in data._task)
-			// Object.assign(taskOptions[key],data._task[key]);
-		taskInstructions(data._task);
-		delete data._task;
-	}
-	if(data.hasOwnProperty('_S')){
-		var waitID,wait;
-		if(typeof(data._S)=='number'){
-			waitID=data._id;
-			wait=waitTime(data._S);
-		}else{
-			waitID=data._S[0];
-			wait=waitTime(data._S[1]);
-		}
-		//dp('WAIT '+waitID+'  '+ wait+'  '+ JSON.stringify(data));
-		delete data._S;
-		if(waitID===undefined){
-			setTimeout(function(){processData(data);}, wait);
+		if(data.hasOwnProperty('_template')){
+			var url=data._template;
+			delete data._template;
+			loadURLs(url,function(){processData(data);});
 			return;
-		}else{
-			if(msgTimeouts[waitID]){
-				clearTimeout(msgTimeouts[waitID].timer);
-				if(wait==null)delete msgTimeouts[waitID];
-				else if(!wait){
-					var data=msgTimeouts[waitID].data;
-					delete msgTimeouts[waitID];
-					processData(data);
-				}else{
-					msgTimeouts[waitID]=setTimeout(function(){
+		}
+		if(data.hasOwnProperty('_unloadwarn')){
+			var txt=data._unloadwarn;
+			delete data._unloadwarn;
+			if(txt==null)onbeforeunload=null;
+			else onbeforeunload=function(){return txt;};
+		}
+		if(data.hasOwnProperty('_replace')){
+			for(key in data._replace){
+				if(data._replace[key]===null)delete txtReplace[key];
+				else txtReplace[key]=data._replace[key];
+			}
+			delete data._replace;
+		}
+		if(data.hasOwnProperty('_vis')){Object.assign(visOptions,data._vis);delete data._vis;}
+		if(data.hasOwnProperty('_task')){
+			// for(var key in data._task)
+				// Object.assign(taskOptions[key],data._task[key]);
+			taskInstructions(data._task);
+			delete data._task;
+		}
+		if(data.hasOwnProperty('_S')){
+			var waitID,wait;
+			if(typeof(data._S)=='number'){
+				waitID=data._id;
+				wait=waitTime(data._S);
+			}else{
+				waitID=data._S[0];
+				wait=waitTime(data._S[1]);
+			}
+			//dp('WAIT '+waitID+'  '+ wait+'  '+ JSON.stringify(data));
+			delete data._S;
+			if(waitID===undefined){
+				setTimeout(function(){processData(data);}, wait);
+				return;
+			}else{
+				if(msgTimeouts[waitID]){
+					clearTimeout(msgTimeouts[waitID].timer);
+					if(wait==null)delete msgTimeouts[waitID];
+					else if(!wait){
 						var data=msgTimeouts[waitID].data;
 						delete msgTimeouts[waitID];
 						processData(data);
+					}else{
+						msgTimeouts[waitID]=setTimeout(function(){
+							var data=msgTimeouts[waitID].data;
+							delete msgTimeouts[waitID];
+							processData(data);
+						}, wait);
+					}
+				}else{
+					msgTimeouts[waitID]={};
+					msgTimeouts[waitID].data=data;
+					msgTimeouts[waitID].timer=setTimeout(function(){
+						delete msgTimeouts[waitID];
+						processData(data);
 					}, wait);
+					return;
 				}
-			}else{
-				msgTimeouts[waitID]={};
-				msgTimeouts[waitID].data=data;
-				msgTimeouts[waitID].timer=setTimeout(function(){
-					delete msgTimeouts[waitID];
-					processData(data);
-				}, wait);
-				return;
 			}
 		}
-	}
-	if(data.hasOwnProperty('_R')){
-		sendReceipt=true;
-		delete data._R;
-	}
-	if(data.hasOwnProperty('_pp')){
-		if(data._pp===null || data._pp===""){
-			ppdiv._hide();
-			ppdiv._clear();
-		}else{
-			if(maindiv._childmap["#_pp"]==undefined)
-				maindiv._childmap["#_pp"]=ppdiv;
-			data['#_pp']=data._pp;
-			ppdiv._unhide();
-		}
-		delete data._pp;
-	}
-	// process other special directives
-	processOptions(maindiv,data);
-	//process state
-	if(data.hasOwnProperty('_.')){
-		for(var key in data['_.']){
-			if(elements[key].offsetParent){
-				var d={};
-				d[key]=data['_.'][key];
-				processState(d,elements[key]._parentState,0);
+		if(data.hasOwnProperty('_R')){sendReceipt=data._R;}
+		if(data.hasOwnProperty('_pp')){
+			if(data._pp===null || data._pp===""){
+				ppdiv._hide();
+				ppdiv._clear();
 			}else{
-				delete elements[key];
+				if(maindiv._childmap["#_pp"]==undefined)
+					maindiv._childmap["#_pp"]=ppdiv;
+				data['#_pp']=data._pp;
+				ppdiv._unhide();
+			}
+			delete data._pp;
+		}
+		// process other special directives
+		processOptions(maindiv,data);
+		//process state
+		if(data.hasOwnProperty('_.')){
+			for(var key in data['_.']){
+				if(elements[key].offsetParent){
+					var d={};
+					d[key]=data['_.'][key];
+					processState(d,elements[key]._parentState,0);
+				}else{
+					delete elements[key];
+				}
 			}
 		}
+		processState(data,maindiv,0);
+		if(visOptions.scrolldown)window.scrollTo(0,document.body.scrollHeight);
+		if(sendReceipt || data._R)sendAction("_R",data._id);
 	}
-	processState(data,maindiv,0);
-	if(visOptions.scrolldown)window.scrollTo(0,document.body.scrollHeight);
-	if(sendReceipt)sendAction("_R",data._id);
 }
 
 function processMsg(msg){

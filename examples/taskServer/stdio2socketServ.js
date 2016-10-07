@@ -4,7 +4,7 @@
 //	each new connection will spawn a new stdio task process
 //
 // TODO:
-//  add option for playback service (with optional password)
+//  add/test option for playback service (with optional password and ability to start without -t and -w options), given the STAP5 changes (timing with _S and timing in user msgs)
 //  add option for data selection (with optional password)
 //	add (a better) mechanism for multi-player service
 //	add mechanism for tcp-ws relay (for servers serving one but not the other)
