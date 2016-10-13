@@ -272,6 +272,11 @@ function setPathOptions(path,options){
 
 function setDivOptions(div,options){
 	//TODO: test all options
+	if(options.hasOwnProperty('autoscroll')){
+		div.autoscroll=options.autoscroll;
+		div.style.overflowY='auto';
+		delete options.autoscroll;
+	}
 	if(options.hasOwnProperty('_T')){
 		var ani=options._T.s || 1,
 			newOptions={ease:getEaseSpec(options._T)};
@@ -860,6 +865,7 @@ function processState(data,container,level){
 					}
 					if(displaykey)child._key.innerHTML=displaykey;
 					container._childmap[key]=child;
+					//if(container._content.autoscroll){child.scrollIntoView();}
 				}else if(child._type!==typeofval && !(compatible[typeofval] && (child._type in compatible[typeofval])) && !(typeofval==='object' && !isState(data[key]))){
 					child._setclass(typeofval);
 					if(child._type in specialElements)child._specialElement=child._type;
@@ -870,6 +876,9 @@ function processState(data,container,level){
 				elementTypes[child._type](data[key],child,level+1);
 			}
 		}
+	}
+	if(container._content.autoscroll){
+		container._content.scrollTop=container._content.scrollHeight;
 	}
 }
 
@@ -977,7 +986,7 @@ function processData(data){
 			delete data._pp;
 		}
 		// process other special directives
-		processOptions(maindiv,data);
+		processOptions(data,maindiv);
 		//process state
 		if(data.hasOwnProperty('_.')){
 			for(var key in data['_.']){
@@ -991,7 +1000,8 @@ function processData(data){
 			}
 		}
 		processState(data,maindiv,0);
-		if(visOptions.scrolldown)window.scrollTo(0,document.body.scrollHeight);
+		//if(visOptions.scrolldown)window.scrollTo(0,document.body.scrollHeight);
+		if(maindiv._content.autoscroll)window.scrollTo(0,document.body.scrollHeight);
 		if(sendReceipt || data._R)sendAction("_R",data._id);
 	}
 }

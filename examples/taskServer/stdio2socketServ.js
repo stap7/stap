@@ -185,15 +185,7 @@ function onActorConnection(task,socket,rcvEvent,endEvent){
 	}
 }
 function startTaskService(task){
-	if(task.server && task.server.exe){
-		var taskprocess = run(task.server.exe,task.server.exeParams);
-		taskprocess.stderr.on("data", function(data){
-			console.error("------- Error in \""+task._+"\"\n"+data.toString()+"\n=======");
-			killSpawnedProcess(taskprocess);
-			socket.close();
-			if(tasklog)tasklog.end();
-		});
-	}
+	//set up logging and playback
 	if(task.logpath){
 		mkdir(task.logpath);
 		if(task.playback){
@@ -214,13 +206,14 @@ function startTaskService(task){
 			if(task.html)makeHtmlStapClient(task.html,task.serveOnWSPort);
 		});
 	}
+	console.log('Service started for "'+task._+'". Press ^C to quit.');
 }
 
 
 
 ////////////////////////////////////////
 function makeHtmlStapClient(filepath,port){
-	console.log('creating',filepath,port);
+	console.log('Creating',filepath,port);
 	var indexPage=fs.createWriteStream(filepath);
 	indexPage.write(`<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 		<meta name="apple-mobile-web-app-capable" content="yes">

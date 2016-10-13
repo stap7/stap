@@ -53,6 +53,6 @@ process.stdin.on('data', function (data) {
 
 send({
 	_template:"lib/stap-terminal.css",
-	_vis:{scrolldown:1},
+	_bx:{autoscroll:1},
 	"$":{'_ix':{"oninput":-1}}
 	});

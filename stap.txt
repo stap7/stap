@@ -1,5 +1,5 @@
 STAP (Simple Task-Actor Protocol)
-version 5.1
+version 5.2
 
     STAP is a machine-readable format for specifying user-interface changes.
     Main focus of STAP is in providing symmetric task experience for human and computational users alike.
@@ -98,8 +98,9 @@ Definition:
 
 ->::= <<state>>                                                         //edit current display state recursively with values in <<state>>
 ->::= {"_.":{<<key>>:<<element>>}}                                      //find first occurrence of <<key>> in existing display state hierarchy, edit its value based on <<element>>
-->::= <<text>>                                                          //append <<text>> to display; shorthand for {"_a":<<text>>}; e.g. "hello world" "goodbye world" is equivalent to {"_a":"hello world"} {"_a":"goodbye world"}, and will append "hello world" and then "goodbye world" text strings to the virtual display
-->::= null                                                              //clear the display state; shorthand for {"_*":null}
+->::= <<text>>                                                          //shorthand for {"_a":<<text>>}; append <<text>> to display; e.g. "hello world" "goodbye world" is equivalent to {"_a":"hello world"} {"_a":"goodbye world"}, and will append "hello world" and then "goodbye world" text strings to the virtual display
+->::= null                                                              //shorthand for {"_*":null}; clear the display state
+->::= 0                                                                 //shorthand for {"_Z":0}; end of stream flag; indicates that there are no more display updates until user input
 
 <-::= [<<ums>>,<<key>>,<<actionValue>>]                                 //<<key>> corresponds to an actionable item key (e.g. button panel, textbox)
 <-::= [<<ums>>,<<tweenID>>,0]                                           //signifies that a requested timeout or animation is finished (or virtually finished for faster-than-real-time computational simulations)
@@ -128,7 +129,6 @@ Definition:
 <<option>>::= "_task":{"(good)|(bad)":<<conds>>                         //may be sent once before task begins; goal values, e.g. {"good":{<<key>>:"correct"}} means that the <<key>>="correct" condition is a goal-state, {"bad":{<<key>>:"incorrect"}} means that the <<key>>="incorrect" is a condition to avoid, {"good":{<<key>>:1}} means <<key>> values closer to 1.0 are better, {"good":{<<key>>:"+"}} means higher numbers are better, {"good":{<<key>>:"-"}} means lower numbers are better
 <<option>>::= "_replace":{(<<text>>:<<html>>,)+}                        //may be sent once before task begins; may be ignored by computational agents; replace shorthand text with longer text/html (can be used for special characters, icons, sound, images, movies, etc.); used to save bandwidth/processing and make things nice looking in gui, rather than to add meaningful information (e.g. to replace certain words with icon equivalents); Example:  {"_replace":{":)":"<img src=smiley.gif>"}} would signify that whenever ":)" is found in text, it is to be replaced with the smiley.gif image
 <<option>>::= "_clientinfo":[(<<clientInfo>>,)*]                        //may be sent once before task begins; request information about the participant; participant replies to this request as such: {"_clientinfo":<<json>>}, e.g. {"_clientinfo":{"ip":"129.84.2.65","url":"http://localhost:8080/stap.html","screen":{"availWidth":1524,"availHeight":900,"width":1600,"height":900,"colorDepth":24,"pixelDepth":24,"availLeft":0,"availTop":0,"orientation":{"angle":0}},"userAgent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36"}}
-<<option>>::= "_vis":{"scrolldown":1|0}                                 //may be sent once before task begins; "_vis":{"scrolldown":1} signifies that the display automatically scrolls down to show the latest key:element added to the display state
 <<option>>::= "_pp":<<state>>                                           //popup
 <<option>>::= "_R":0|1                                                  //receipt flag; "_R":0 indicates that a receipt is required for the current msg, "_R":1 indicates that a receipt is required for every msg; receipt from user sw will be initiated on the completion of message processing, and will be in the format [<<ums>>,"_R",<<msgID>>]
 <<option>>::= "_S":<<ums>>                                              //start time flag; used to delay the processing of the current state until user time is has reached specified <<ums>>
@@ -178,7 +178,6 @@ Definition:
 <<numOption>>::=    "<=":<<number>>                                     //minimum value
 <<numOption>>::=    ">=":<<number>>                                     //maximum value
 <<numOption>>::=    "=":<<number>>                                      //default/starting value
-<<divOption>>::=    "autoscroll":1|0                                    //
 <<divOption>>::=    "w":<<number>>, "h":<<number>>                      //width/height of the box
 <<divOption>>::=    "x":<<number>>, "y":<<number>>                      //position of left-top corner of the graphics area
 <<divOption>>::=    "r":<<number>>                                      //rounded corner radius (ex: create a circle w/ radius=10 -> {"_bx":{"w":20,"h":20,"r":10}})
@@ -191,6 +190,7 @@ Definition:
 <<divOption>>::=    "fnt":<<cssFont>>                                   //font for text displayed inside the graphics area
 <<divOption>>::=    "col":<<color>>                                     //color for text displayed inside the graphics area
 <<divOption>>::=    "_T":<<aniOptions>>                                 //signifies that <<divOption>> values are not set instantly, but rather via animation (Tween)
+<<divOption>>::=    "autoscroll":0|1                                    //"autoscroll":1 signifies that contents automatically scroll down to show the latest key:element added to the state; replaces deprecated directive 
 <<aniOptions>>::=   {(<<aniOption>>,)*}
 <<aniOption>>::=    "s":<<number>>                                      //number of seconds to animate
 <<aniOption>>::=    "ease":(0|1|2|3|4|"back"|"elastic"|"bounce")        //easing option for animation; default is 0 (linear); see http://greensock.com/ease-visualizer to visualize ease options
@@ -217,7 +217,6 @@ Definition:
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //Potential future additions:
-// <<divOption>>::=    "autoscroll":1|0                                    //{"autoscroll":1} signifies that the display automatically scrolls down to show the latest key:element added to the state
 // <<conds>>::= [([<<cond>>+],)+]                                          //assume OR for all items in outer list, assume AND for all items in inner list
 // <<cond>>::= "<<key>> (==|!=|<|>) <<text>>|<<number>>",                  //boolean statement signifying a potential game-end condition
 // <<inputOption>>::=  "keys":([(<<keycode>>,)*])|{(<<key>>:<<keycode>>,)*}//keyboard shortcuts assigned to each input element (e.g. use 13 for carriage return, 65 for A, 37 for left arrow key)
