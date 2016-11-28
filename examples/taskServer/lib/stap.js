@@ -1002,7 +1002,7 @@ function processData(data){
 		processState(data,maindiv,0);
 		//if(visOptions.scrolldown)window.scrollTo(0,document.body.scrollHeight);
 		if(maindiv._content.autoscroll)window.scrollTo(0,document.body.scrollHeight);
-		if(sendReceipt || data._R)sendAction("_R",data._id);
+		if(sendReceipt || ("_R" in data))sendAction("_R",data._id);
 	}
 }
 
