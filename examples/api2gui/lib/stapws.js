@@ -2,26 +2,26 @@
 var PARAMS={};location.search.substr(1).split("&").forEach(function(a){var b=a.split("=");PARAMS[b[0]]=b[1]});
 var PORT=PARAMS['p'] || 8719;
 var HOST=PARAMS['h'] || location.hostname || "localhost";
+var LOC=PARAMS['l'];
 
 var ws;
-
-
-function processMsg(msg){
-	console.log('-> '+msg.data);
-	processData(JSON.parse(msg.data));
-}
 
 function send(msg){
 	console.log('<- '+msg);
 	ws.send(msg);
 }
 
+function recv(msg){
+	console.log('-> '+msg.data);
+	processData(JSON.parse(msg.data));
+}
+
 function connect(){
 	processData('Loading...');
 	if("WebSocket" in window){
-		ws=new window.WebSocket('ws://'+HOST+':'+PORT);
-		ws.onerror=function(e){processData(null);processData({'Error':'Cannot establish connection to ws://'+HOST+':'+PORT});};
-		ws.onopen=function(){processData(null);console.log('Connection established.');}
+		ws=new window.WebSocket(LOC || ('ws://'+HOST+':'+PORT));
+		ws.onerror=function(e){processData(null);processData({'error':'Cannot establish connection to ws://'+HOST+':'+PORT});};
+		ws.onopen=onTaskConnect;
 		ws.onclose=function (event) {
 			var reason;
 			// See http://tools.ietf.org/html/rfc6455#section-7.4.1
@@ -53,13 +53,15 @@ function connect(){
 				reason = "The connection was closed due to a failure to perform a TLS handshake (e.g., the server certificate can't be verified).";
 			else
 				reason = "Unknown reason";
-			console.log('Connection closed. '+reason);
+			//console.log('Connection closed. '+reason);
+			processData({'error':'Connection closed. '+reason});
+			processData(['Connection closed.']);
 		};
-		ws.onmessage=processMsg;
-		startTime=(new Date()).getTime();
+		ws.onmessage=recv;//function(e){recv(e.data);};
 	}else{
 		processData(null);
-		processData({'Error':'Your browser does not support websockets. Please use a modern browser to run this application.'});
+		processData([[true,null],['Error','Your browser does not support websockets. Please use a modern browser to run this application.']]);
+		//processData({'error':'Your browser does not support websockets. Please use a modern browser to run this application.'});
 	}
 }
 

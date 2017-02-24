@@ -23,18 +23,18 @@ Examples:
         -> ["Hello World"]
         // display a "Click Me" button
         -> [["Click Me"]]
-        // user clicked the button after 30.8s
+        // user clicks the button after 30.8s
         <- [30800,"Click Me",true]
 
     Sample Interaction 2:
-        // let client know that a goal in this task is to maximize coins earned, and that "S" and "eT" are required directives for this task
+        // let client know that a goal in this task is to maximize coins earned, and that "S" (start time) and "eT" (editable-text field) are required directives for this task
         -> {"task":{"good":[["Coins Earned",">"]]},"require":["S","eT"]}
-		// display a text prompt to get participant's name (eT:1 turns text editable)
-		-> [["What is your name?","",{"eT":1}]]
-		// participant types in "Bob" and hits enter (9.876sec after task display first loaded)
-		<- [9876,"What is your name?","Bob"]
-		// clear display
-		-> null
+        // display a text prompt to get participant's name (eT:1 turns text editable)
+        -> [["What is your name?","",{"eT":1}]]
+        // participant types in "Bob" and hits enter (9.876sec after task display first loaded)
+        <- [9876,"What is your name?","Bob"]
+        // clear display
+        -> null
         // display two buttons
         -> [["choose a button",[["Button 1"],["Button 2"]]]]
         // first button was clicked after 12.307sec
@@ -42,7 +42,7 @@ Examples:
         // give client reward, "Coins Earned"=7
         -> [["Coins Earned",7]]
         // wait 2 seconds and remove the Coins Earned display
-        -> [["Coins Earned":null],{"S":14307}]
+        -> [["Coins Earned",null,{"S":14307}]]
         // second button was clicked
         <- [15422,"Button 2",true]
         // give reward
@@ -50,7 +50,7 @@ Examples:
         ...
 
     Sample Interation 3:
-        // display a 100x100 box, with an element inside it that will display red lines
+        // display a 100x100 box that will display red lines; "e":[30] signies that click events should be captured (see <<eventType>> 30 below)
         -> [["click somewhere",{"type":"path","c":"red","w":100,"h":100,"e":[30]}]]
         // user clicked in location 24,60 relative to top-left corner of the box
         <- [1570,"click somewhere",[30,24,60]]
@@ -90,18 +90,20 @@ Examples:
 //
 Message Type        Regular Expression                                  Functionality
 ** task -> user **  <<state>>                                           //edit current display state with values in <<state>>
-** task -> user **  null                                                //clear the display state //?do we need this?
+** task -> user **  null                                                //clear the display state; shorthand for [[true:null]]
 ** task -> user **  {(<<taskOption>>|<<option>>,)+}                     //various optional task and display-element directives
 ** user -> task **  [<<ums>>,<<key>>,<<value>>]                         //<<key>> corresponds to an actionable item key (e.g. button, textbox), <<value>> must be of a type consistent with the element signified by <<key>> (e.g. a key paired with a boolean element can only send back boolean values)
 ** user -> task **  [<<ums>>(,<<key>>)?,{(<<optionResponse>>,)+}]       //<<key>> corresponds to the edit or element <<key>> of the <<option>> that activated this response message
 ** user -> task **  [<<ums>>(,<<key>>)?,[<<eventType>>(,<<value>>)*]]   //captured events for elements where "e" <<option>> is specified; array of <<value>>'s is specific to each <<eventType>>, see <<eventType>> functionality below
 //
 Label Name          Regular Expression                                  Functionality
-<<state>>           [(<<value>>|<<keyValOpt>>,)*]                       //array of values and key-value-option tuples; elements specified as <<value>> are always appended to the end of the <<state>>, i.e. [...<<value>>...] is shorthand for [...["",<<value>>]...]
-<<keyValOpt>>       [<<key>>(,<<element>>)?(,{(<<option>>,)+})?]        //if element is not specified, default is false
+<<state>>           [(<<value>>|<<keyValOpt>>,)*]                       //array of values and key-value-option tuples; elements specified as <<value>> are always appended to the end of the <<state>>, i.e. [...,<<value>>,...] is shorthand for [...,["",<<value>>],...]
+<<keyValOpt>>       [<<key>>(,<<element>>)?(,{(<<option>>,)+})?]        //if element is not specified, default is a boolean-type element with a value of false (i.e. button or option)
 <<element>>         <<state>>|<<value>>|null                            //null signifies deletion of key-element pair from the display
 <<value>>           <<text>>|<<number>>|true|false
 <<key>>             ** non-empty <<text>> **                            //any words beginning with # in <<key>> text are hidden (hashtags); used for reference only //TODO: add way to escape #, e.g. ##
+<<key>>             ""                                                  //empty string key signifies that the corresponding element should be appended without a key
+<<key>>             true                                                //true is a wildcard signifying, "for all existing keys"; e.g. [[true,0]] sets values of each existing element to 0; [[true,null,{"S":20000}]] signifies that all elements should be removed 20s after task begins; [[true,{"bg":"red"}]] signifies that all elements background color should be changed to red
 <<key>>             <<uint>>                                            //numeric keys are row numbers (row numbering begins at 0); if <<uint>> is greater or equal to current number of rows in parent state, corresponding element is appended to this state
 <<taskOption>>      "require":{(<<required>>,)+}                        //should be sent once before task begins; specify which options and option values are required for correctly interpreting current task; if any of the <<required>> elements are not implemented yet in the user software, the suggested behavior is to disconnect from task after a polite {"error":"sorry, <<required>> is not yet implemented on this side :("}
 <<taskOption>>      "template":<<url>>                                  //likely sent once before task begins; may be ignored by computational agents; url of a custom visualization template for STAP messages (e.g. CSS or JS file); may be used multiple times to load multiple template files
@@ -118,7 +120,9 @@ Label Name          Regular Expression                                  Function
 <<clientInfo>>      "ip"                                                //request client ip address
 <<clientInfo>>      "userAgent"                                         //request information about user-side software (e.g. webbrowser type/version, AI architecture type/version)
 <<clientInfo>>      "url"                                               //request client url (relevant when user-side software runs in a webbrowser)
-<<clientInfo>>      "screen"                                            //find out total user screen size (for human participants this is different from <<eventType>> 3, which only sends back current <<state>> size)
+<<clientInfo>>      "screen"                                            //find out total user screen size (for human participants this would be different from <<eventType>> 13, which only sends back current <<state>> size)
+<<eventType>>       0                                                   //load event; user->task message on this event would be: [<<ums>>,<<key>>,[0]]
+<<eventType>>       1                                                   //beforeunload event; user->task message on this event would be: [<<ums>>,<<key>>,[1]]
 <<json>>            ** see full JSON specification, e.g. http://json.org **
 <<text>>            ** see JSON string specification, e.g. http://json.org **
 <<number>>          ** see JSON number specification, e.g. http://json.org **
@@ -131,17 +135,17 @@ Label Name          Regular Expression                                  Function
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // everything below can be negotiated via the "required" <<taskOption>>
 //
-<<required>>        "options":[<<optionName>>]                          //specify options necessary for this task; e.g., {"required":{"options":["r","rot"]}}
-<<required>>        "sizeUnits":[<<sizeUnit>>]                          //specify size-units necessary for this task; e.g., {"required":{"sizeUnits":["%","E","vh","vw"]}}
-<<required>>        "types":[<<elementType>>]                           //specify element types necessary for this task; e.g., {"required":{"types":["popup","path"]}}; if "requiredTypes" is not empty, "type" does not need to be specified via {"required":{"options"...} -- it is assumed to be required
-<<required>>        "events":[<<event>>]                                //specify event-capture capabilities necessary for this task; e.g., {"required":{"events":["keydown","mousemove"]}};  if "requiredEvents" is not empty, "e" does not need to be specified via {"required":{"options"...} -- it is assumed to be required
+<<required>>        "options":[(<<optionName>>,)+]                      //specify options necessary for this task; e.g., {"required":{"options":["r","rot"]}}
+<<required>>        "sizeUnits":[("<<sizeUnit>>",)+]                    //specify size-units necessary for this task; e.g., {"required":{"sizeUnits":["%","E","vh","vw"]}}
+<<required>>        "types":[(<<elementType>>,)+]                       //specify element types necessary for this task; e.g., {"required":{"types":["popup","path"]}}; if "requiredTypes" is not empty, "type" does not need to be specified via {"required":{"options"...} -- it is assumed to be required
+<<required>>        "events":[(<<event>>,)+]                            //specify event-capture capabilities necessary for this task; e.g., {"required":{"events":["keydown","mousemove"]}};  if "requiredEvents" is not empty, "e" does not need to be specified via {"required":{"options"...} -- it is assumed to be required
 <<optionName>>      ** the part on the left of the colon in the <<option>> expression; e.g. "ins", "S", "eB", "bg" **
 //
 <<option>>          "ins":<<uint>>                                      //[edit-specific] insert current element at, or move to, row indicated by <<uint>> (row-numbering starts at 0); if <<uint>> is greater or equal to current number of rows in parent state, corresponding element is appended to this state; e.g. [["a","b"],["c","d"],["e","f"]] followed by [["x","y",{"ins":1}]] is equivalent to [["a","b"],["x","y"],["c","d"],["e","f"]]
 <<option>>          "S":<<ums>>|null                                    //[edit-specific] start time flag; used to delay the processing of the current edits until user time has reached specified <<ums>>; null clears previous delays for current element edits
 <<option>>          "T":<<number>>|null                                 //[edit-specific] animate (Tween) flag; <<number>> is the number of seconds to animate the current edits; null clears current animations
 <<option>>          "R":<<receiptType>>                                 //[edit-specific] receipt flag for current edit
-<<option>>          "@":<<key>>                                         //[edit-specific] optional <<key>> for current edit (rather than the element being edited); useful for edits that employ S, T, or R flags; e.g. the following four task->user messages -- [["candles",0]] [["candles",1,{"@":"@t1","S":10000,"R":3}]] [["candles",2,{"@":"@t2","S":20000,"R":3}]] [["@t1",{"S":null}]] -- would result in a key:value pair "candles":0 being added to display, and timers set up to change the value of "candles" to 1 at 10sec, then to 2 at 20sec into the task, then the 10sec timer is removed, but the 20sec timer for the same element remains, and user ends up sending the following back to task -- [<<ums>>,"@t1",{"R":1}] [<<ums>>,"@t2",{"R":1}] [20000,"@t2",{"R":2}]
+<<option>>          "@":<<key>>                                         //[edit-specific] optional <<key>> for current edit (rather than the element being edited); useful for edits that employ S, T, or R flags; e.g. the following four task->user messages -- [["candles",0]] [["candles",1,{"@":"@t1","S":10000,"R":3}]] [["candles",2,{"@":"@t2","S":20000,"R":3}]] [["@t1",{"S":null}]] -- would result in a key:value pair "candles":0 being added to display, and timers set up to change the value of "candles" to 1 at 10sec, then to 2 at 20sec into the task, then the 10sec timer is removed, but the 20sec timer for the same element remains, and user sw ends up sending the following back to task -- [<<ums>>,"@t1",{"R":1}] [<<ums>>,"@t2",{"R":1}] [20000,"@t2",{"R":2}]
 <<option>>          <<inputOption>>                                     //user-input options (specify whether element value is editable, and what the behavior is upon edits)
 <<option>>          <<stateOption>>                                     //state element options
 <<option>>          <<boolOption>>                                      //boolean element options
@@ -159,16 +163,15 @@ Label Name          Regular Expression                                  Function
 <<option>>          <<pieOption>>                                       //pie element options
 <<option>>          <<pathOption>>                                      //path element options; these options should be used only when needed for the task to function correctly, never merely for visual appeal (visual appeal specifications are loaded via templates, using <<taskOption>> "template":<<url>>)
 //
-<<inputOption>>     "oninput":<<element>>|{(<<option>>,)+}              //how to change element after user input (e.g. [["btn1",{"oninput":{"eB:0"}}]] creates a button, btn1, that becomes disabled once clicked)
-<<inputOption>>     "oninput":[<<element>>,{(<<option>>,)+}]            
+<<inputOption>>     "onedit":<<element>>|{(<<option>>,)+}               //how to change editable element after user changes its value; use "onedit":{} to reset a control to do nothing after a user-directed change; e.g. [["say something","",{"eT":1,"onedit":""}]] will create a textbox where user can type something, but as soon as they hit Enter, the text will disappear; [["btn1",{"onedit":{"eB:0"}}]] creates a button, btn1, that becomes disabled once clicked; [["btn1",{"onedit":null}]] creates a button, btn1, that gets removed once clicked)
+<<inputOption>>     "onedit":[<<element>>,{(<<option>>,)+}]
+<<inputOption>>     "onsubedit":<<element>>|{(<<option>>,)+}            //how to change state after one of its child elements receives user input; e.g. [["choose",[["choice 1"],["choice 2"]],{"select":1,"onsubedit":{"eB:0"}}]] creates a set of choices, which all become disabled once any one of them gets clicked
+<<inputOption>>     "onsubedit":[<<element>>,{(<<option>>,)+}]
 <<inputOption>>     "eB":0|1                                            //editable Boolean flag; 0 makes boolean elements (buttons) disabled; 1 (default) enables them
 <<inputOption>>     "eT":0|1|2|3|4                                      //editable Text flag; 0 (default) is standard, non-editable text; non-zero value turns text elements into text inputs; 1 signifies that text-change event occurs on enter-key; 2 sends change when field loses focus; 3 sends change on both enter-key and blur; 4 sends change whenever any text in the field is altered
-<<inputOption>>     "eN":0|1                                            //editable Number flag; 
-<<inputOption>>     "e":[(<<eventType>>,)*]                             //[element-specific] capture element events like key presses and mouse movements; event types required for task must be pre-specified via the "requiredEvents" <<taskOption>>
-<<inputOption>>     "esu":<<sizeUnit>>                                  //size unit for x/y/w/h specs in user->task messages for captured events
-//
-<<stateOption>>     "*":<<value>>                                       //[edit-specific] change value to <<value>> for all elements in state
-<<stateOption>>     "*":{(<<option>>,)+}                                //[edit-specific] update each <<option>> for all elements in state
+<<inputOption>>     "eN":0|1|2|3|4                                      //editable Number flag; 0 (default) is standard, non-editable text; non-zero value turns text elements into text inputs; 1 signifies that text-change event occurs on enter-key; 2 sends change when field loses focus; 3 sends change on both enter-key and blur; 4 sends change whenever any text in the field is altered
+<<inputOption>>     "e":[(<<eventType>>,)*]                             //[element-specific] event capture; capture element events like key presses and mouse movements; event types required for task must be pre-specified via the "require" <<taskOption>>
+<<inputOption>>     "esu":"<<sizeUnit>>"                                //size unit for x/y/w/h specs in user->task messages for captured events
 //
 <<boolOption>>      "select":-1|0|1|2|0.5                               //selection behavior for boolean elements: -1 (default) means that each element is selected (true) on click, and considered deselected immediately (i.e. clickable buttons); 0 means that each element is selected (true) on mousedown, and deselected (false) on mouseup (i.e. hold-down buttons); 1 means that an element stays selected (true) when clicked, until it is clicked again to deselect (false), or until another element is selected in same state (i.e. radio buttons or select); 2 means that each element is selected (true) when clicked and deselected (false) when clicked again (i.e. checkboxes or multi-select); 0.5 is a hybrid between 1 and 0 -- only one element in state can be selected at a time, but the selection/deselection does not happen on click, but rather on mousedown/hover/mouseup  (e.g. a set of navigation buttons) -- each element is selected (true) either (1) on mousedown or (2) on mousehover while another boolean element in the same state is selected, and an element is deselected (false) either (1) on mouseup or (2) when mouse hovers over some other boolean element in the same state
 //
@@ -178,24 +181,26 @@ Label Name          Regular Expression                                  Function
 <<numOption>>       "unit":<<text>>                                     //exclusive with "time" option; unit for the number (e.g. "$", "%", "m/sec", "kg", "€ million", "$ k")
 <<numOption>>       "time":"(<<timeField>>)+"                           //exclusive with "unit" option; indicates that the value for this element is the total number of seconds since 1970/01/01 00:00; e.g. [["when",1483963200,{"time":"YMDhm"}]] is a way to specify date/time 2017/01/09 12:00
 //
-<<txtOption>>       "pwd":<<text>>                                      //this turns a text input into a password field, and <<text>> specifies salt to add to the password string before using SHA256 to hash it before sending (this way user's intended passwords are never sent across the wire (this does not preclude the need to also salt/hash server-side); salt must be consistent for a given user; see https://en.wikipedia.org/wiki/Salt_(cryptography))
+<<txtOption>>       "pwd":<<text>>                                      //this turns a text input into a password field, and <<text>> specifies salt to append to the password string before using SHA256 to hash it before sending (this way user's intended passwords are never sent across the wire (this does not preclude the need to also salt/hash server-side); salt must be consistent for a given user; see https://en.wikipedia.org/wiki/Salt_(cryptography))
 <<txtOption>>       "no":<<text>>                                       //<<text>> is a set of characters that are not allowed to be entered into the text element; e.g. "no":"\r\n"
 <<txtOption>>       "maxchars":<<number>>                               //max number of characters in <<text>> or <<number>> element
 //
+<<boxOption>>       "bg":<<cssBackground>>                              //background
+<<boxOption>>       "c":<<color>>                                       //text/stroke color
+<<boxOption>>       "fnt":<<cssFont>>                                   //text font
+<<boxOption>>       "scroll":0|1|2                                      //vertical scrolling; 0 - scrolling isn't allowed, 1 - scrolling allowed when possible, 2 - scrolling isn't allowed, but state automatically scrolls to the bottom to reveal newly added content, 3 - scrolling is allowed, and state automatically scrolls to the bottom to reveal newly added content
+<<boxOption>>       "scrollH":0|1|2                                     //horizontal scrolling; 0 - scrolling isn't allowed, 1 - scrolling allowed when possible, 2 - scrolling isn't allowed, but state automatically scrolls to the right to reveal newly added content, 3 - scrolling is allowed, and state automatically scrolls to the right to reveal newly added content
 <<boxOption>>       "w":<<number>>|"<<number>><<sizeUnit>>"             //width of the element
 <<boxOption>>       "h":<<number>>|"<<number>><<sizeUnit>>"             //height of the element
-<<boxOption>>       "x":<<number>>|"<<number>><<sizeUnit>>"             //horizontal position of left-top corner of the 
-<<boxOption>>       "y":<<number>>|"<<number>><<sizeUnit>>"             //vertical position of left-top corner of the 
+<<boxOption>>       "x":<<number>>|"<<number>><<sizeUnit>>"             //horizontal position of left-top corner of the element
+<<boxOption>>       "y":<<number>>|"<<number>><<sizeUnit>>"             //vertical position of left-top corner of the element
+<<boxOption>>       "z":<<number>>                                      //z-index (stack order) of the element; an element with greater stack order is always in front of an element with a lower stack order
 <<boxOption>>       "r":<<number>>                                      //rounded corner radius (ex: create a circle w/ radius=10 -> {"_bx":{"w":20,"h":20,"r":10}})
 <<boxOption>>       "rot":<<number>>                                    //rotation
-<<boxOption>>       "bg":<<cssBackground>>                              //background
 <<boxOption>>       "bd":<<cssBorder>>                                  //border style
 <<boxOption>>       "bdc":<<color>>                                     //border color
 <<boxOption>>       "bdw":<<number>>                                    //border width
 <<boxOption>>       "pad":<<cssPadding>>                                //padding
-<<boxOption>>       "fnt":<<cssFont>>                                   //text font
-<<boxOption>>       "col":<<color>>                                     //text color
-<<boxOption>>       "autoscroll":0|1                                    //"autoscroll":1 signifies that contents automatically scroll down to show the latest key:element added to the state; replaces deprecated directive 
 //
 <<aniOption>>       "ease":(0|1|2|3|4|"back"|"elastic"|"bounce")        //easing option for animation; default is 0 (linear); see http://greensock.com/ease-visualizer to visualize ease options
 <<aniOption>>       "easeout":(1|-1|0)                                  //ease direction; 1 is out, -1 is in, 0 is in-and-out; default is 1; see http://greensock.com/ease-visualizer to visualize ease options
@@ -204,38 +209,39 @@ Label Name          Regular Expression                                  Function
 //
 <<pieOption>>       "bounda":[(<<number>>,)+]                           //bounding angles of the pie in clockwise order; e.g., [["navigation",[["E"],["S"],["W"],["N"]],{"type":"pie","bounda":[45,135,225,315]}]]
 //
-<<pathOption>>      "c":(<<color>>|"none")                              //similar to SVG stroke
 <<pathOption>>      "f":(<<color>>|"none")                              //similar to SVG fill
 <<pathOption>>      "thk":<<number>>                                    //similar to SVG stroke-width
 <<pathOption>>      "arrow1|2":"(arrow)|(circle)|(square)|()"           //similar to SVG marker-start/marker-end
-<<pathOption>>      "cap":"(square)|(round)|(butt)"                     //similar to SVG stroke-linecap
+<<pathOption>>      "cap":"(square)|(round)|()"                         //similar to SVG stroke-linecap
 <<pathOption>>      "dash":<<strokeDash>>                               //similar to SVG stroke-dasharray
 //
 <<sizeUnit>>        ** legal CSS length unit; e.g., http://www.w3schools.com/cssref/css_units.asp **
-<<sizeUnit>>        "E"                                                 //E signifies element size; when specifying height of <<state>> or <<table>>, E is row-height (e.g. {"h":"2.5E"} signifies that 2.5 rows will be visible in current state before scrolling down); when specifying width of <<state>> or <<table>>, E is element-width (e.g. {"w":"2.5E"} signifies that 2.5 elements will be visible in current state before scrolling right); when specifying height of a <<text>> element, E is (font height + space between lines) (e.g. {"h":"2.5E"} signifies that 2.5 lines of text will be visible in current element before scrolling down); when specifying width of a <<text>> element, E is (font width + space between characters) (e.g. {"w":"10E"} signifies that, if font-type is monospace, 10 characters will be visible; if font is not monospace, at least client promises to do its best).
-<<sizeUnit>>        "w|h"                                               //w/h signify element width and height; e.g., [["my box",{"w":100,"h":".5w"}]] makes the width/height of "my box" 100 and 50 pixels, respectively
+<<sizeUnit>>        E                                                   //E signifies element size; when specifying height of <<state>> or <<table>>, E is row-height (e.g. {"h":"2.5E"} signifies that 2.5 rows will be visible in current state before scrolling down); when specifying width of <<state>> or <<table>>, E is element-width (e.g. {"w":"2.5E"} signifies that 2.5 elements will be visible in current state before scrolling right); when specifying height of a <<text>> element, E is (font height + space between lines) (e.g. {"h":"2.5E"} signifies that 2.5 lines of text will be visible in current element before scrolling down); when specifying width of a <<text>> element, E is (font width + space between characters) (e.g. {"w":"10E"} signifies that, if font-type is monospace, 10 characters will be visible; if font is not monospace, at least client promises to do its best).
+<<sizeUnit>>        w|h                                                 //w/h signify element width and height; e.g., [["my box",{"w":100,"h":".5w"}]] makes the width/height of "my box" 100 and 50 pixels, respectively
 <<receiptType>>     1..7                                                //1 indicates a receipt required when the message is received (receipt is sent as soon as the message is received, even if execution is delayed due to S flag); 2 indicates a receipt required when changes occur (if the change is animated, "R":2 indicates the beginning, not the end of animation); 4 indicates a receipt required at the end of the animation (if there is no animation, this is equivalent to "R":2); sums of these values indicate that multiple receipts are required (e.g. "R":3 is equivalent to having both, "R":1 and "R":2)
-<<eventType>>       0                                                   //focus event; user->task message on this event would be: [<<ums>>,<<key>>,[0]]
-<<eventType>>       1                                                   //blur event; user->task message on this event would be: [<<ums>>,<<key>>,[1]]
-<<eventType>>       2                                                   //scroll event; user->task message on this event would be: [<<ums>>,<<key>>,[2],<<number>>]
-<<eventType>>       3                                                   //resize event; user->task message on this event would be: [<<ums>>,<<key>>,[3,<<number>>,<<number>>]] where <<number>>,<<number>> is the width and height of the element; when this event is first assigned to an element, an immediate response is warranted
-<<eventType>>       4                                                   //collision event; user->task message on this event would be: [<<ums>>,<<key>>,[4,<<key>>,<<number>>,<<number>>,<<number>>,<<number>>]] where <<key>> is the colliding element (which must also have collision-detection enabled), and <<number>>,<<number>>,<<number>>,<<number>> is the x,y,width,height of the overlapping rectangle, where x,y is from the top-left corner of current element
-<<eventType>>       10                                                  //select event; user->task message on this event would be: [<<ums>>,<<key>>,[10,<<number>>,<<number>>]]
-<<eventType>>       11                                                  //copy event; user->task message on this event would be: [<<ums>>,<<key>>,[11]]
-<<eventType>>       12                                                  //cut event; user->task message on this event would be: [<<ums>>,<<key>>,[12]]
-<<eventType>>       13                                                  //paste event; user->task message on this event would be: [<<ums>>,<<key>>,[13]]
-<<eventType>>       20                                                  //keypress event; user->task message on this event would be: [<<ums>>,<<key>>,[20,<<number>>]], where <<number>> is the keycode
-<<eventType>>       21                                                  //keydown event; user->task message on this event would be: [<<ums>>,<<key>>,[21,<<number>>]], where <<number>> is the keycode
-<<eventType>>       22                                                  //keyup event; user->task message on this event would be: [<<ums>>,<<key>>,[22,<<number>>]], where <<number>> is the keycode
-<<eventType>>       30                                                  //click event; user->task message on this event would be: [<<ums>>,<<key>>,[30,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
-<<eventType>>       31                                                  //dblclick event; user->task message on this event would be: [<<ums>>,<<key>>,[31,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
-<<eventType>>       32                                                  //mousedown event; user->task message on this event would be: [<<ums>>,<<key>>,[32,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
-<<eventType>>       33                                                  //mouseup event; user->task message on this event would be: [<<ums>>,<<key>>,[33,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
-<<eventType>>       34                                                  //mousemove event; user->task message on this event would be: [<<ums>>,<<key>>,[34,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
-<<eventType>>       35                                                  //mouseenter event; user->task message on this event would be: [<<ums>>,<<key>>,[35,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
-<<eventType>>       36                                                  //mouseleave event; user->task message on this event would be: [<<ums>>,<<key>>,[36,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
-<<eventType>>       37                                                  //mouseover event; user->task message on this event would be: [<<ums>>,<<key>>,[37,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
-<<eventType>>       38                                                  //mouseout event; user->task message on this event would be: [<<ums>>,<<key>>,[38,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
+<<eventType>>       0                                                   //load event; user->task message on this event would be: [<<ums>>,<<key>>,[0]]
+<<eventType>>       1                                                   //beforeunload event; user->task message on this event would be: [<<ums>>,<<key>>,[1]]
+<<eventType>>       10                                                  //focus event; user->task message on this event would be: [<<ums>>,<<key>>,[10]]
+<<eventType>>       11                                                  //blur event; user->task message on this event would be: [<<ums>>,<<key>>,[11]]
+<<eventType>>       12                                                  //scroll event; user->task message on this event would be: [<<ums>>,<<key>>,[12],<<number>>]
+<<eventType>>       13                                                  //resize event; user->task message on this event would be: [<<ums>>,<<key>>,[13,<<number>>,<<number>>]] where <<number>>,<<number>> is the width and height of the element; when this event is first assigned to an element, an immediate response is warranted
+<<eventType>>       14                                                  //collision event; user->task message on this event would be: [<<ums>>,<<key>>,[14,<<key>>,<<number>>,<<number>>,<<number>>,<<number>>]] where <<key>> is the colliding element (which must also have collision-detection enabled), and <<number>>,<<number>>,<<number>>,<<number>> is the x,y,width,height of the overlapping rectangle, where x,y is from the top-left corner of current element
+<<eventType>>       20                                                  //select event; user->task message on this event would be: [<<ums>>,<<key>>,[20,<<number>>,<<number>>]]
+<<eventType>>       21                                                  //copy event; user->task message on this event would be: [<<ums>>,<<key>>,[21]]
+<<eventType>>       22                                                  //cut event; user->task message on this event would be: [<<ums>>,<<key>>,[22]]
+<<eventType>>       23                                                  //paste event; user->task message on this event would be: [<<ums>>,<<key>>,[23]]
+<<eventType>>       30                                                  //keypress event; user->task message on this event would be: [<<ums>>,<<key>>,[30,<<number>>]], where <<number>> is the keycode
+<<eventType>>       31                                                  //keydown event; user->task message on this event would be: [<<ums>>,<<key>>,[31,<<number>>]], where <<number>> is the keycode
+<<eventType>>       32                                                  //keyup event; user->task message on this event would be: [<<ums>>,<<key>>,[32,<<number>>]], where <<number>> is the keycode
+<<eventType>>       40                                                  //click event; user->task message on this event would be: [<<ums>>,<<key>>,[40,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
+<<eventType>>       41                                                  //dblclick event; user->task message on this event would be: [<<ums>>,<<key>>,[41,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
+<<eventType>>       42                                                  //mousedown event; user->task message on this event would be: [<<ums>>,<<key>>,[42,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
+<<eventType>>       43                                                  //mouseup event; user->task message on this event would be: [<<ums>>,<<key>>,[43,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
+<<eventType>>       44                                                  //mousemove event; user->task message on this event would be: [<<ums>>,<<key>>,[44,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
+<<eventType>>       45                                                  //mouseenter event; user->task message on this event would be: [<<ums>>,<<key>>,[45,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
+<<eventType>>       46                                                  //mouseleave event; user->task message on this event would be: [<<ums>>,<<key>>,[46,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
+<<eventType>>       47                                                  //mouseover event; user->task message on this event would be: [<<ums>>,<<key>>,[47,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
+<<eventType>>       48                                                  //mouseout event; user->task message on this event would be: [<<ums>>,<<key>>,[48,<<number>>,<<number>>]] where <<number>>,<<number>> is the x,y of the mouse from the top-left of element 
 <<timeField>>       Y|M|D|d|h|m|s|.                                     //the characters "YMDdhms." correspond to Year, Month, Day, day of week, hours, min, sec, and milliseconds
 <<color>>           ** see CSS color specification, e.g. http://www.w3schools.com/cssref/css_colors.asp **
 <<cssBackground>>   ** see CSS background specification, e.g. http://www.w3schools.com/cssref/css3_pr_background.asp **
@@ -252,11 +258,14 @@ Label Name          Regular Expression                                  Function
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Potential future additions:
-// <<key>>             ""                                                  //auto-key; [["",<<element>>]] is used to append element to end of state; this directive is shorthand for [[<<X>>,<<element>>]] where <<X>> starts at zero and is incremented with each message, e.g. [["","hello world"]] [["","goodbye world"]] is equivalent to [[0,"hello world"]] [[1,"goodbye world"]]
-// <<key>>             true                                                //all keys; e.g. [[true,0]] is used to set value for each key in state to 0
+// <<key>>             <<int>>                                             //if <<int>> is less than zero, corresponding element is inserted at the top of the current state
+// <<stateOption>>     "*":<<value>>                                       //[edit-specific] change value to <<value>> for all elements in state
+// <<stateOption>>     "*":{(<<option>>,)+}                                //[edit-specific] update each <<option>> for all elements in state
 // <<option>>          "rich":0|1                                          //allowing/disallow rich text
 // <<option>>          "get":1..63                                         //get row-number, key, type, value, options, and/or length of the element; values 1,2,4,8,16,32 correspond to row-number, key, type, value, options, and length, respectively; sums of these numbers signify that multiple pieces of information are needed; e.g. [["hello",["a",["b","c"]],"goodbye]] followed by {"get":63} should send the following: [<<ums>>,{"get":[]}]
 //   TODO: figure out what to send back on "get"; e.g. {"get":47} might return {"row":1,"key":1,"type":"state","len":7}
+// <<inputOption>>     "ef":[[<<eventType>>,<<eventProp>>,[(<<value>>,)*]]]  //[element-specific] event capture with filters; capture events whenever eventProp is one of the specified values; e.g. {"e":[[31,"keyCode",[65,83,68,87]]]} will capture keydown events only for keys a,s,d,w; [["trace",{"type":"path","w":400,"h":300,"ef":[[44,"buttons",[1,3]],[44,"shiftKey",[true]]]}]] will create an 400x300 box that will send all user mouse-movements to the task whenever left mouse-button is held down or both mouse-buttons are held down or the shift key is held down; for lists of event properties, see individual js events, e.g. mousemove (https://developer.mozilla.org/en-US/docs/Web/Events/mousemove), keypress (https://developer.mozilla.org/en-US/docs/Web/Events/keypress)
+// <<inputOption>>     "ef":[[<<eventType>>,<<eventType>>,[(<<value>>,)*]]]  //[element-specific] event capture with filters; capture events whenever eventProp is one of the specified values; e.g. [["trace",{"type":"path","w":400,"h":300,"ef":[[44,42],[44,31,[16]]]}]] will create an 400x300 box that will send all user mouse-movements to the task whenever left mouse-button is held down or both mouse-buttons are held down or the shift key is held down
 // <<option>>          "W":<<number>>                                      //wait flag; used to delay the processing of the current state for a given number of seconds
 // <<option>>          "=":<<value>>                                       //default value (if not specified in current or ancestor <<state>>, default is false)
 // <<inputOption>>     "eS":0|1|[(<<key>>,)+]                              //editable State flag; 0 (default) is standard non-editable state; 1 means that elements can be moved up/down in order; an array of keys means that elements in this state can be inserted at row of a target specified by <<key>>
