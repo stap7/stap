@@ -7,7 +7,7 @@ def recv():
   return json.loads(form.getvalue('d')) if 'd' in form else [0,0]
 
 def send(stap):
-  print()
+  print("Content-type: text/plain\n")
   print("recv(%s);"%json.dumps(stap))
 
 
