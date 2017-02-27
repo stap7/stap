@@ -5,7 +5,7 @@ Current folder includes sample STAP task and gui software.
 			used to run included stdio and cgi scripts
 				(convinient for running computational agents on STAP tasks)
 		- websocketd from [http://websocketd.com/]
-			used to serve included task scripts using websocket or http/cgi protocols
+			used to serve included task scripts using websocket or http/cgi/jsonp protocols
 				(convinient for web experiments with human or computational participants)
 		- a modern web browser, like Chrome [https://www.google.com/chrome/]
 			used to present STAP tasks to human users
@@ -21,24 +21,27 @@ Try it out:
 		- optionally, put the websocketd executable in your applications folder
 
 	Start http, cgi, and websocket services:
-		- open terminal window (linux, freeBSD or DOS shell), and run websocketd (or websocketd.exe):
+		- open terminal window (linux, freeBSD, or DOS shell), and run websocketd:
 			
 			path/to/websocketd --port 8080 --staticdir path/to/stap6/examples/api2gui --cgidir path/to/stap6/examples/tasks/stateless/cgi-bin/ --dir path/to/stap6/examples/tasks/stdio
-				(optionally port can be anything other than 8080)
-			
+				(optionally, port parameter can be anything other than 8080)
+				(optionally, staticdir parameter may be omitted if you don't need serve the included html5 GUI)
+				(optionally, cgidir parameter may be omitted if you don't need serve the included cgi scripts)
+		
 		That's it.
 		Now you are serving tasks in the examples/tasks/stdio folder over websockets and as cgi scripts.
 		
 		To try each websocket task in the browser go to:
-			http://localhost:8080/stapws.html?l=ws://localhost:8080/helloworld.py
-			http://localhost:8080/stapws.html?l=ws://localhost:8080/twoarm.py
-			http://localhost:8080/stapws.html?l=ws://localhost:8080/shj.py
-			http://localhost:8080/stapws.html?l=ws://localhost:8080/pvt.py
-			http://localhost:8080/stapws.html?l=ws://localhost:8080/timeestimation.py
-			http://localhost:8080/stapws.html?l=ws://localhost:8080/draw.py
+			http://localhost:8080/stap.html?l=ws://localhost:8080/helloworld.py
+			http://localhost:8080/stap.html?l=ws://localhost:8080/twoarm.py
+			http://localhost:8080/stap.html?l=ws://localhost:8080/shj.py
+			http://localhost:8080/stap.html?l=ws://localhost:8080/pvt.py
+			http://localhost:8080/stap.html?l=ws://localhost:8080/timeestimation.py
+			http://localhost:8080/stap.html?l=ws://localhost:8080/draw.py
 
 		To try each stateless cgi task in the browser go to:
-			http://localhost:8080/stap.html?l=http://localhost:8080/helloworld.py
+			http://localhost:8080/stapp.html?l=http://localhost:8080/helloworld.sh
+			http://localhost:8080/stapp.html?l=http://localhost:8080/helloworld.py
 
 
 Contents:

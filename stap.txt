@@ -6,7 +6,7 @@ version 6.0
     In its focus to make human software usable by machine agents, STAP aims to eliminate non-task-essential design choices (e.g. font type/size may be irrelevant for many task types), leaving those to be optionally specified via customizable templates (e.g. CSS).
     STAP messages adhere to JSON formatting, and can be deserialized with any standard JSON library.
     
-    Deploying a STAP application is similar to deploying a web application, where STAP is takes place of HTML as the markup language for user interface specification.
+    Deploying a STAP application is similar to deploying a web application, where STAP takes place of HTML as the markup language for user interface specification.
     Much like HTML, STAP is a means for serializing task interface display and interactions.
     Unlike HTML documents, STAP messages are incremental updates to the display.
     Whereas HTML is focused on hypertext look and feel, STAP is focused on function, structure, and affordances of task display.
@@ -19,6 +19,8 @@ Examples:
     <-     Message sent to task software from participant software
 
     Sample Interaction 1:
+        // user software ready
+        <- [0,[0]]
         // display "Hello World"
         -> ["Hello World"]
         // display a "Click Me" button
@@ -27,6 +29,8 @@ Examples:
         <- [30800,"Click Me",true]
 
     Sample Interaction 2:
+        // user software ready
+        <- [0,[0]]
         // let client know that a goal in this task is to maximize coins earned, and that "S" (start time) and "eT" (editable-text field) are required directives for this task
         -> {"task":{"good":[["Coins Earned",">"]]},"require":["S","eT"]}
         // display a text prompt to get participant's name (eT:1 turns text editable)
@@ -49,25 +53,27 @@ Examples:
         -> [["Coins Earned",3]]
         ...
 
-    Sample Interation 3:
-        // display a 100x100 box that will display red lines; "e":[30] signies that click events should be captured (see <<eventType>> 30 below)
-        -> [["click somewhere",{"type":"path","c":"red","w":100,"h":100,"e":[30]}]]
+    Sample Interaction 3:
+        // user software ready
+        <- [0,[0]]
+        // display a 100x100 box that will display red lines; "e":[40] signifies that click events should be captured (see <<eventType>> 40 below)
+        -> [["click somewhere",{"type":"path","c":"red","w":100,"h":100,"e":[40]}]]
         // user clicked in location 24,60 relative to top-left corner of the box
-        <- [1570,"click somewhere",[30,24,60]]
+        <- [1570,"click somewhere",[40,24,60]]
         // draw a line from middle of the box to where user clicked
         -> [["click somewhere",[50,50,24,60]]]
         // user clicked in location 91,10 relative to top-left corner of the box
-        <- [2307,"click somewhere",[30,91,10]]
+        <- [2307,"click somewhere",[40,91,10]]
         // draw a line from middle of the box to where user clicked
         -> [["click somewhere",[50,50,91,10]]]
         // user clicked in location 31,33 relative to top-left corner of the box
-        <- [2555,"click somewhere",[30,31,33]]
+        <- [2555,"click somewhere",[40,31,33]]
         // draw a line from middle of the box to where user clicked
         -> [["click somewhere",[50,50,31,33]]]
         ...
 
 
-    Input       Sampe Control definition (->)                             Sample Actions (<-)
+    Input       Sample Control definition (->)                            Sample Actions (<-)
     -------------------------------------------------------------------------------------------------------------------
     button      [["press me"]]                                            [1012,"press me",true]
     buttons     [["#abc",[["press me"],["no, me"]]]]
@@ -78,7 +84,7 @@ Examples:
     onoffs      [["Choose cars",[["subaru"],["tesla"]],{"select":2}]]     [1012,"subaru",true] [1327,"tesla",true] [5172,"subaru",false]
     text        [["Type something","",{"eT":1}]]                          [1012,"Type something","hello world"]
     numeric     [["Enter number",0,{"eN":1}]]                             [1012,"Enter number",78.3]
-    events      [["Click somewhere","",{"e":[30,34]}]]                    [1012,"Click somewhere",[34,4,0]] [1045,"Click somewhere",[34,6,2]] [1090,"Click somewhere",[34,8,4]] [1117,"Click somewhere",[34,12,9]] [1327,"Click somewhere",[30,12,9]]
+    events      [["Click somewhere","",{"e":[40,44]}]]                    [1012,"Click somewhere",[44,4,0]] [1045,"Click somewhere",[44,6,2]] [1090,"Click somewhere",[44,8,4]] [1117,"Click somewhere",[44,12,9]] [1327,"Click somewhere",[40,12,9]] ...
 
 
 

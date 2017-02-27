@@ -29,8 +29,10 @@ INSTRUCTIONS = 'Click a button when one appears'
 def main():
 	log=[]
 	
+	#wait for user to send software to announce readiness
 	ums=recv()[0]
-	send({'require':{'options':[RECEIPT,START_EDIT,ON_EDIT]}})#,'types':['popup']}})
+	#announce required options
+	send({'require':{'options':[RECEIPT,START_EDIT,ON_EDIT]}})
 	
 	send([ ('Trial',1,{'<=':TRIALS}), (INSTRUCTIONS,[]) ])
 	
@@ -46,7 +48,7 @@ def main():
 		#get participant action
 		ums=recv()[0]
 		log.append(ums-receipttime)
-		send([ ('Your response time is',log[-1]) ])
+		send([ ('Your response time is',log[-1],{'unit':'ms'}) ])
 
 	#display goodbye message in popup
 	send( CLEAR )

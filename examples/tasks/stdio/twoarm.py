@@ -28,10 +28,15 @@ def getReward(buttonNum):
 
 def main():
 	recv()
-	send({'task':{
-		'end':[['Trial',TRIALS]],								#let participant know that the task will end when the title field Trial reaches its max
-		'good':[['Reward',1]]									#let participant know that the goal of the task is to keep Reward as close to 1 as possible
-	}})
+	send({
+		'require':{
+			'options':['S','R','onsubedit','eB']				#announce required options
+		},
+		'task':{
+			'end':[['Trial',TRIALS]],							#let participant know that the task will end when the title field Trial reaches its max
+			'good':[['Reward',1]]								#let participant know that the goal of the task is to keep Reward as close to 1 as possible
+		}
+	})
 	send([['Trial',0,{'<=':TRIALS}]])							#let participant know that Trial will be a number with a maximum value
 	send([['Click a button',
 		[["Button 1"],["Button 2"]],							#let participant know there are 2 buttons to click

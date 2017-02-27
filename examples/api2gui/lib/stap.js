@@ -22,7 +22,7 @@ TODO:
 
 
 
-var OPTIONS=new Set(["S","T","R"]),
+var OPTIONS=new Set(["S","T","R","onsubedit"]),
 	TYPES=new Set();
 
 var REQUIRED={

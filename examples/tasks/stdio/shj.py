@@ -42,8 +42,11 @@ def stimulus(dimVals):
 		r=vis[2]*20)
 
 def main():
-	recv()
+	#wait for user to send software to announce readiness
+	ums=recv()[0]
 	send({
+		#announce required options
+		'require':{'options':['S','R','select','eB','onsubedit','bg','bdc','r']},
 		#set the label OBJ to stand for the full string, "Is this object a Greeble or a Groble?"
 		"replace":{"OBJ":"Is this object a Greeble or a Groble?"},
 		#announce task conditions
