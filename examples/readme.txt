@@ -52,8 +52,10 @@ Contents:
 	
 	tasks/stdio/
 		STAP task scripts that interact over the standard input/output streams.
-		stdio streams may be piped locally to compuational agents or redirected and served over sockets for web access
-		
+		stdio streams may be piped to connect local clients to tasks,
+			they may also be served over TCP using netcat or a similar tool,
+			and may be served over websockets for local or remote task participation. 
+	
 	tasks/stateless/
 		Stateless scripts are scripts that are executed by a generic webserver.
 		The reason these scripts are called "stateless" is because each time a URL for a script is requested, that script is executed to completion; thus variable values in task script do not survive two consecutive message exchanges with the user.
