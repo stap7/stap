@@ -9,6 +9,7 @@ TODO:
 		scroll:0 doesn't work on maindiv
 	features:
 		x of N number format
+		options ., ins, @
 		scrollH (including autoscroll)
 		path options
 		ani options
@@ -475,7 +476,7 @@ function processElement(parent,key,val,options){
 				if(val===undefined){val=false;typeofval='boolean';}
 				else typeofval=typeof(val);
 			}
-			if(typeof(key)==='string')
+			if(key && typeof(key)==='string')
 				displaykey=replaceShorthand(key).replace(HASHTAGS,'').trim();
 			else{
 				key=Object.keys(parent._childmap).length;
