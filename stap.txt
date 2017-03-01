@@ -1,5 +1,5 @@
 STAP (Simple Task-Actor Protocol)
-version 6.0
+version 6.01
 
     STAP is a machine-readable format for specifying user-interface changes.
     Main focus of STAP is in providing a functionally-equivalent task experience for human and computational users alike.
@@ -96,7 +96,7 @@ Examples:
 //
 Message Type        Regular Expression                                  Functionality
 ** task -> user **  <<state>>                                           //edit current display state with values in <<state>>
-** task -> user **  null                                                //clear the display state; shorthand for [[true:null]]
+** task -> user **  null                                                //clear the display state; shorthand for [[true,null]]
 ** task -> user **  {(<<taskOption>>|<<option>>,)+}                     //various optional task and display-element directives
 ** user -> task **  [<<ums>>,<<key>>,<<value>>]                         //<<key>> corresponds to an actionable item key (e.g. button, textbox), <<value>> must be of a type consistent with the element signified by <<key>> (e.g. a key paired with a boolean element can only send back boolean values)
 ** user -> task **  [<<ums>>(,<<key>>)?,{(<<optionResponse>>,)+}]       //<<key>> corresponds to the edit or element <<key>> of the <<option>> that activated this response message
@@ -141,12 +141,18 @@ Label Name          Regular Expression                                  Function
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // everything below can be negotiated via the "required" <<taskOption>>
 //
+//   unless otherwise specified, each option value is inheritable; e.g. [["numbers",[1,2,["more",[3,4]]],{"rnd":1}]] signifies that all numeric values in "numbers", including those under "more", are rounded to 1 (integers)
+//   [element-specific] options are not inheritable
+//   [edit-specific] option values are not permanent; e.g. [["x","",{"T":10,"bg":"blue"}]] signifies that the background of "x" should be changed to blue over the course of 10seconds, after which the value of "bg" (background) remains "blue", but the value "T" (time of animation) resets to null, because "T" is an [edit-specific] option
+//
+Label Name          Regular Expression                                  Functionality
 <<required>>        "options":[(<<optionName>>,)+]                      //specify options necessary for this task; e.g., {"required":{"options":["r","rot"]}}
 <<required>>        "sizeUnits":[("<<sizeUnit>>",)+]                    //specify size-units necessary for this task; e.g., {"required":{"sizeUnits":["%","E","vh","vw"]}}
 <<required>>        "types":[(<<elementType>>,)+]                       //specify element types necessary for this task; e.g., {"required":{"types":["popup","path"]}}; if "requiredTypes" is not empty, "type" does not need to be specified via {"required":{"options"...} -- it is assumed to be required
 <<required>>        "events":[(<<event>>,)+]                            //specify event-capture capabilities necessary for this task; e.g., {"required":{"events":["keydown","mousemove"]}};  if "requiredEvents" is not empty, "e" does not need to be specified via {"required":{"options"...} -- it is assumed to be required
-<<optionName>>      ** the part on the left of the colon in the <<option>> expression; e.g. "ins", "S", "eB", "bg" **
+<<optionName>>      ** the part on the left of the colon in the <<option>> or <<taskOption>> expression; e.g. "ins", "S", "eB", "bg" **
 //
+<<taskOption>>      ".":<<keyValOpt>>                                   //[edit-specific] find the key from <<keyValOpt>> tuple in current display and edit its value/options to the value/options specified in <<keyValOpt>> tuple; e.g. if the display was formed as follows, [["x",[["y",[["z",0]]]]]], then {".":["z",5]} would change it to [["x",[["y",[["z",5]]]]]]
 <<option>>          "ins":<<uint>>                                      //[edit-specific] insert current element at, or move to, row indicated by <<uint>> (row-numbering starts at 0); if <<uint>> is greater or equal to current number of rows in parent state, corresponding element is appended to this state; e.g. [["a","b"],["c","d"],["e","f"]] followed by [["x","y",{"ins":1}]] is equivalent to [["a","b"],["x","y"],["c","d"],["e","f"]]
 <<option>>          "S":<<ums>>|null                                    //[edit-specific] start time flag; used to delay the processing of the current edits until user time has reached specified <<ums>>; null clears previous delays for current element edits
 <<option>>          "T":<<number>>|null                                 //[edit-specific] animate (Tween) flag; <<number>> is the number of seconds to animate the current edits; null clears current animations
