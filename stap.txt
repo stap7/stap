@@ -2,11 +2,24 @@ STAP (Simple Task-Actor Protocol)
 version 6.01
 
     STAP is a machine-readable format for specifying user-interface changes.
+	
+	Benefits of task development with STAP:
+		- less code, more GUI
+		- cross-platform, web-friendly
+		- precision timing
+		- consistent cross-task API, allowing computational agents to interact with the same sw that that human users interact with
+	
+	Benefits of agent development for STAP-compliant tasks:
+		- consistent cross-task API, allowing computational agents to interact with the same sw that that human users interact with
+		- precise user-time [with faster-than-real-time and slower-than-real-time capabilities]
+		- cross-platform, web-friendly
+		- scalable (i.e., core API is minimal, additional UI feature handlers can be added to agent framework on a per-task basis)
+	
     Main focus of STAP is in providing a functionally-equivalent task experience for human and computational users alike.
     In its focus to make human software usable by machine agents, STAP aims to eliminate non-task-essential design choices (e.g. font type/size may be irrelevant for many task types), leaving those to be optionally specified via customizable templates (e.g. CSS).
     STAP messages adhere to JSON formatting, and can be deserialized with any standard JSON library.
     
-    Deploying a STAP application is similar to deploying a web application, where STAP takes place of HTML as the markup language for user interface specification.
+    Deploying a STAP application is similar to deploying a web application, where STAP takes place of HTML as the language for UI description.
     Much like HTML, STAP is a means for serializing task interface display and interactions.
     Unlike HTML documents, STAP messages are incremental updates to the display.
     Whereas HTML is focused on hypertext look and feel, STAP is focused on function, structure, and affordances of task display.
@@ -31,8 +44,10 @@ Examples:
     Sample Interaction 2:
         // user software ready
         <- [0,[0]]
-        // let client know that a goal in this task is to maximize coins earned, and that "S" (start time) and "eT" (editable-text field) are required directives for this task
-        -> {"task":{"good":[["Coins Earned",">"]]},"require":["S","eT"]}
+        // let client know that "S" (start time) and "eT" (editable-text field) are required directives for this task
+        -> {"require":{"options":["S","eT"]}}
+        // let client know that a goal in this task is to maximize coins earned
+        -> {"task":{"good":[["Coins Earned",">"]]}}
         // display a text prompt to get participant's name (eT:1 turns text editable)
         -> [["What is your name?","",{"eT":1}]]
         // participant types in "Bob" and hits enter (9.876sec after task display first loaded)
@@ -56,8 +71,10 @@ Examples:
     Sample Interaction 3:
         // user software ready
         <- [0,[0]]
+        // let client know that options "w" (width) and "h" (height), type "path", and event 40 (mouse-click) are required for this task
+        -> {"require":{"types":["path"],"events":[40],"options":["w","h"]}}
         // display a 100x100 box that will display red lines; "e":[40] signifies that click events should be captured (see <<eventType>> 40 below)
-        -> [["click somewhere",{"type":"path","c":"red","w":100,"h":100,"e":[40]}]]
+        -> [["click somewhere",{"type":"path","w":100,"h":100,"e":[40]}]]
         // user clicked in location 24,60 relative to top-left corner of the box
         <- [1570,"click somewhere",[40,24,60]]
         // draw a line from middle of the box to where user clicked
