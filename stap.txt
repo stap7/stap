@@ -2,19 +2,19 @@ STAP (Simple Task-Actor Protocol)
 version 6.01
 
     STAP is a machine-readable format for specifying user-interface changes.
-	
-	Benefits of task development with STAP:
-		- less code, more GUI
-		- cross-platform, web-friendly
-		- precision timing
-		- consistent cross-task API, allowing computational agents to interact with the same sw that that human users interact with
-	
-	Benefits of agent development for STAP-compliant tasks:
-		- consistent cross-task API, allowing computational agents to interact with the same sw that that human users interact with
-		- precise user-time [with faster-than-real-time and slower-than-real-time capabilities]
-		- cross-platform, web-friendly
-		- scalable (i.e., core API is minimal, additional UI feature handlers can be added to agent framework on a per-task basis)
-	
+    
+    Benefits of task development with STAP:
+        - less code, more GUI
+        - cross-platform, web-friendly
+        - precision timing
+        - consistent cross-task API, allowing computational agents to interact with the same sw that that human users interact with
+    
+    Benefits of agent development for STAP-compliant tasks:
+        - consistent cross-task API, allowing computational agents to interact with the same sw that that human users interact with
+        - precise user-time [with faster-than-real-time and slower-than-real-time capabilities]
+        - cross-platform, web-friendly
+        - scalable (i.e., core API is minimal, additional UI feature handlers can be added to agent framework on a per-task basis)
+    
     Main focus of STAP is in providing a functionally-equivalent task experience for human and computational users alike.
     In its focus to make human software usable by machine agents, STAP aims to eliminate non-task-essential design choices (e.g. font type/size may be irrelevant for many task types), leaving those to be optionally specified via customizable templates (e.g. CSS).
     STAP messages adhere to JSON formatting, and can be deserialized with any standard JSON library.
