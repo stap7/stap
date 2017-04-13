@@ -22,8 +22,9 @@ Try it out:
 	Start tcp, http ,and websocket services:
 		- open terminal window and start servep:
 			
-			servep path/to/stap6/examples/api2gui --port 8080 --ws path/to/stap6/examples/tasks/stdio --tcp path/to/stap6/examples/tasks/stdio --http path/to/stap6/examples/tasks/stdio
+			servep path/to/stap6/examples/api2gui --port 8080 --log path/to/logfiles --ws path/to/stap6/examples/tasks/stdio --tcp path/to/stap6/examples/tasks/stdio --http path/to/stap6/examples/tasks/stdio
 				(optionally, port parameter can be anything other than 8080)
+				(optionally, log parameter may be omitted if you do not require logging/playback)
 				(optionally, path/to/stap6/examples/api2gui may be omitted if you don't need serve the included html5 GUI)
 				(optionally, ws, tcp, and/or http parameters may be omitted if you don't need serve the included task scripts over those protocols)
 		
