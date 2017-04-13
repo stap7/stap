@@ -22,9 +22,10 @@ Try it out:
 	Start tcp, http ,and websocket services:
 		- open terminal window and start servep:
 			
-			servep path/to/stap6/examples/api2gui --port 8080 --log path/to/logfiles --ws path/to/stap6/examples/tasks/stdio --tcp path/to/stap6/examples/tasks/stdio --http path/to/stap6/examples/tasks/stdio
+			servep path/to/stap6/examples/api2gui --port 8080 --log path/to/logfiles --py path/to/python3 --ws path/to/stap6/examples/tasks/stdio --tcp path/to/stap6/examples/tasks/stdio --http path/to/stap6/examples/tasks/stdio
 				(optionally, port parameter can be anything other than 8080)
 				(optionally, log parameter may be omitted if you do not require logging/playback)
+				(optionally, py parameter may be omitted if you are not on Windows, have python3 in $PATH, and the scripts in examples/tasks/stdio are executable)
 				(optionally, path/to/stap6/examples/api2gui may be omitted if you don't need serve the included html5 GUI)
 				(optionally, ws, tcp, and/or http parameters may be omitted if you don't need serve the included task scripts over those protocols)
 		
@@ -48,6 +49,10 @@ Try it out:
 			http://localhost:8080/stapp.html?l=pvt.py
 			http://localhost:8080/stapp.html?l=timeestimation.py
 			http://localhost:8080/stapp.html?l=draw.py
+		
+		To interact with these scripts over headless TCP, you may use netcat to connect
+			over ports 9000, 9001, ...
+			(other TCP ports may be specified; see servep documentation by typing "servep --help" in terminal)
 
 
 Contents:
