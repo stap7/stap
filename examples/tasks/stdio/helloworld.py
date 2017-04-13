@@ -10,7 +10,7 @@ def send(d): print(json.dumps(d)); sys.stdout.flush()
 def recv(): return json.loads(input())
 
 
-#wait for user to send software to announce readiness
+#wait for user software to announce readiness
 recv()
 
 #add two items to user display: "Hello World!" string and a button "Press Me"

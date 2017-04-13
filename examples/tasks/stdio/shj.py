@@ -42,7 +42,7 @@ def stimulus(dimVals):
 		r=vis[2]*20)
 
 def main():
-	#wait for user to send software to announce readiness
+	#wait for user software to announce readiness
 	ums=recv()[0]
 	send({
 		#announce required options

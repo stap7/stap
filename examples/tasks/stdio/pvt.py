@@ -29,7 +29,7 @@ INSTRUCTIONS = 'Click a button when one appears'
 def main():
 	log=[]
 	
-	#wait for user to send software to announce readiness
+	#wait for user software to announce readiness
 	ums=recv()[0]
 	#announce required options
 	send({'require':{'options':[RECEIPT,START_EDIT,ON_EDIT]}})

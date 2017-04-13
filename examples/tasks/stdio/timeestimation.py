@@ -31,7 +31,7 @@ GOALLINEHEIGHT = 2
 
 
 def main():
-	#wait for user to send software to announce readiness
+	#wait for user software to announce readiness
 	recv()
 	#announce required options
 	send({"require":{

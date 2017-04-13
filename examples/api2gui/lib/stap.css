@@ -24,6 +24,8 @@ th,td {
 	padding:2px;
 	border:1px solid #bbbbbb;
 }
+[contenteditable=true] {background-color:white;width:100px;padding-left:5px;padding-right:5px;border:solid 1px lightgray}
+[contenteditable=true]:focus {box-shadow: 0px 0px 5px 1px rgba(79,155,247,1)}
 
 
 
@@ -62,7 +64,7 @@ th,td {
 	display:inline-block;
 	/* padding:5px; */
 }
-.string.content[contenteditable=true] {background-color:white;width:100px;}
+/* .string.content[contenteditable=true] {background-color:white;width:100px;box-shadow: 0px 0px 5px 1px rgba(79,155,247,1);} */
 
 /* .number.main {padding:5px} */
 .number.key {display:inline-block;}
@@ -72,7 +74,7 @@ th,td {
 	display:inline-block;
 	/* padding:5px; */
 }
-.number.content[contenteditable=true] {background-color:white;width:100px;}
+/* .number [contenteditable=true] {background-color:white;width:100px;padding-left:5px;padding-right:5px;box-shadow: 0px 0px 5px 1px rgba(79,155,247,1);} */
 
 .progress {width:200px;border:solid 1px gray;display:table-cell;vertical-align:bottom;background-color:lightgray}
 .progressbar {z-index:1;display:inline;background-color:rgba(0,0,0,.5);position:absolute;height:100%;width:100%;left:0px;bottom:0px;border-radius:0px;margin:0;padding:0;}
@@ -149,15 +151,6 @@ th,td {
 .boolean[_select="2"] .content:after {content:""}
 .boolean[_select="2"][_selected="1"] .content {background:#ddeeff;}
 .boolean[_select="2"][_selected="1"] .content:before {content:"\2611";padding-left:7px;padding-right:7px;}
-
-.string[_eT="1"].key {display:inline-block}
-.string[_eT="1"].content {
-	background:white;
-	box-shadow: 0px 0px 5px 1px rgba(79,155,247,1);
-	width:10em;
-	display:inline-block;
-	height:1.5em;
-}
 
 .path.content {height:100px;}
 svg {position:absolute;left:0px;top:0px;width:100%;height:100%;}

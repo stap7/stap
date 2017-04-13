@@ -1,6 +1,6 @@
 
 var PARAMS={};location.search.substr(1).split("&").forEach(function(a){var b=a.split("=");PARAMS[b[0]]=b[1]});
-var PORT=PARAMS['p'] || 8719;
+var PORT=PARAMS['p'] || location.port; if(PORT)PORT=':'+PORT;
 var HOST=PARAMS['h'] || location.hostname || "localhost";
 var LOC=PARAMS['l'];
 
@@ -19,7 +19,9 @@ function recv(msg){
 function connect(){
 	processData('Loading...');
 	if("WebSocket" in window){
-		ws=new window.WebSocket(LOC || ('ws://'+HOST+':'+PORT));
+		if(!LOC.startsWith('ws://') && !LOC.startsWith('wss://'))
+			LOC='ws://'+HOST+PORT+(LOC.startsWith('/')?LOC:('/'+LOC));
+		ws=new window.WebSocket(LOC);
 		ws.onerror=function(e){processData(null);processData({'error':'Cannot establish connection to ws://'+HOST+':'+PORT});};
 		ws.onopen=onTaskConnect;
 		ws.onclose=function (event) {
@@ -53,9 +55,9 @@ function connect(){
 				reason = "The connection was closed due to a failure to perform a TLS handshake (e.g., the server certificate can't be verified).";
 			else
 				reason = "Unknown reason";
-			//console.log('Connection closed. '+reason);
-			processData({'error':'Connection closed. '+reason});
-			processData(['Connection closed.']);
+			console.log('Connection closed. '+reason);
+			//processData({'error':'Connection closed. '+reason});
+			//processData(['Connection closed.']);
 		};
 		ws.onmessage=recv;//function(e){recv(e.data);};
 	}else{

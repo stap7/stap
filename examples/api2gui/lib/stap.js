@@ -23,7 +23,7 @@ TODO:
 
 
 
-var OPTIONS=new Set(["S","T","R","onsubedit"]),
+var OPTIONS=new Set([".","S","T","R","onsubedit"]),
 	TYPES=new Set();
 
 var REQUIRED={
@@ -60,6 +60,8 @@ var EASE={0:'Power0',1:'Power1',2:'Power2',3:'Power3',4:'Power4',back:'Back',ela
 var isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
 var EMPTYSET=new Set();
 var HEAD = document.getElementsByTagName('head')[0];
+var SELECTION = window.getSelection();
+var RANGE = document.createRange();
 function dp(s){console.log(typeof(s)=="string"?s:JSON.stringify(s));};
 function pass(){}
 function self(o){return o;}
@@ -105,6 +107,11 @@ function objectify(o){
 		if(typeof(o[key])=='object')r[key]=objectify(o[key]);
 		else r[key]=o[key];
 	return r;
+}
+function select(e){
+	RANGE.selectNodeContents(e);
+	SELECTION.removeAllRanges();
+	SELECTION.addRange(RANGE);
 }
 function inHead(type,thing,url){
 	var x=document.getElementsByTagName(type);
@@ -453,7 +460,7 @@ function addElement(container,type,level,key){
 }
 
 function processElement(parent,key,val,options){
-	//console.log(parent,key,val,options);
+	// console.log(parent,key,val,options);
 	if(options.R&1)sendAction(key,{R:1});
 	if(options.S){		//optional delay
 		var delay=waitTime(options.S);
@@ -713,12 +720,16 @@ setOption={
 				}else{
 					c._content.removeEventListener('click',progressbar.getValue,false);
 					c._format.valueSpan.setAttribute('contenteditable',true);
+					if(!document.activeElement.getAttribute('contenteditable')){
+						c._format.valueSpan.focus();
+						setTimeout(()=>{select(c._format.valueSpan)},1);
+					}
 					c._format.valueSpan.addEventListener("keyup", keepNumeric, false);
-					if(v&1)c._format.valueSpan.onkeypress=function(e){if(e.keyCode==13){sendAction(c,c._content.innerText);return false;}};
+					if(v&1)c._format.valueSpan.onkeypress=function(e){if(e.keyCode==13){sendAction(c,parseFloat(c._content.innerText));return false;}};
 					else c._format.valueSpan.onkeypress=null;
-					if(v&2)c._format.valueSpan.onblur=function(){sendAction(c,c._content.innerText);};
+					if(v&2)c._format.valueSpan.onblur=function(){sendAction(c,parseFloat(c._content.innerText));};
 					else c._format.valueSpan.onblur=null;
-					if(v&4)c._format.valueSpan.oninput=function(){sendAction(c,c._content.innerText);};
+					if(v&4)c._format.valueSpan.oninput=function(){sendAction(c,parseFloat(c._content.innerText));};
 					else c._format.valueSpan.oninput=null;
 				}
 			}else{
@@ -732,6 +743,7 @@ setOption={
 		eT:function(c,v){
 			if(v&1 || v&2 || v&4){
 				c._content.setAttribute('contenteditable',true);
+				if(!document.activeElement.getAttribute('contenteditable'))c._content.focus()
 				if(v&1){ //on enter
 					c._content.onkeypress=function(e){if(e.keyCode==13){c._sendText(e);return false;}};
 				}
@@ -842,11 +854,9 @@ setValue={
 				options={};
 			}
 			if(key===true){
-				var d=[];
-				for(var curkey in this._childmap){
-					d.push([curkey,val,options]);
+				for(key=this._content.childElementCount-1;key>=0;--key){
+					processElement(this,key,val,options);
 				}
-				this._setValue(d);
 			}else 
 				processElement(this,key,val,options);
 		}
@@ -998,6 +1008,24 @@ function processData(data){
 			}
 			//taskInstructions(data.task);
 			delete data.task;
+		}
+		if('.' in data && data['.'].constructor===Array && data['.'].length>1){
+			let key=data['.'][0],e=document.getElementById(key);
+			if(e){
+				let val,options;
+				if(data['.'].length==2){
+					if(isObj(data['.'][1])){
+						options=data['.'][1];
+					}else{
+						val=data['.'][1];
+						options={};
+					}
+				}else{
+					val=data['.'][1];
+					options=data['.'][2];
+				}
+				processElement(e._parentState,key,val,options);
+			}
 		}
 		// process other optional element directives
 		Object.assign(maindiv._options,data);

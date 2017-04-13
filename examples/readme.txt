@@ -1,60 +1,64 @@
 Current folder includes sample STAP task and gui software.
 	
 	To try out included examples, we suggest downloading/installing:
-		- python3 from [https://www.python.org/]
-			used to run included stdio and cgi scripts
-				(convinient for running computational agents on STAP tasks)
-		- websocketd from [http://websocketd.com/]
-			used to serve included task scripts using websocket or http/cgi/jsonp protocols
-				(convinient for web experiments with human or computational participants)
 		- a modern web browser, like Chrome [https://www.google.com/chrome/]
 			used to present STAP tasks to human users
+		- python3 [from https://www.python.org/]
+			used to run included task scripts
+		- servep [via npm installer; npm installer comes with node.js from https://nodejs.org/]
+			used to serve included task scripts and web pages
 
 			
 Try it out:
 	
 	Make sure you have python3 (if not, download and install from https://www.python.org/)
 	
-	Download and install websocketd:
-		- go to http://websocketd.com and click Download (they have versions for every OS)
-		- download the websocketd zip file for your OS, unzip it
-		- optionally, put the websocketd executable in your applications folder
+	Download and install servep:
+		- go to https://nodejs.org; download and install node
+		- open terminal window and type:
+			npm install -g servep
+			(you may need to precede the previous line with "sudo" on linux)
 
-	Start http, cgi, and websocket services:
-		- open terminal window (linux, freeBSD, or DOS shell), and run websocketd:
+	Start tcp, http ,and websocket services:
+		- open terminal window and start servep:
 			
-			path/to/websocketd --port 8080 --staticdir path/to/stap6/examples/api2gui --cgidir path/to/stap6/examples/tasks/stateless/cgi-bin/ --dir path/to/stap6/examples/tasks/stdio
+			servep path/to/stap6/examples/api2gui --port 8080 --ws path/to/stap6/examples/tasks/stdio --tcp path/to/stap6/examples/tasks/stdio --http path/to/stap6/examples/tasks/stdio
 				(optionally, port parameter can be anything other than 8080)
-				(optionally, staticdir parameter may be omitted if you don't need serve the included html5 GUI)
-				(optionally, cgidir parameter may be omitted if you don't need serve the included cgi scripts)
+				(optionally, path/to/stap6/examples/api2gui may be omitted if you don't need serve the included html5 GUI)
+				(optionally, ws, tcp, and/or http parameters may be omitted if you don't need serve the included task scripts over those protocols)
 		
 		That's it.
-		Now you are serving tasks in the examples/tasks/stdio folder over websockets and as cgi scripts.
+		Now you are serving tasks in the examples/tasks/stdio folder over tcp/http/websockets.
 		
-		To try each websocket task in the browser go to:
-			http://localhost:8080/stap.html?l=ws://localhost:8080/helloworld.py
-			http://localhost:8080/stap.html?l=ws://localhost:8080/twoarm.py
-			http://localhost:8080/stap.html?l=ws://localhost:8080/shj.py
-			http://localhost:8080/stap.html?l=ws://localhost:8080/pvt.py
-			http://localhost:8080/stap.html?l=ws://localhost:8080/timeestimation.py
-			http://localhost:8080/stap.html?l=ws://localhost:8080/draw.py
+		To try each task in the browser using websockets go to:
+			http://localhost:8080/stap.html?l=helloworld.py
+			http://localhost:8080/stap.html?l=twoarm.py
+			http://localhost:8080/stap.html?l=addition.py
+			http://localhost:8080/stap.html?l=shj.py
+			http://localhost:8080/stap.html?l=pvt.py
+			http://localhost:8080/stap.html?l=timeestimation.py
+			http://localhost:8080/stap.html?l=draw.py
 
-		To try each stateless cgi task in the browser go to:
-			http://localhost:8080/stapp.html?l=http://localhost:8080/helloworld.sh
-			http://localhost:8080/stapp.html?l=http://localhost:8080/helloworld.py
+		To try each task in the browser without using websockets (more lag) go to:
+			http://localhost:8080/stapp.html?l=helloworld.py
+			http://localhost:8080/stapp.html?l=twoarm.py
+			http://localhost:8080/stapp.html?l=addition.py
+			http://localhost:8080/stapp.html?l=shj.py
+			http://localhost:8080/stapp.html?l=pvt.py
+			http://localhost:8080/stapp.html?l=timeestimation.py
+			http://localhost:8080/stapp.html?l=draw.py
 
 
 Contents:
 	
 	api2gui/
-		example of webbrowser-based client-side STAP interpretation software for human users
-	
+		STAP software for human participants (webbrowser-based)
 	
 	tasks/stdio/
 		STAP task scripts that interact over the standard input/output streams.
-		stdio streams may be piped to connect local clients to tasks,
-			they may also be served over TCP using netcat or a similar tool,
-			and may be served over websockets for local or remote task participation. 
+		stdio streams may be piped to connect local participants to tasks.
+			They may also be served over TCP, HTTP, or Websockets for remote
+			human and computational participants. 
 	
 	tasks/stateless/
 		Stateless scripts are scripts that are executed by a generic webserver.
