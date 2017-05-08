@@ -88,6 +88,8 @@ Sample Interactions:
 
 ## STAP message syntax
 
+Please see stap.txt for complete syntax and functionality.
+
 ### task to user message syntax:
 ![](https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/taskMsg.png)
 
@@ -100,4 +102,4 @@ Sample Interactions:
 #### value:
 ![](https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/value.png)
 
-
+Please see stap.txt for complete syntax and functionality.
