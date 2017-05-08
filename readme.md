@@ -93,8 +93,8 @@ Please see stap.txt for complete syntax and functionality.
 ### task-to-user message syntax:
 ![](https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/taskMsg.png)
 
-* each task-to-user message adds or updates UI elements
-* *null* clears the display
+* each task-to-user message adds or updates UI elements on user display
+* *null* clears display
 
 #### state:
 ![](https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/state.png)
