@@ -86,3 +86,18 @@ Sample Interactions:
         ...
 
 
+## STAP message syntax
+
+### task to user message syntax:
+!(https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/taskMsg.png)
+
+#### state:
+!(https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/state.png)
+
+#### key-element:
+!(https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/key-element.png)
+
+#### value:
+!(https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/value.png)
+
+
