@@ -10,16 +10,17 @@ Unlike HTML documents, STAP messages are incremental updates to the display.
 Whereas HTML is focused on hypertext look and feel, STAP is focused on function, structure, and affordances of task display.
 
 Benefits of task development with STAP:
-    - less code, more GUI
-    - cross-platform, web-friendly
-    - precision timing
-    - consistent cross-task API, allowing computational agents to interact with the same sw that that human users interact with
+* less code, more GUI
+* cross-platform, web-friendly
+* precision timing
+* consistent cross-task API, allowing computational agents to interact with the same sw that that human users interact with
 
 Benefits of agent development for STAP-compliant tasks:
-    - consistent cross-task API, allowing computational agents to interact with the same sw that that human users interact with
-    - precise user-time [with faster-than-real-time and slower-than-real-time capabilities]
-    - cross-platform, web-friendly
-    - scalable (i.e., core API is minimal, additional UI feature handlers can be added to agent framework on a per-task basis)
+* consistent cross-task API, allowing computational agents to interact with the same sw that that human users interact with
+* precise user-time [with faster-than-real-time and slower-than-real-time capabilities]
+* cross-platform, web-friendly
+* scalable (i.e., core API is minimal, additional UI feature handlers can be added to agent framework on a per-task basis)
+
 
 Sample Interactions:
 
@@ -83,3 +84,5 @@ Sample Interactions:
         // draw a line from middle of the box to where user clicked
         -> [["click somewhere",[50,50,31,33]]]
         ...
+
+
