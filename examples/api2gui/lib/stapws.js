@@ -62,8 +62,7 @@ function connect(){
 		ws.onmessage=recv;//function(e){recv(e.data);};
 	}else{
 		processData(null);
-		processData([[true,null],['Error','Your browser does not support websockets. Please use a modern browser to run this application.']]);
-		//processData({'error':'Your browser does not support websockets. Please use a modern browser to run this application.'});
+		processData([['Error','Your browser does not support websockets. Please use a modern browser to run this application.']]);
 	}
 }
 

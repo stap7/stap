@@ -57,19 +57,18 @@ var EASE={0:'Power0',1:'Power1',2:'Power2',3:'Power3',4:'Power4',back:'Back',ela
 
 //////////////////////////////////////////////////////////////////////////////
 // helper functions
-var isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+//var isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
 var EMPTYSET=new Set();
 var HEAD = document.getElementsByTagName('head')[0];
 var SELECTION = window.getSelection();
 var RANGE = document.createRange();
-function dp(s){console.log(typeof(s)=="string"?s:JSON.stringify(s));};
 function pass(){}
 function self(o){return o;}
 function round2(n,r){return (Math.round(n/r)*r);}
 function ceil2(n,r){return (Math.ceil(n/r)*r);}
-function twodigit(x){return x<10?'0'+x:x;}
-function threedigit(x){return x<10?'00'+x:(x<100?'0'+x:x);}
 Date.prototype.toString=function(format){
+	function twodigit(x){return x<10?'0'+x:x;}
+	function threedigit(x){return x<10?'00'+x:(x<100?'0'+x:x);}
 	var s="";
 	if(format.includes("Y"))s+=this.getUTCFullYear();
 	if(format.includes("M"))s+=(s.length?"-":"")+twodigit(this.getUTCMonth()+1);
@@ -135,12 +134,11 @@ function loadURLs(urls, callback, onerror, type){
 		fileref.setAttribute("type", "text/css");
 		fileref.setAttribute("href", url);
 	}else{
-		try{eval(url);dp('Code:\n'+url);}
+		try{eval(url);}
 		catch(e){console.log('not sure how to handle '+url);}
 		onload();
 		return;
 	}
-	dp(url);
 	fileref.onreadystatechange=onload;
 	fileref.onload=onload;
 	fileref.onerror=onerror||pass;
