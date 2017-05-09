@@ -24,8 +24,8 @@ Benefits of agent development for STAP-compliant tasks:
 
 Sample Interactions:
 
-    ->     Message sent from task software to participant software
-    <-     Message sent to task software from participant software
+    <-     Message received by task software from user software
+    ->     Message sent from task software to user software
 
     Sample Interaction 1:
         // user software ready
@@ -40,13 +40,13 @@ Sample Interactions:
     Sample Interaction 2:
         // user software ready
         <- [0,[0]]
-        // let client know that "S" (start time) and "eT" (editable-text field) are required directives for this task
+        // let user software know that "S" (start time) and "eT" (editable-text field) are required directives for this task
         -> {"require":{"options":["S","eT"]}}
-        // let client know that a goal in this task is to maximize coins earned
-        -> {"task":{"good":[["Coins Earned",">"]]}}
-        // display a text prompt to get participant's name (eT:1 turns text editable)
+        // let user know that a goal in this task is to earn as close to 10 coins as possible
+        -> {"task":{"good":[["Coins Earned",10]]}}
+        // display a text prompt to get user's name (eT:1 turns text editable)
         -> [["What is your name?","",{"eT":1}]]
-        // participant types in "Bob" and hits enter (9.876sec after task display first loaded)
+        // user types in "Bob" and hits enter (9.876sec after task display first loaded)
         <- [9876,"What is your name?","Bob"]
         // clear display
         -> null
@@ -54,7 +54,7 @@ Sample Interactions:
         -> [["choose a button",[["Button 1"],["Button 2"]]]]
         // first button was clicked after 12.307sec
         <- [12307,"Button 1",true]
-        // give client reward, "Coins Earned"=7
+        // give user reward, "Coins Earned"=7
         -> [["Coins Earned",7]]
         // wait 2 seconds and remove the Coins Earned display
         -> [["Coins Earned",null,{"S":14307}]]
@@ -67,7 +67,7 @@ Sample Interactions:
     Sample Interaction 3:
         // user software ready
         <- [0,[0]]
-        // let client know that options "w" (width) and "h" (height), type "path", and event 40 (mouse-click) are required for this task
+        // let user software know that options "w" (width) and "h" (height), type "path", and event 40 (mouse-click) are required for this task
         -> {"require":{"types":["path"],"events":[40],"options":["w","h"]}}
         // display a 100x100 box that will display red lines; "e":[40] signifies that click events should be captured (see <<eventType>> 40 below)
         -> [["click somewhere",{"type":"path","w":100,"h":100,"e":[40]}]]
