@@ -88,7 +88,8 @@ Sample Interactions:
 
 ## Core STAP message syntax
 
-The following is the minimum syntax that must be par
+The following syntax must be parsable by user-agent connecting to STAP-compliant point-and-click task software.
+Task software that requires additional UI elements/options will include a *"require"* directive in task-options.
 Please see stap.txt for complete syntax and functionality.
 
 ### task-to-user message syntax:
