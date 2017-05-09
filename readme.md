@@ -86,23 +86,42 @@ Sample Interactions:
         ...
 
 
-## STAP message syntax
+## Core STAP message syntax
 
+The following is the minimum syntax that must be par
 Please see stap.txt for complete syntax and functionality.
 
 ### task-to-user message syntax:
-![](https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/taskMsg.png)
+![](https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/task-to-user.png)
 
 * each task-to-user message adds or updates UI elements on user display
 * *null* clears display
+* user-agents can ignore all task-options with the exception of *"require"* (please see stap.txt for a full description of task-options)
 
-#### state:
-![](https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/state.png)
+#### element-list:
+![](https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/element-list.png)
 
-#### key-element:
-![](https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/key-element.png)
+#### key-value-tuple:
+![](https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/key-value-tuple.png)
 
-#### value:
-![](https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/value.png)
+* *null* deletes the element corresponding to key
+
+#### key:
+![](https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/key.png)
+
+* *string* key is a displayable name for the corresponding element
+* empty-string signifies the corresponding element should be appended without a name
+* *number* key signifies element position in element-list
+* *true* is a wildcard key signifying "for all existing elements"
+
+#### base-value:
+![](https://raw.githubusercontent.com/vdv7/stap/master/diagram/diagram/base-value.png)
+
+* *string* base-value signifies a text element
+* *number* base-value signifies a numeric element
+* *boolean* base-value signifies a button or option element
+
+*string*, *number*, and *boolean* syntax must follow the JSON spec (see json.org)
+
 
 Please see stap.txt for complete syntax and functionality.
