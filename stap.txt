@@ -30,7 +30,7 @@ version 6.01
     <<optionResponse>>  "client":{(<<clientInfo>>:<<json>>,)+}              //response to "clientinfo" <<taskOption>>; e.g. a response to {"clientinfo":["ip","url","screen","userAgent"]} may be [<<ums>>,{"clientinfo":{"ip":"129.84.2.65","url":"http://localhost:8080/stap.html","screen":{"availWidth":1524,"availHeight":900,"width":1600,"height":900,"colorDepth":24,"pixelDepth":24,"availLeft":0,"availTop":0,"orientation":{"angle":0}},"userAgent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36"}}]
     <<optionResponse>>  "error":<<text>>                                    //user->task messages that contain this directive are dumped into task-side error stream
     <<conds>>           [(<<cond>>|([(<<cond>>,)+]),)+]                     //the entire <<conds>> expression evaluates to True if any of the items in it are True; the optional inner [(<<cond>>,)+] list is True if ALL of the items in the list are True
-    <<cond>>            [<<key>>((,"<|>|(<=)|(>=)|(!=)")?,<<number>>|<<text>>]
+    <<cond>>            [<<key>>(,"<|>|(<=)|(>=)|(!=)")?,<<number>>|<<text>>]
     <<clientInfo>>      "ip"                                                //request client ip address
     <<clientInfo>>      "userAgent"                                         //request information about user-side software (e.g. webbrowser type/version, AI architecture type/version)
     <<clientInfo>>      "url"                                               //request client url (relevant when user-side software runs in a webbrowser)

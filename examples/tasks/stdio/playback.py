@@ -23,12 +23,12 @@ def playback(path):
 		for line in f:
 			try:
 				t,c,s=line.strip().split('\t',2)
-				t=int(t)
+				t=(int(t)-250) if s=='-' else int(t)
 				if lasttime:
+					#TODO: instead of sleeping, should use S option (add S if it's not already in msg, rely on S and c[0] whenever possible)
 					time.sleep((t-lasttime)/1000.)
 				lasttime=t
 				if s=='-':
-					#TODO: account for ftrl
 					c=json.loads(c)
 					if not isinstance(c[2],list): #make sure it's an edit, rather than event; TODO: replay events too
 						send({'.':[c[1],c[2]]})

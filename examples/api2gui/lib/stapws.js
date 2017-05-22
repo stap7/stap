@@ -6,24 +6,25 @@ var LOC=PARAMS['l'];
 
 var ws;
 
-function send(msg){
+userAgent.action = function(data){
+	var msg=JSON.stringify(data);
 	console.log('<- '+msg);
 	ws.send(msg);
 }
 
 function recv(msg){
 	console.log('-> '+msg.data);
-	processData(JSON.parse(msg.data));
+	userAgent.update(JSON.parse(msg.data));
 }
 
 function connect(){
-	processData('Loading...');
+	userAgent.update(['Loading...']);
 	if("WebSocket" in window){
 		if(!LOC.startsWith('ws://') && !LOC.startsWith('wss://'))
 			LOC='ws://'+HOST+PORT+(LOC.startsWith('/')?LOC:('/'+LOC));
 		ws=new window.WebSocket(LOC);
-		ws.onerror=function(e){processData(null);processData({'error':'Cannot establish connection to ws://'+HOST+':'+PORT});};
-		ws.onopen=onTaskConnect;
+		ws.onerror=function(e){userAgent.update(null);userAgent.update({'error':'Cannot establish connection to '+LOC});};
+		ws.onopen=userAgent.onTaskConnect;
 		ws.onclose=function (event) {
 			var reason;
 			// See http://tools.ietf.org/html/rfc6455#section-7.4.1
@@ -56,13 +57,13 @@ function connect(){
 			else
 				reason = "Unknown reason";
 			console.log('Connection closed. '+reason);
-			//processData({'error':'Connection closed. '+reason});
-			//processData(['Connection closed.']);
+			//userAgent.update({'error':'Connection closed. '+reason});
+			//userAgent.update(['Connection closed.']);
 		};
-		ws.onmessage=recv;//function(e){recv(e.data);};
+		ws.onmessage=recv;
 	}else{
-		processData(null);
-		processData([['Error','Your browser does not support websockets. Please use a modern browser to run this application.']]);
+		userAgent.update(null);
+		userAgent.update([['Error','Your browser does not support websockets. Please use a modern browser to run this application.']]);
 	}
 }
 
