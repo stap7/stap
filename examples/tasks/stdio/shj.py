@@ -11,6 +11,8 @@ if 'raw_input' in vars(__builtins__): input = raw_input		#Fix for Python 2.x raw
 
 def send(d): print(json.dumps(d)); sys.stdout.flush()
 def recv(): return json.loads(input())
+
+CLEAR_ALL = (True,None)
 #########################################################
 
 
@@ -66,12 +68,14 @@ def main():
 	for trial in range(1,MAXTRIALS+1):
 		#create random stimulus
 		s=random.randrange(2),random.randrange(2),random.randrange(2)
-		#set Trial field in title bar to current trial number
-		send([ ("Trial",trial,{"<=":MAXTRIALS}) ])
-		#add the stimulus to the canvas
-		send([ ("OBJ",'',stimulus(s)) ])
-		#add category buttons
-		send([ ("#btns",[[btn] for btn in CATEGORY_NAMES],{"onsubedit":{"eB":0}}) ])
+		send([
+			CLEAR_ALL,
+			#set Trial field in title bar to current trial number
+			("Trial",trial,{"<=":MAXTRIALS}),
+			#add the stimulus to the canvas
+			("OBJ",'',stimulus(s)),
+			#add category buttons
+			("#btns",[[btn] for btn in CATEGORY_NAMES],{"eB":1, "onsubedit":{"eB":0}}) ])
 		#collect response
 		ums,response,_ = recv()
 		#check if correct
@@ -81,20 +85,16 @@ def main():
 		#wait 500ms
 		send({ "S":ums+TIME_BETWEEN_TRIALS, "R":2 })
 		recv()
-		#clear screen
-		send(None)
 	#summary screen
-	send(['Thank you for your participation.'])
 	send([
+		CLEAR_ALL,
+		'Thank you for your participation.',
 		('Experiment Summary',[
 			('Category Structure Type',['I','II','IV','VI'][CONDITIONS.index(CURRENT_CONDITION)]),
 			(CATEGORY_NAMES[1],[("#%d"%i,'',stimulus(s)) for i,s in enumerate(CURRENT_CONDITION)]),
 			('Score',[
-				['First Half',sum(correctTrials[:(MAXTRIALS//2)])],
-				['Second Half',sum(correctTrials[(MAXTRIALS//2):])]
-			])
-		])
-	])
+				('First Half',sum(correctTrials[:(MAXTRIALS//2)])),
+				('Second Half',sum(correctTrials[(MAXTRIALS//2):])) ]) ]) ])
 
 if __name__=='__main__': main()
 

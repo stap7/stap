@@ -4,6 +4,7 @@ TODO:
 	high priority:
 		
 	bugs:
+		call onEdit after editable element has been updated (even tho it's from task-side)
 		account for vertical progress bars for tics, clicks
 		cancel one tween when starting a new one
 		scroll:0 doesn't work on maindiv
@@ -322,41 +323,44 @@ var userAgent=(function(){
 	//////////////////////////////////////////////////////////////////////////////
 
 	function ums(){return (new Date()).getTime()-startTime;}
-
+	
+	function onEdit(element,elementid,parent){
+		if(element._format.onedit!==undefined){
+			let val,opt;
+			if(element._format.onedit && element._format.onedit.constructor===Array && element._format.onedit[1].constructor===Object){
+				val=element._format.onedit[0];
+				opt=element._format.onedit[1];
+			}else if(element._format.onedit && element._format.onedit.constructor===Object){
+				opt=element._format.onedit;
+			}else{
+				val=element._format.onedit;
+				opt={};
+			}
+			processElement(parent,elementid,val,opt,{});
+		}
+		if(parent._format.onsubedit!==undefined){
+			let val,opt;
+			if(parent._format.onsubedit && parent._format.onsubedit.constructor===Array && parent._format.onsubedit[1].constructor===Object){
+				val=parent._format.onsubedit[0];
+				opt=parent._format.onsubedit[1];
+			}else if(parent._format.onsubedit && parent._format.onsubedit.constructor===Object){
+				opt=parent._format.onsubedit;
+			}else{
+				val=parent._format.onsubedit;
+				opt={};
+			}
+			processElement(parent._parentState,parent.id||getElementIndex(parent.parentElement),val,opt,{});
+		}
+	}
+	
 	function sendAction(element,val){
 		if(!element){
 			userAgent.action([ums(),val]);
 		}else if(typeof(element)==='object'){
 			var elementid=element.id || getElementIndex(element.parentElement),
 				parent=element._parentState;
+			onEdit(element,elementid,parent);
 			userAgent.action([ums(),elementid,val]);
-			if(element._format.onedit!==undefined){
-				let val,opt;
-				if(element._format.onedit && element._format.onedit.constructor===Array && element._format.onedit[1].constructor===Object){
-					val=element._format.onedit[0];
-					opt=element._format.onedit[1];
-				}else if(element._format.onedit && element._format.onedit.constructor===Object){
-					opt=element._format.onedit;
-				}else{
-					val=element._format.onedit;
-					opt={};
-				}
-				processElement(parent,elementid,val,opt,{});
-			}
-			if(parent._format.onsubedit!==undefined){
-				let val,opt;
-				if(parent._format.onsubedit && parent._format.onsubedit.constructor===Array && parent._format.onsubedit[1].constructor===Object){
-					val=parent._format.onsubedit[0];
-					opt=parent._format.onsubedit[1];
-				}else if(parent._format.onsubedit && parent._format.onsubedit.constructor===Object){
-					opt=parent._format.onsubedit;
-					
-				}else{
-					val=parent._format.onsubedit;
-					opt={};
-				}
-				processElement(parent._parentState,parent.id||getElementIndex(parent.parentElement),val,opt,{});
-			}
 		}else{
 			userAgent.action([ums(),element.id || element,val]);
 		}
