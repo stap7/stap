@@ -6,8 +6,8 @@ version 6.03
     ** task -> user **  <<state>>                                           edit current display state with values in <<state>>
     ** task -> user **  null                                                clear the display state; shorthand for [[true,null]]
     ** task -> user **  {<<taskOption>>(,<<taskOption>>)*}                  optional task directives
-    ** user -> task **  [<<ums>>,<<key>>,<<value>>]                         user-side action; <<key>> corresponds to an user-editable item key (e.g. button, textbox), <<value>> must be of a type consistent with the element signified by <<key>> (e.g. a key paired with a boolean element can only send back boolean values)
-    ** user -> task **  [<<ums>>(,<<key>>)?,<<user-event>>]                 user-side event
+    ** user -> task **  [<<ums>>,<<key>>,<<value>>]                         user-side action; <<key>> corresponds to element key that is manipulated by user (e.g. button, textbox), <<value>> must be of a type consistent with this element (e.g. for boolean elements value must be a boolean)
+    ** user -> task **  [<<ums>>(,<<key>>)?,<<userEvent>>]                  user-side event
 
     Label Name          Regular Expression                                  Functionality
     <<state>>           [<<element>>(,<<element>>)*]                        array of elements
@@ -16,7 +16,7 @@ version 6.03
     <<item>>            <<state>>|<<value>>|null                            state, value, or null (null signifies deletion of key-item pair from the display)
     <<value>>           <<text>>|<<number>>|true|false
     <<key>>             ** non-empty <<text>> **                            displayable key; any words beginning with # in <<key>> text are hidden (hashtags); used for reference only //TODO: add way to escape #, e.g. ##
-    <<key>>             ""                                                  empty string <<key>> signifies that the corresponding element should be appended without a key
+    <<key>>             ""                                                  empty string <<key>> signifies that the corresponding item should be appended without a key
     <<key>>             true                                                true is a wildcard key, signifying "for all existing keys"; e.g. [[true,0]] sets values of each existing element to 0; [[true,null,{"S":20000}]] signifies that all elements should be removed 20s after task begins; [[true,{"bg":"red"}]] signifies that all elements background color should be changed to red
     <<key>>             <<uint>>                                            numeric keys are row numbers (row numbering begins at 0); if <<uint>> is greater or equal to current number of rows in parent state, corresponding element is appended to this state
     <<ums>>             <<uint>>                                            time in milliseconds since the initiation of user software (e.g. onload event)
@@ -44,10 +44,10 @@ everything below specifies optional directives that enable more featureful user-
     <<clientInfo>>      "userAgent"                                         request information about user-side software (e.g. webbrowser type/version, AI architecture type/version)
     <<clientInfo>>      "url"                                               request client url (relevant when user-side software runs in a webbrowser)
     <<clientInfo>>      "screen"                                            find out total user screen size (for human participants this would be different from <<eventType>> 13, which only sends back current <<state>> size)
-    <<user-event>>      {"client":{(<<clientInfo>>:<<json>>,)+}}            response to "clientinfo" <<taskOption>>; e.g. a response to {"clientinfo":["ip","url","screen","userAgent"]} may be [<<ums>>,{"clientinfo":{"ip":"129.84.2.65","url":"http://localhost:8080/stap.html","screen":{"availWidth":1524,"availHeight":900,"width":1600,"height":900,"colorDepth":24,"pixelDepth":24,"availLeft":0,"availTop":0,"orientation":{"angle":0}},"userAgent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36"}}]
-    <<user-event>>      {"error":<<text>>}                                  user->task messages that contain this directive are dumped into task-side error stream
-    <<user-event>>      [0]                                                 load event (user-sw is ready)
-    <<user-event>>      [1]                                                 beforeunload event (user-sw is quitting)
+    <<userEvent>>       {"client":{(<<clientInfo>>:<<json>>,)+}}            response to "client" <<taskOption>>; e.g. a response to {"client":["ip","url","screen","userAgent"]} may be [<<ums>>,{"client":{"ip":"129.84.2.65","url":"http://localhost:8080/stap.html","screen":{"availWidth":1524,"availHeight":900,"width":1600,"height":900,"colorDepth":24,"pixelDepth":24,"availLeft":0,"availTop":0,"orientation":{"angle":0}},"userAgent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36"}}]
+    <<userEvent>>       {"error":<<text>>}                                  user->task messages that contain this directive are dumped into task-side error stream
+    <<userEvent>>       [0]                                                 load event. i.e. user-sw is ready
+    <<userEvent>>       [1]                                                 beforeunload event, i.e. user-sw is quitting
     <<json>>            ** see full JSON specification, e.g. http://json.org **
     <<url>>             ** legal url **
     <<js>>              ** legal javascript **
@@ -70,8 +70,6 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
     <<required>>        "types":[<<elementType>>(,<<elementType>>)+]        specify element types necessary for this task; e.g., {"required":{"types":["popup","path"]}}; if "requiredTypes" is not empty, "type" does not need to be specified via {"required":{"options"...} -- it is assumed to be required
     <<required>>        "events":[<<eventType>>(,<<eventType>>)*]           specify event-capture capabilities necessary for this task; e.g., {"required":{"events":["keydown","mousemove"]}};  if "requiredEvents" is not empty, "e" does not need to be specified via {"required":{"options"...} -- it is assumed to be required
     <<optionName>>      ** the part on the left of the colon in the <<option>> or <<taskOption>> expression; e.g. "ins", "S", "eB", "bg" **
-    <<user-event>>      {"R":<<receiptType>>}                               response to "R" <<option>>; receipt message for edits corresponding to key of element being edited (or key of specific edit whenever "#" is specified)
-    <<user-event>>      [<<eventType>>(,<<value>>)*]                        captured UI events specified via the "e" option, see <<eventType>> descriptions below for more detail
 
     <<taskOption>>      <<option>>
     <<taskOption>>      ".":<<key-item>>                                    find the key from <<key-item>> tuple in current display and edit its value/options to the value/options specified in <<key-item>> tuple; e.g. if the display was formed as follows, [["x",[["y",[["z",0]]]]]], then {".":["z",5]} would change it to [["x",[["y",[["z",5]]]]]]
@@ -154,6 +152,9 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
     <<pathOption>>      "arrow1|2":"(arrow)|(circle)|(square)|()"           similar to SVG marker-start/marker-end
     <<pathOption>>      "cap":"(square)|(round)|()"                         similar to SVG stroke-linecap
     <<pathOption>>      "dash":<<strokeDash>>                               similar to SVG stroke-dasharray
+
+    <<userEvent>>       {"R":<<receiptType>>}                               response to "R" <<option>>; receipt message for edits corresponding to key of element being edited (or key of specific edit whenever "#" is specified)
+    <<userEvent>>       [<<eventType>>(,<<value>>)*]                        captured UI events specified via the "e" option, see <<eventType>> descriptions below for more detail
 
     <<sizeUnit>>        ** legal CSS length unit; e.g., http://www.w3schools.com/cssref/css_units.asp **
     <<sizeUnit>>        E                                                   E signifies element size; when specifying height of <<state>> or <<table>>, E is row-height (e.g. {"h":"2.5E"} signifies that 2.5 rows will be visible in current state before scrolling down); when specifying width of <<state>> or <<table>>, E is element-width (e.g. {"w":"2.5E"} signifies that 2.5 elements will be visible in current state before scrolling right); when specifying height of a <<text>> element, E is (font height + space between lines) (e.g. {"h":"2.5E"} signifies that 2.5 lines of text will be visible in current element before scrolling down); when specifying width of a <<text>> element, E is (font width + space between characters) (e.g. {"w":"10E"} signifies that, if font-type is monospace, 10 characters will be visible; if font is not monospace, at least client promises to do its best).
