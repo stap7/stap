@@ -24,7 +24,7 @@ version 6.03
     <<number>>          ** see JSON number specification, e.g. http://json.org **
     <<uint>>            ** integer >= 0 **
 
-everything above is core-STAP; all user sw must be able to handle the format specified above this line for simple text+button tasks
+everything above is core-STAP; all user sw must be able to handle the format specified above for simple text+button tasks
 
 ==
 
@@ -54,11 +54,11 @@ everything below specifies optional directives that enable more featureful user-
     <<html>>            ** legal text/html **
 
 
-everything above is core-STAP; although task-options can be ignored in many cases, user-sw must still expect them as potentially incoming messages
+everything above is core-STAP; although task-options can be ignored in many cases, user-sw must still expect them as potentially incoming messages, and be willing to quit if it cannot handle any of the items specified via the "require" task option
 
 ==
 
-everything below can be negotiated via the "required" <<taskOption>>; if task requires options that user sw cannot handle, user can disconnect
+everything below can be negotiated via the "require" <<taskOption>>; if task requires options that user sw cannot handle, user can disconnect
 
 - unless otherwise specified, each option value is inheritable; e.g. [["numbers",[1,2,["more",[3,4]]],{"rnd":1}]] signifies that all numeric values in "numbers", including those under "more", are rounded to 1 (integers)
 - [element-specific] options are not inheritable
