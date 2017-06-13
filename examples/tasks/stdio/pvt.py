@@ -12,11 +12,10 @@ if 'raw_input' in vars(__builtins__): input = raw_input		#Fix for Python 2.x raw
 def send(d): print(json.dumps(d)); sys.stdout.flush()
 def recv(): return json.loads(input())
 
-CLEAR = None
-START_EDIT = 'S'
-ON_EDIT = 'onedit'
-RECEIPT = 'R'
-RECEIPT_WHEN_CHANGING = 2
+DELETE = None
+DELETE_ALL = True,DELETE
+START_TIME = 'S'
+ON_INPUT = 'onedit'
 #########################################################
 
 
@@ -24,35 +23,31 @@ import random,statistics
 
 
 TRIALS = 4
-INSTRUCTIONS = 'Click a button when one appears'
+INSTRUCTIONS = 'Click a button when one appears here'
 
 def main():
 	log=[]
-	
 	#wait for user software to announce readiness
 	ums=recv()[0]
 	#announce required options
-	send({'require':{'options':[RECEIPT,START_EDIT,ON_EDIT]}})
-	
-	send([ ('Trial',1,{'<=':TRIALS}), (INSTRUCTIONS,[]) ])
-	
+	send({'require':{'options':[START_TIME,ON_INPUT]}})
+	#display Trial and instructions containers; let user software know that any buttons inside the instructions container should be deleted once user-input (i.e. click) is detected
+	send([ ('Trial',1,{'<=':TRIALS}),
+			(INSTRUCTIONS,[],{ON_INPUT:DELETE} ) ])
+	#do trials
 	for trial in range(1,TRIALS+1):
-		#wait, then show the button and send back receipt
+		#set random time for button appearance
+		buttonAppearanceTime=ums+random.randrange(2000,10000)
+		#update trial time, wait till buttonAppearanceTime, then add the 'Click me' button
 		send([ ('Trial',trial),
-			(INSTRUCTIONS, [['Click me']], {
-				START_EDIT:ums+random.randrange(2000,10000),
-				RECEIPT:RECEIPT_WHEN_CHANGING,
-				ON_EDIT:CLEAR}) ])
-		#get receipt
-		receipttime=recv()[0]
+			(INSTRUCTIONS, [['Click me']], {START_TIME:buttonAppearanceTime}) ])
 		#get participant action
 		ums=recv()[0]
-		log.append(ums-receipttime)
+		log.append(ums-buttonAppearanceTime)
 		send([ ('Your response time is',log[-1],{'unit':'ms'}) ])
-
 	#display goodbye message in popup
-	send( CLEAR )
-	send([ ('Your mean response time is',statistics.mean(log)),
+	send([ DELETE_ALL,
+		('Your mean response time is',statistics.mean(log)),
 		'Thank you for your participation.' ])
 
 

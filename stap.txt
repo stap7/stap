@@ -12,7 +12,7 @@ version 6.03
     Label Name          Regular Expression                                  Functionality
     <<state>>           [<<element>>(,<<element>>)*]                        array of elements
     <<element>>         <<value>>|<<key-item>>                              elements can be specified with key or without; elements specified without a key are always appended to the end of the <<state>>, i.e. [...,<<value>>,...] is shorthand for [...,["",<<value>>],...]
-    <<key-item>>        [<<key>>(,<<item>>)?]                               key-item pair; if item is not specified, default is a boolean-type element with a value of false (i.e. button or option)
+    <<key-item>>        [<<key>>(,<<item>>)?]                               key-item pair; if item is not specified, default is false (i.e. button or unselected option)
     <<item>>            <<state>>|<<value>>|null                            state, value, or null (null signifies deletion of key-item pair from the display)
     <<value>>           <<text>>|<<number>>|true|false
     <<key>>             ** non-empty <<text>> **                            displayable key; any words beginning with # in <<key>> text are hidden (hashtags); used for reference only //TODO: add way to escape #, e.g. ##
