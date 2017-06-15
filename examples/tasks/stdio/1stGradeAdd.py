@@ -50,8 +50,8 @@ def main():
 		#display feedback and Next button
 		send( [ 'Correct' if (str(x+y)==button) else 'Incorrect',
 				['Next'] ] )
-		#wait for participant to click the button
-		recv()
+		#wait for participant to click the Next button
+		while recv()[1]!='Next': pass
 		#clear screen
 		send( None )
 	#display goodbye message

@@ -9,37 +9,13 @@
 
 
 ;;TODO:
-;;	seems to be that with pause-between-actions t, the model has less clicks/time per trial, than same nil, but still more clicks/time per trial than real-time t (should do a proper test of this)
+;;	add options for *pause-between-actions*
+	;; pause-on: any display update wo buttons, any scheduled event, a button click
+	;; continue-on: any display update, addition of buttons, events cleared
 ;;	check that socket is open before reading/writing
 ;;	make a nicer model, check that x/y/w/h of all elements is correct (can do right from model)
-;;
-;; pvt (nil t) 313 347 302 281 295 295 315.5
-;; pvt (nil nil) 378 351 292.5 653 334.5 409.25
-;; pvt (t nil) 320.25 380 377.25 335.5 379.25 293
-;; pvt (t t) 318.25 379.75 334.5 375.75 303.25
 
 
-;; pause-on: any display update wo buttons, any scheduled event, a button click
-;; continue-on: display update has buttons, events cleared
-
-;; readsocket-thread: 
-;;	stap-update (q W/S events to be scheduled in main thread)
-;;	q proc-display
-;; main-thread:
-;;	run-until-condition
-;;		on periodic-event
-;;			if q
-;;				proc-display
-;;				while no buttons/events, pause
-;;		on input event
-;;			:onedit
-;;				proc-display
-;;				while no buttons/events, pause
-;;		on W/S event
-;;			stap-update
-;;				proc-display
-;;				while no buttons/events, pause
-;;
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -53,6 +29,7 @@
 ;; define constants
 (defconstant +implemented-options+ '("S" "W" "onedit"))
 (defconstant +pixel-offset+ 10)
+(defconstant +refresh-rate+ .05)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; global variables
@@ -65,10 +42,9 @@
 (defvar *running-in-real-time* t)
 (defvar *pause-between-actions* t)
 (defvar *updating* nil)
-(defvar *msg-queue* nil)
 (defvar *q-lock* (uni-make-lock "q-lock"))
-;(defvar *event-lock* (uni-make-lock "event-lock"))
-(defvar *stap-event-list* nil)
+(defvar *stap-events-unscheduled* nil)
+(defvar *stap-event-times* nil)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; debugging
@@ -88,86 +64,27 @@
 	(setq *socket-read-thread*
 		(bt:make-thread
 			(lambda ()
-				;(ignore-errors
+				(ignore-errors
 					(let ((line))
 						(loop while (setq line (read-line (usocket:socket-stream socket) nil)) do
 							(model-output "<= ~a" line)
-							(funcall with-line-f line)));)
+							; (model-output "~a" (usocket:socket-state *socket*))
+							(funcall with-line-f line))))
 				(model-output "Closing socket.")
+				(display-update)
 				(usocket:socket-close socket)))))
 
-(defun close-socket (&optional (socket *socket*))
-	(usocket:socket-close socket))
-
 (defun socket-sendjson (data &optional (socket *socket*))
-	(model-output "=> ~a" (st-json:write-json-to-string data))
-	(st-json:write-json data (usocket:socket-stream socket))
-	(terpri (usocket:socket-stream socket))
-	(finish-output (usocket:socket-stream socket)))
+	(let ( (s (st-json:write-json-to-string data)) )
+		(model-output "=> ~a" s)
+		(write-line s (usocket:socket-stream socket))
+		(force-output (usocket:socket-stream socket))))
 
+(defun close-socket (&optional (socket *socket*)) (usocket:socket-close socket))
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; STAP for ACT-R
 ;;
-
-;; events
-(defun past-time (time) (<= time (get-time)))
-(defun remove-stap-events ()
-	(uni-lock *q-lock*)
-	(model-output "[~a] removing old from ~a" (get-time) *stap-event-list*)
-	(setq *stap-event-list* (remove-if 'past-time *stap-event-list*))
-	(model-output "events: ~a" *stap-event-list*)
-	(uni-unlock *q-lock*)
-	)
-(defun stap-event (event-time fct)
-	(uni-lock *q-lock*)
-	(loop while (find (incf event-time) *stap-event-list*))
-	(model-output "schedule-event ~a ~a"  (/ event-time 1000) fct)
-	(schedule-event (/ event-time 1000) fct)
-	(model-output "Push ~a ~a ..." event-time *stap-event-list*)
-	(push event-time *stap-event-list*)
-	(model-output "... Events: ~a" *stap-event-list*)
-	(schedule-event (/ (1+ event-time) 1000) 'remove-stap-events)
-	(uni-unlock *q-lock*)
-	)
-;;
-
-(defun display-update (&optional (val 'done))
-	(uni-lock *q-lock*)
-	(setq *updating* val)
-	(model-output "*updating* = ~a" *updating*)
-	(uni-unlock *q-lock*))
-	; (if (eq *pause-between-actions* 'paused)
-		; (setq *need-to-proc* t)
-		; (proc-and-print)))
-	;(proc-and-print))
-	;(stap-event (1+ (get-time)) 'proc-and-print))
-	;(let ( (event-time (get-time)) )
-	;	(loop while (find (incf event-time) *stap-event-list*))
-		;(stap-event (schedule-event (/ event-time 1000) 'proc-and-print))
-	;	))
-
-(defun proc-and-print ()
-	(let ((proc nil))
-		(uni-lock *q-lock*)
-		(when (eq *updating* 'done)
-			(model-output "in proc-and-print ~a" *updating*)
-			(setq proc t)
-			(setq *updating* nil))
-		(uni-unlock *q-lock*)
-		(when proc
-			(proc-display)
-			(if *print-visicon* (print-visicon))
-			(pause-for-something-to-do))))
-
-; (defun proc-and-print ()
-	; (proc-display)
-	; (if *print-visicon* (print-visicon))
-	; (pause-for-something-to-do)
-	; )
-
-(defun stop-condition ()
-	(and (not (bt:thread-alive-p *socket-read-thread*)) (not *stap-event-list*) (not *updating*) (not *msg-queue*)))
 (defun prep-device ()
 	(when (not (current-device))
 		(install-device (open-exp-window "task" :x 0 :y 0 :width 800 :height 1200 :visible t)))
@@ -186,49 +103,74 @@
 		(setq *socket* (usocket:socket-connect host port :timeout timeout))
 		(socket-sendjson '(0 (0))) ;; let task-sw know that user-sw is ready
 		(socket-readlines #'stap-update)
-		(schedule-periodic-event .05 'proc-and-print :maintenance t)
+		(schedule-periodic-event +refresh-rate+ 'proc-and-print :maintenance t)
 		(if (setq *pause-between-actions* pause-between-actions)
 			(pause-for-something-to-do))
 		(run-until-condition 'stop-condition :real-time (setq *running-in-real-time* real-time))))
+
+(defun stop-condition ()
+	(and (not (bt:thread-alive-p *socket-read-thread*)) (not *stap-event-times*) (not *updating*) (not *stap-events-unscheduled*)))
+
+;; events
+(defun past-time (time) (<= time (get-time)))
+(defun remove-stap-events ()
+	(setq *stap-event-times* (remove-if 'past-time *stap-event-times*)))
+(defun stap-event (event-time fct)
+	(uni-lock *q-lock*)
+	(push (cons event-time fct) *stap-events-unscheduled*)
+	(uni-unlock *q-lock*))
+
+(defun stap-schedule-events ()
+	(loop while *stap-events-unscheduled* do
+		(let* ( (e (pop *stap-events-unscheduled*))
+				(event-time (car e))
+				(fct (cdr e)) )
+		(schedule-event (/ event-time 1000) fct)
+		(push event-time *stap-event-times*)
+		(schedule-event (/ (1+ event-time) 1000) 'remove-stap-events))))
 
 ;; model actions
 (defun button-click (btn)
 	(let ((oninput (get-option btn "onedit")))
 		(when oninput
-			;(model-output "oninput: ~s" oninput)
 			(display-update 'in-progress)
 			(process-element (gethash btn *parents*) (list btn oninput) (gethash btn *level*))
 			(display-update)))
 	(socket-sendjson (list (get-time) (DIALOG-ITEM-TEXT btn) t)))
-;	(pause-for-something-to-do))
 
 (defun pause-for-something-to-do ()
 	(when *pause-between-actions*
-		(let ((i 0))
-			(model-output "*PAUSED...")
-			(setq *pause-between-actions* 'paused)
+		(let ((paused nil))
 			(loop while (and
 				(not (find 'button-vdi (mapcar 'type-of (flatten *hierarchical-display*))))
-				(not *stap-event-list*)
-				(bt:thread-alive-p *socket-read-thread*)) do (incf i))
-			(setq *pause-between-actions* t)
-			(model-output "...CONTINUING [after ~a wait cycles] *" i))))
-
-;; message queue
-; (defun q-stap-msg (s)
-	; (uni-lock *q-lock*)
-	; (push-last s *msg-queue*)
-	; (uni-unlock *q-lock*))
-; (defun check-for-msgs ()
-	; (uni-lock *q-lock*)
-	; (when *msg-queue*
-		; (stap-update (pop *msg-queue*)))
-	; (uni-unlock *q-lock*))
+				(not *stap-event-times*)
+				(not *stap-events-unscheduled*)
+				(bt:thread-alive-p *socket-read-thread*)) do
+					(when (not paused)
+						(model-output "*PAUSED...")
+						(setq paused t)))
+			(if paused (model-output "...CONTINUING*")))))
 
 ;; visicon updates
+(defun display-update (&optional (val 'done))
+	(uni-lock *q-lock*)
+	(setq *updating* val)
+	;(model-output "*updating* = ~a" *updating*)
+	(uni-unlock *q-lock*))
+(defun proc-and-print ()
+	(let ((proc nil))
+		(uni-lock *q-lock*)
+		(stap-schedule-events)
+		(when (eq *updating* 'done)
+			(setq proc t)
+			(setq *updating* nil))
+		(uni-unlock *q-lock*)
+		(when proc
+			(proc-display)
+			(if *print-visicon* (print-visicon))
+			(pause-for-something-to-do))))
 (defun stap-update (json-string)
 	(display-update 'in-progress)
-	(model-output "<= ~a" json-string)
 	(let ((data (st-json:read-json-from-string json-string)))
 		(etypecase data
 			(st-json:jso
@@ -249,14 +191,12 @@
 						(t
 							(print-warning "Ignoring directive { ~s : ~s }" (car option) (cdr option))))))
 			(list
-				;(model-output "Updating display:~%    ~a" data) 
 				(update-element *hierarchical-display* nil data 1)
 				(correct-positions))
 			((or keyword number string)
 				(when (eq data :null)
 					(setq *hierarchical-display* (list nil))
 					(clear-exp-window)))))
-	(model-output "Done updating for ~a" json-string)
 	(display-update))
 
 (defun correct-positions ()
@@ -267,7 +207,6 @@
 				(modify-text-for-exp-window element :y (* position +pixel-offset+)))
 			(button-vdi
 				(modify-button-for-exp-window element :y (* position +pixel-offset+))))))
-
 
 ;; add/update elements
 (defgeneric add-element (key val level))
@@ -348,7 +287,7 @@
 				(setq 	e-val (second e)
 						e-opt (if (eq 'st-json:jso (type-of (third e))) (slot-value (third e) 'st-json::alist)))))
 		;(model-output "?: ~a : ~a ~a" e-key e-val e-opt)
-		(let (	(delay (or (assoc "S" e-opt :test 'equal) (assoc "W" e-opt :test 'equal))) )
+		(let ( (delay (or (assoc "S" e-opt :test 'equal) (assoc "W" e-opt :test 'equal))) )
 			(if delay
 				(stap-event (if (equal (car delay) "S") (cdr delay) (+ (get-time) (* (cdr delay) 1000)))
 						#'(lambda ()
@@ -356,18 +295,6 @@
 							(set-key-val-opt container e-key e-val e-opt e-lvl)
 							(correct-positions)
 							(display-update)))
-					; (uni-lock *event-lock*)
-					; (push (schedule-event (if (equal (car delay) "S")
-									; (/ (cdr delay) 1000)
-									; (+ (cdr delay) (get-time)))
-									; #'(lambda ()
-										; (set-key-val-opt container e-key e-val e-opt e-lvl)
-										; (correct-positions)
-										; (remove-events)
-										; (pause-for-something-to-do)
-										; (display-updated)))
-						; *stap-event-list*)
-					; (uni-unlock *event-lock*))
 				(set-key-val-opt container e-key e-val e-opt e-lvl)))))
 
 (defun set-key-val-opt (container e-key e-val e-opt e-lvl)
@@ -414,4 +341,3 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; TODO: :true wildcard key 

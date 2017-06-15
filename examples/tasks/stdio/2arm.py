@@ -48,8 +48,8 @@ def main():
 		send(None)
 		#display reward and Next Trial button
 		send([ ('Reward',getReward(buttonNum)), ['Next Trial'] ])
-		#wait for participant to click the button
-		recv()
+		#wait for participant to click the Next Trial button
+		while recv()[1]!='Next Trial': pass
 		#clear screen
 		send(None)
 	#display goodbye message
