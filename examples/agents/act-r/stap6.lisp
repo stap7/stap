@@ -9,11 +9,9 @@
 
 
 ;;TODO:
-;;	add options for *pause-between-actions*
-	;; pause-on: any display update wo buttons, any scheduled event, a button click
-	;; continue-on: any display update, addition of buttons, events cleared
-;;	check that socket is open before reading/writing
-;;	make a nicer model, check that x/y/w/h of all elements is correct (can do right from model)
+;;	better sample model
+;;	check that x/y/w/h of all elements is correct (can do right from model)
+;;	
 
 
 
@@ -27,9 +25,11 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; define constants
-(defconstant +implemented-options+ '("S" "W" "onedit"))
+(defconstant +stap-implemented-options+ '("S" "W" "onedit"))
+(defconstant +stap-load-event+ '(0))
 (defconstant +pixel-offset+ 10)
 (defconstant +refresh-rate+ .05)
+(defconstant +socket-timeout+ 4)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; global variables
@@ -47,7 +47,7 @@
 (defvar *stap-event-times* nil)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; debugging
+;; debugging (can get rid of these functions when ready for production)
 ;;
 (defun print-hash (tbl &optional padding)
 	(maphash #'(lambda (key val)
@@ -68,26 +68,28 @@
 					(let ((line))
 						(loop while (setq line (read-line (usocket:socket-stream socket) nil)) do
 							(model-output "<= ~a" line)
-							; (model-output "~a" (usocket:socket-state *socket*))
 							(funcall with-line-f line))))
 				(model-output "Closing socket.")
 				(display-update)
 				(usocket:socket-close socket)))))
 
-(defun socket-sendjson (data &optional (socket *socket*))
-	(let ( (s (st-json:write-json-to-string data)) )
-		(model-output "=> ~a" s)
-		(write-line s (usocket:socket-stream socket))
-		(force-output (usocket:socket-stream socket))))
+(defun socket-writeline (s &optional (socket *socket*))
+	(model-output "=> ~a" s)
+	(write-line s (usocket:socket-stream socket))
+	(force-output (usocket:socket-stream socket)))
 
-(defun close-socket (&optional (socket *socket*)) (usocket:socket-close socket))
+(defun socket-writejson (data &optional (socket *socket*))
+	(socket-writeline (st-json:write-json-to-string data)))
+
+(defun socket-close (&optional (socket *socket*)) (if socket (usocket:socket-close socket)))
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; STAP for ACT-R
 ;;
 (defun prep-device ()
 	(when (not (current-device))
-		(install-device (open-exp-window "task" :x 0 :y 0 :width 800 :height 1200 :visible t)))
+		(suppress-warnings
+			(install-device (open-exp-window "task" :x 0 :y 0 :width 800 :height 1200 :visible t))))
 	(add-word-characters #\_ #\- #\+ #\* #\# #\) #\( #\. #\, #\; #\! #\? #\space #\newline #\\ #\/ #\: #\* #\" #\')
 	(clear-exp-window))
 (defun prep-model ()
@@ -96,17 +98,23 @@
 		(define-chunks (button name oval))
 		(merge-chunks button oval))
 	(prep-device))
-(defun run-tcp-task (&key (host "localhost") (port 9000) (timeout 30) (real-time t) (pause-between-actions t))
-	(when (current-model)
-		(prep-model)
-		(setq *print-visicon* (no-output (car (sgp :v))))
-		(setq *socket* (usocket:socket-connect host port :timeout timeout))
-		(socket-sendjson '(0 (0))) ;; let task-sw know that user-sw is ready
-		(socket-readlines #'stap-update)
-		(schedule-periodic-event +refresh-rate+ 'proc-and-print :maintenance t)
-		(if (setq *pause-between-actions* pause-between-actions)
-			(pause-for-something-to-do))
-		(run-until-condition 'stop-condition :real-time (setq *running-in-real-time* real-time))))
+(defun run-tcp-task (&key (host "localhost") (port 9000) (real-time t) (pause-between-actions t))
+	(if (current-model)
+		(progn
+			(prep-model)
+			(setq *print-visicon* (no-output (car (sgp :v))))
+			(setq *pause-between-actions* pause-between-actions)
+			(socket-close *socket*)
+			(setq *socket* (handler-case
+				(usocket:socket-connect host port :timeout +socket-timeout+)
+				(error (e) (print-warning "Could not connect to ~a:~a (~a)" host port e) nil)))
+			(when *socket*
+				(socket-writejson (list (get-time) +stap-load-event+)) ;; let task-sw know that user-sw is ready
+				(socket-readlines #'stap-update) ;; start reading from a socket (in new thread)
+				(loop while (neq *updating* 'done)) ;; wait for the first display update
+				(schedule-periodic-event +refresh-rate+ 'proc-and-print :maintenance t)
+				(run-until-condition 'stop-condition :real-time (setq *running-in-real-time* real-time))))
+		(print-warning "Please load a model before connecting to a task.")))
 
 (defun stop-condition ()
 	(and (not (bt:thread-alive-p *socket-read-thread*)) (not *stap-event-times*) (not *updating*) (not *stap-events-unscheduled*)))
@@ -136,7 +144,7 @@
 			(display-update 'in-progress)
 			(process-element (gethash btn *parents*) (list btn oninput) (gethash btn *level*))
 			(display-update)))
-	(socket-sendjson (list (get-time) (DIALOG-ITEM-TEXT btn) t)))
+	(socket-writejson (list (get-time) (DIALOG-ITEM-TEXT btn) t)))
 
 (defun pause-for-something-to-do ()
 	(when *pause-between-actions*
@@ -166,6 +174,7 @@
 			(setq *updating* nil))
 		(uni-unlock *q-lock*)
 		(when proc
+			(correct-positions)
 			(proc-display)
 			(if *print-visicon* (print-visicon))
 			(pause-for-something-to-do))))
@@ -181,7 +190,7 @@
 								(cond
 									((equal (car required) "options")
 										(dolist (option (cdr required))
-											(when (not (find option +implemented-options+ :test 'equal))
+											(when (not (find option +stap-implemented-options+ :test 'equal))
 												(print-warning "This task requires unimplemented option: ~s" option)
 												(if *socket* (usocket:socket-close *socket*)))))
 									(t
@@ -191,8 +200,7 @@
 						(t
 							(print-warning "Ignoring directive { ~s : ~s }" (car option) (cdr option))))))
 			(list
-				(update-element *hierarchical-display* nil data 1)
-				(correct-positions))
+				(update-element *hierarchical-display* nil data 1))
 			((or keyword number string)
 				(when (eq data :null)
 					(setq *hierarchical-display* (list nil))
@@ -293,7 +301,6 @@
 						#'(lambda ()
 							(display-update 'in-progress)
 							(set-key-val-opt container e-key e-val e-opt e-lvl)
-							(correct-positions)
 							(display-update)))
 				(set-key-val-opt container e-key e-val e-opt e-lvl)))))
 
