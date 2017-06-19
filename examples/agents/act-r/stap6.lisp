@@ -192,11 +192,11 @@
 										(dolist (option (cdr required))
 											(when (not (find option +stap-implemented-options+ :test 'equal))
 												(print-warning "This task requires unimplemented option: ~s" option)
-												(if *socket* (usocket:socket-close *socket*)))))
+												(socket-close *socket*))))
 									(t
 										(print-warning "This task requires something, and i don't know how to handle it:~%    { ~s : ~s }"
 											(car required) (cdr required))
-										(if *socket* (usocket:socket-close *socket*))))))
+										(socket-close *socket*)))))
 						(t
 							(print-warning "Ignoring directive { ~s : ~s }" (car option) (cdr option))))))
 			(list
