@@ -4,6 +4,7 @@
 ;; to run your model:
 ;;  after you define your model, use (run-tcp-task :host HOST :port PORT :real-time REALTIME_OR_NOT :pause-between-actions PAUSE_OR_NOT) to connect to task served on HOST/PORT, and run in REALTIME_OR_NOT
 ;;		the suggestion is to always set :pause-between-actions flag to T; however, it you need the model-time to keep going even when there are no buttons to press and no scheduled display changes, set this flag to NIL
+;;			(if you do set :pause-between-actions to NIL, you may want to also set :real-time to T -- otherwise a lot of model time may pass in the instances when new display updates are coming over the socket)
 ;;
 
 
@@ -60,19 +61,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; async socket client
 ;;
+(defun socket-close (&optional (socket *socket*)) (if socket (usocket:socket-close socket)))
 (defun socket-readlines (with-line-f &optional (socket *socket*))
 	(setq *socket-read-thread*
 		(bt:make-thread
 			(lambda ()
-				(ignore-errors
+				(handler-case
 					(let ((line))
-						(loop while (setq line (read-line (usocket:socket-stream socket) nil)) do
+						(loop while (setq line (handler-case
+								(read-line (usocket:socket-stream socket) nil nil)
+								(stream-error (e) nil))) do
 							(model-output "<= ~a" line)
-							(funcall with-line-f line))))
+							(funcall with-line-f line)))
+					(error (e) (model-output "Error encountered: ~a" e)))
 				(model-output "Closing socket.")
 				(display-update)
-				(usocket:socket-close socket)))))
-
+				(socket-close socket)))))
 (defun socket-writeline (s &optional (socket *socket*))
 	(model-output "=> ~a" s)
 	(write-line s (usocket:socket-stream socket))
@@ -81,7 +85,6 @@
 (defun socket-writejson (data &optional (socket *socket*))
 	(socket-writeline (st-json:write-json-to-string data)))
 
-(defun socket-close (&optional (socket *socket*)) (if socket (usocket:socket-close socket)))
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; STAP for ACT-R
