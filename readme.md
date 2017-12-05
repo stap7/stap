@@ -1,3 +1,4 @@
+<img src="https://cdn.rawgit.com/vdv7/stap/7fd33da5/pres/stap-icon.png" width=250 align=right>
 STAP (Simple Task-Actor Protocol) is a machine-readable format for specifying user-interface changes. 
 
 Main focus of STAP is in providing a functionally-equivalent task experience for human and computational users alike.
