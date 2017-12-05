@@ -1,6 +1,10 @@
 
 ;;model that finds and clicks buttons
 
+#-:act-r
+  (if (not (find :act-r *features*))
+    (load "/mnt/c/Users/vveksler/Dropbox/+main/prog/actr7/load-act-r.lisp"))
+
 (defvar *clicks* 0)
 
 (clear-all)
@@ -56,8 +60,7 @@
      ?visual>
       state free
      ==>
-	!eval! (model-output "CLICKING")
-	!eval! (incf *clicks*)
+	!eval! (model-output "CLICKING [~a]" (incf *clicks*))
      +manual>
       isa click-mouse
 	 +visual-location>
