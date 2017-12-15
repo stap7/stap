@@ -1,0 +1,57 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<html><head>
+<link rel="stylesheet" href="lib/stap.css"></link>
+<script src="lib/stap.js"></script>
+<script>
+var task = {
+	
+	start: function(){
+		//add "Hello, World!" text and a "Press Me" button to user display
+		task.updateUI([
+			["Add Element", [
+				["Text"], ["Button"], ["Radio"], ["Checkboxes"]
+			]],
+			["STAP", "", {"eT":1,"w":"100%"} ],
+			["Preview",[] ]
+		]);
+		task.stap='';
+		task.datalog=[];
+	},
+	
+	userAction: function([time,element,value]){
+		task.datalog.push([time,element,value]);
+		if(element=='Text'){
+			task.stap+='"Hello World!",\n';
+			task.updateUI([["Preview",[ "Hello World!" ]],["STAP", '[\n'+task.stap+']' ]]);
+		}else if(element=='Button'){
+			task.stap+='["Press Me"],\n';
+			task.updateUI([["Preview",[ ["Press Me"] ]],["STAP", '[\n'+task.stap+']' ]]);
+		}else if(element=='Radio'){
+			task.stap+='[ "Choose a car", [["Subaru"],["Ford"],["Tesla"]], {"select":1} ],\n';
+			task.updateUI([["Preview",[ [ "Choose a car", [["Subaru"],["Ford"],["Tesla"]], {"select":1} ] ]],["STAP", '[\n'+task.stap+']' ]]);
+		}else if(element=='Checkboxes'){
+			task.stap+='[ "Choose cars", [["Subaru"],["Ford"],["Tesla"]], {"select":2} ],\n';
+			task.updateUI([["Preview",[ [ "Choose cars", [["Subaru"],["Ford"],["Tesla"]], {"select":2} ] ]],["STAP", '[\n'+task.stap+']' ]]);
+		}
+	},
+	
+	//overloadable function called at end of task for cleanup
+	end: function(){},
+	
+	//overloadable function for updating user-interface with STAP objects
+	updateUI: function(){}
+	
+}
+
+
+
+//	connect userAgent.action to task.userAction
+userAgent.action = task.userAction;
+//	connect task.updateUI to userAgent.update;
+task.updateUI = userAgent.update;
+//	start task
+connect = task.start;
+</script>
+</head><body /></html>
