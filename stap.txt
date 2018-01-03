@@ -1,9 +1,6 @@
 STAP (Simple Task-Actor Protocol)
 version 7.00
 
-TODO:
-	clean up all examples that use stap6
-
 
     Message Type        Regular Expression                                  Functionality
     ** task -> user **  <<container>>                                       edit current display container with values in <<container>>
