@@ -23,7 +23,7 @@ version 7.00
     <<chars>>           ** see JSON chars specification, e.g. http://json.org **
     <<number>>          ** see JSON number specification, e.g. http://json.org **
     <<uint>>            ** integer >= 0 **
-	<<boolean>>         (true)|(false)
+    <<boolean>>         (true)|(false)
 
 everything above is core-STAP; all user-side sw must be able to handle the format specified above for simple text+button tasks
 
@@ -124,7 +124,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
     <<txtOption>>       "no":<<text>>                                       <<text>> is a set of characters that are not allowed to be entered into the text item; e.g. "no":"\r\n"
     <<txtOption>>       "maxchars":<<number>>                               max number of characters in <<text>> or <<number>> item
 
-	<<boxOption>>       "title":<<text>>                                    visible title (replaces item id as the visible title)
+    <<boxOption>>       "title":<<text>>                                    visible title (replaces item id as the visible title)
     <<boxOption>>       "emp":<<emphasis>>                                  emphasize
     <<boxOption>>       "bg":<<cssBackground>>                              background
     <<boxOption>>       "c":<<color>>                                       text/stroke color
@@ -163,7 +163,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
     <<emphasis>>        10                                                  emphasize current container/content in some way, different from {"emp":1}
     <<emphasis>>        100                                                 emphasize current container/content in some way, different from {"emp":1} or {"emp":10}
     <<emphasis>>        2                                                   emphasize current container/content in the same way as {"emp":1}, but stronger (e.g. if {"emp":1} makes text bold, {"emp":2} makes text bolder, etc)
-	<<emphasis>>        <<uint>>                                            emphasize current container/content in some way; each <<uint>> is a positive integer where the value of the singles digit declares the intensity of emphasis A, the value of the tens digit declares the intensity of a different emphasis B, the value of the hundreds digit declares the intensity of yet a different emphasis C, and so on; e.g. if {"emp":1} is bold, {"emp":10} can be a bg highlight, {"emp":100} can be increased font size, etc.; if {"emp":1} is bold, {"emp":2 is bolder}, and {"emp":3} is even bolder (or bold+italic); if {"emp":10} is a beige highlight, {"emp":20} is a brighter highlight (e.g. orange), and {"emp":30} is even brighter (e.g. yellow); adding numbers yields a combined emphasis
+    <<emphasis>>        <<uint>>                                            emphasize current container/content in some way; each <<uint>> is a positive integer where the value of the singles digit declares the intensity of emphasis A, the value of the tens digit declares the intensity of a different emphasis B, the value of the hundreds digit declares the intensity of yet a different emphasis C, and so on; e.g. if {"emp":1} is bold, {"emp":10} can be a bg highlight, {"emp":100} can be increased font size, etc.; if {"emp":1} is bold, {"emp":2 is bolder}, and {"emp":3} is even bolder (or bold+italic); if {"emp":10} is a beige highlight, {"emp":20} is a brighter highlight (e.g. orange), and {"emp":30} is even brighter (e.g. yellow); adding numbers yields a combined emphasis
     <<sizeUnit>>        ** legal CSS length unit; e.g., http://www.w3schools.com/cssref/css_units.asp **
     <<sizeUnit>>        E                                                   E signifies item size; when specifying height of <<container>> or <<table>>, E is row-height (e.g. {"h":"2.5E"} signifies that 2.5 rows will be visible in current container before scrolling down); when specifying width of <<container>> or <<table>>, E is item-width (e.g. {"w":"2.5E"} signifies that 2.5 items will be visible in current container before scrolling right); when specifying height of a <<text>> item, E is (font height + space between lines) (e.g. {"h":"2.5E"} signifies that 2.5 lines of text will be visible in current item before scrolling down); when specifying width of a <<text>> item, E is (font width + space between characters) (e.g. {"w":"10E"} signifies that, if font-type is monospace, 10 characters will be visible; if font is not monospace, at least client promises to do its best).
     <<sizeUnit>>        w|h                                                 specify size as a proportion of current width or height; e.g., [{"@my box":{},"w":100,"h":".5w"}] makes the width/height of "my box" 100 and 50 pixels, respectively
