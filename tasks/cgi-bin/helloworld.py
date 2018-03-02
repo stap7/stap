@@ -5,6 +5,7 @@ import json
 
 callback = form.getvalue('callback') or form.getvalue('c')
 data = form.getvalue('data') or form.getvalue('d')
+if data: data=json.loads(data)
 
 
 def send(stap):
@@ -15,9 +16,6 @@ def send(stap):
     print(json.dumps(stap))
 
 
-
-if data:
-	data=json.loads(data)
 
 if data and len(data)>1 and data[1]=='Press Me':
   send([ 'You pressed the button!' ])
