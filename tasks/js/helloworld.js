@@ -24,8 +24,8 @@ var task = {
 		task.updateUI([ "Hello, World!", {"@Press Me":false} ]);
 	},
 	
-	userAction: function([time,element,value]){
-		if(element=='Press Me'){
+	userAction: function(time,id,value){
+		if(id=='Press Me'){
 			//when user presses the button, clear screen and add "You pressed the button!" text
 			task.updateUI(null);
 			task.updateUI([ "You pressed the button!" ]);
@@ -44,5 +44,5 @@ var task = {
 
 ////////////////////////////////////////////////////////////////
 // line below added for node.js
-if(typeof(window)==='undefined'){task.end=function(){process.exit()};if(require.main===module){task.updateUI=function(data){console.log(JSON.stringify(data))};process.stdin.on("data",function(s){let data;try{data=JSON.parse(s)}catch(e){console.log('{"error":"invalid JSON string"}');return}if(data.constructor!==Array||data.length!=3){console.log('{"error":"Invalid STAP 7 response. Expected [time,element,value]"}');return}task.userAction(data)});task.start()}else{exports.task=task}}
+if(typeof(window)==='undefined'){task.end=function(){process.exit()};if(require.main===module){task.updateUI=function(data){console.log(JSON.stringify(data))};process.stdin.on("data",function(s){let data;try{data=JSON.parse(s)}catch(e){console.log('{"error":"invalid JSON string"}');return}if(data.constructor!==Array||data.length!=3){console.log('{"error":"Invalid STAP 7 response. Expected [time,id,value]"}');return}task.userAction(data[0],data[1],data[2])});task.start()}else{exports.task=task}}
 ////////////////////////////////////////////////////////////////

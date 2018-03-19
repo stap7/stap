@@ -31,6 +31,8 @@ var task = {
 	
 	start: function(){
 		task.trials=20;
+		task.score=0;
+		task.updateUI(stap.clear);
 		task.doTrial();
 	},
 	
@@ -48,31 +50,30 @@ var task = {
 		for(i=answers.length;i<4;++i){
 			answers.push(answers.last()+Math.randbtwn(1,2));
 		}
-		//clear screen
-		task.updateUI(stap.clear);
 		//add question and answer buttons to user display
 		task.updateUI([ {"@Questions left":task.trials--},
 						{"@Question":[x,["-","+"][operation],y]},
 						{"@Answers":answers.map(stap.button)} ]);
 	},
 	
-	onUserAction: function([time,element,value]){
+	userAction: function(time,id,value){
 		if(task.trials){
-			if(element.constructor===String){
+			if(id.constructor===String){
 				//clear screen
 				task.updateUI(stap.clear);
-				if(element=='Next Question'){
+				if(id=='Next Question'){
 					task.doTrial();
-				}else if(element==''+task.correct){
+				}else if(id==''+task.correct){
+					task.score++;
 					task.updateUI([ "Correct!", stap.button('Next Question') ]);
 				}else{
 					task.updateUI([ "Incorrect.", stap.button('Next Question') ]);
 				}
 			}
-		}else{
+		}else if(task.trials==0){
 			//clear screen
 			task.updateUI(stap.clear);
-			task.updateUI([ "Thanks, and have a great day!" ]);
+			task.updateUI([ {"@Score":task.score}, "Thanks, and have a great day!" ]);
 			//exit gracefully
 			task.end();
 		}
@@ -83,5 +84,5 @@ var task = {
 
 ////////////////////////////////////////////////////////////////
 // line below added for node.js
-if(typeof(window)==='undefined'){task.end=function(){process.exit()};if(require.main===module){task.updateUI=function(data){console.log(JSON.stringify(data))};process.stdin.on("data",function(s){var data;try{data=JSON.parse(s)}catch(e){console.log('{"error":"invalid JSON string"}');return}if(data.constructor!==Array||data.length!=3){console.log('{"error":"Invalid STAP 7 response. Expected [time,element,value]"}');return}task.userAction(data)});task.start()}else{exports.task=task}}
+if(typeof(window)==='undefined'){task.end=function(){process.exit()};if(require.main===module){task.updateUI=function(data){console.log(JSON.stringify(data))};process.stdin.on("data",function(s){var data;try{data=JSON.parse(s)}catch(e){console.log('{"error":"invalid JSON string"}');return}if(data.constructor!==Array||data.length!=3){console.log('{"error":"Invalid STAP 7 response. Expected [time,id,value]"}');return}task.userAction(data[0],data[1],data[2])});task.start()}else{exports.task=task}}
 ////////////////////////////////////////////////////////////////

@@ -43,7 +43,7 @@ def main():
 	#initial task setup
 	if element==0 and value==[0]:
 		send({'require':{'options':['S','onedit']}})
-		send([ {'@Trial':1,'<=':TRIALS}, {'@Click a button when one appears':[]} ])
+		send([ {'@Trial':1,'<=':TRIALS}, {'@Click a button when one appears':[],'onedit':None} ])
 
 	#final task page
 	if state['trial']==TRIALS:
@@ -62,7 +62,7 @@ def main():
 		#wait, then show the button
 		send([
 				{'@Trial':state['trial']}, 
-				{'@Click a button when one appears': [{'@Click me':False}],'S':state['show'],'onedit':None} 
+				{'@Click a button when one appears': [{'@Click me':False}],'S':state['show']} 
 			], state)
 
 main()

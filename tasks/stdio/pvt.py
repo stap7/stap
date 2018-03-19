@@ -21,7 +21,7 @@ ON_INPUT = 'onedit'
 import random,statistics
 
 
-TRIALS = 4
+TRIALS = 20
 INSTRUCTIONS = '@Click a button when one appears here'
 BUTTON = {'@Click Me':False}
 
@@ -33,7 +33,7 @@ def main():
 	send({'require':{'options':[START_TIME,ON_INPUT]}})
 	#display Trial and instructions containers; let user software know that any buttons inside the instructions container should be deleted once user-input (i.e. click) is detected
 	send([ {'@Trial':1,'<=':TRIALS},
-			{INSTRUCTIONS:[],ON_INPUT:DELETE} ])
+			{INSTRUCTIONS:[], ON_INPUT:DELETE} ])
 	#do trials
 	for trial in range(1,TRIALS+1):
 		#set random time for button appearance
