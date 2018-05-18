@@ -35,60 +35,39 @@ Sample Interactions:
 
     Sample Interaction 1:
         // user software ready
-        <- [0,[0]]
+        <- [0,0,[0]]
         // display "Hello World"
         -> ["Hello World"]
         // display a "Click Me" button
-        -> [{"@Click Me":false}]
+        -> [{"id":"Click Me","v":false}]
         // user clicks the button after 30.8s
         <- [30800,"Click Me",true]
 
     Sample Interaction 2:
         // user software ready
         <- [0,[0]]
-        // let user software know that "S" (start time) and "eT" (editable-text field) are required directives for this task
-        -> {"require":{"options":["S","eT"]}}
+        // let user software know that "T" (timeout) and "eT" (editable-text field) are required directives for this task
+        -> {"require":{"options":["T","eT"]}}
         // let user know that a goal in this task is to earn as close to 10 coins as possible
         -> {"task":{"good":[["Coins Earned",10]]}}
         // display a text prompt to get user's name (eT:1 turns text editable)
-        -> [{"@What is your name?":"","eT":1}]
+        -> [{"id":"What is your name?","v":"","eT":1}]
         // user types in "Bob" and hits enter (9.876sec after task display first loaded)
         <- [9876,"What is your name?","Bob"]
         // clear display
         -> null
         // display two buttons
-        -> [{"@choose a button":[{"@Button 1":false},{"@Button 2":false}]]
+        -> [{"id":"choose a button","v":[{"id":"Button 1","v":false},{"id":"Button 2","v":false}]}]
         // first button was clicked after 12.307sec
         <- [12307,"Button 1",true]
         // give user reward, "Coins Earned"=7
-        -> [{"@Coins Earned":7}]
+        -> [{"id":"Coins Earned","v":7}]
         // wait 2 seconds and remove the Coins Earned display
-        -> [{"@Coins Earned":null,"S":14307}]
+        -> [{"T":2,"id":"Coins Earned","v":null}]
         // second button was clicked
         <- [15422,"Button 2",true]
         // give reward
-        -> [{"@Coins Earned":3}]
-        ...
-
-    Sample Interaction 3:
-        // user software ready
-        <- [0,[0]]
-        // let user software know that options "w" (width) and "h" (height), type "path", and event 40 (mouse-click) are required for this task
-        -> {"require":{"types":["path"],"events":[40],"options":["w","h"]}}
-        // display a 100x100 box that will display red lines; "e":[40] signifies that click events should be captured (see <<eventType>> 40 below)
-        -> [{"@click somewhere":{},"type":"path","w":100,"h":100,"e":[40]}]
-        // user clicked in location 24,60 relative to top-left corner of the box
-        <- [1570,"click somewhere",[40,24,60]]
-        // draw a line from middle of the box to where user clicked
-        -> [{"@click somewhere":[50,50,24,60]}]
-        // user clicked in location 91,10 relative to top-left corner of the box
-        <- [2307,"click somewhere",[40,91,10]]
-        // draw a line from middle of the box to where user clicked
-        -> [{"@click somewhere":[50,50,91,10]}]
-        // user clicked in location 31,33 relative to top-left corner of the box
-        <- [2555,"click somewhere",[40,31,33]]
-        // draw a line from middle of the box to where user clicked
-        -> [{"@click somewhere":[50,50,31,33]}]
+        -> [{"id":"Coins Earned","v":3}]
         ...
 
 

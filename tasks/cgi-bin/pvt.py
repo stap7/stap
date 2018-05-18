@@ -25,15 +25,20 @@ try: time,element,value = json.loads(data)
 except: time,element,value = 0,0,[0]
 
 
+def obj(id=None,content=NotImplemented,**options):
+	if id is not None: options['id']=id
+	if content is not NotImplemented: options['v']=content
+	return options
+
 
 def send(stap,state=None):
-  if callback:                           #return jsonp (based on callback in request)
-    if state:
-      print('%s(%s,%s);'%(callback,json.dumps(stap),json.dumps(state)))
-    else:
-      print('%s(%s);'%(callback,json.dumps(stap)))
-  else:                                  #return legal json string
-    print(json.dumps(stap))
+	if callback:                           #return jsonp (based on callback in request)
+		if state:
+			print('%s(%s,%s);'%(callback,json.dumps(stap),json.dumps(state)))
+		else:
+			print('%s(%s);'%(callback,json.dumps(stap)))
+	else:                                  #return legal json string
+		print(json.dumps(stap))
 
 
 def main():
@@ -42,8 +47,9 @@ def main():
 
 	#initial task setup
 	if element==0 and value==[0]:
-		send({'require':{'options':['S','onedit']}})
-		send([ {'@Trial':1,'<=':TRIALS}, {'@Click a button when one appears':[],'onedit':None} ])
+		send({'require':{'options':['U','onedit']}})
+		send([  obj('Trial',1,max=TRIALS),
+				obj('Click a button when one appears',[],onedit=None)  ])
 
 	#final task page
 	if state['trial']==TRIALS:
@@ -54,15 +60,15 @@ def main():
 	else:
 		#display response time
 		if element == 'Click me':
-			send([ {'@Your response time is':time-state['show']} ])
+			send([ obj('Your response time is',time-state['show']) ])
 		#next trial
 		state['trial']+=1
 		#pick random time for button to appear
 		state['show']=time+random.randrange(3000,10000)
 		#wait, then show the button
 		send([
-				{'@Trial':state['trial']}, 
-				{'@Click a button when one appears': [{'@Click me':False}],'S':state['show']} 
+				obj('Trial',state['trial']), 
+				obj('Click a button when one appears', [obj('Click me',False)],U=state['show']) 
 			], state)
 
 main()

@@ -21,10 +21,10 @@ var task = {
 	
 	start: function(){
 		//add "Hello, World!" text and a "Press Me" button to user display
-		task.updateUI([ "Hello, World!", {"@Press Me":false} ]);
+		task.updateUI([ "Hello, World!", {id:"Press Me",v:false} ]);
 	},
 	
-	userAction: function(time,id,value){
+	userAction: function(time,id,val){
 		if(id=='Press Me'){
 			//when user presses the button, clear screen and add "You pressed the button!" text
 			task.updateUI(null);

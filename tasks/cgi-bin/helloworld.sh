@@ -2,5 +2,4 @@
 
 echo 'Content-type: text/plain'
 echo 
-#echo 'recv( ["Hello World"] );'
-echo '["Hello World"]'
+echo 'recv( ["Hello, World!"] );'

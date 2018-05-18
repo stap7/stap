@@ -20,5 +20,5 @@ def send(stap):
 if data and len(data)>1 and data[1]=='Press Me':
   send([ 'You pressed the button!' ])
 else:
-  send([ 'Hello World!', {'@Press Me':False} ])
+  send([ 'Hello World!', {'id':'Press Me','v':False} ])
 

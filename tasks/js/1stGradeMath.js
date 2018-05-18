@@ -1,4 +1,4 @@
-/* 1st grade math STAP-compliant task that can run
+/* basic algebra STAP-compliant task that can run
 	- in-browser
 		use this script alongside stap.js api2gui library, e.g.
 			<html><head><script src=location/of/stap.js><script src=location/of/1stGradeMath.js></head><body /></html>
@@ -24,7 +24,7 @@ if(!Math.randbtwn)Math.randbtwn=function(min,max){return Math.floor(Math.random(
 
 var stap = {
 	clear: null,
-	button:function(val){return {['@'+val]:false};}
+	button:function(name){return {id:name+'',v:false};}
 };
 
 var task = {
@@ -51,9 +51,9 @@ var task = {
 			answers.push(answers.last()+Math.randbtwn(1,2));
 		}
 		//add question and answer buttons to user display
-		task.updateUI([ {"@Questions left":task.trials--},
-						{"@Question":[x,["-","+"][operation],y]},
-						{"@Answers":answers.map(stap.button)} ]);
+		task.updateUI([ {id:"Questions left",v:task.trials--},
+						{id:"Question",v:[x,["-","+"][operation],y]},
+						{id:"Answers",v:answers.map(stap.button)} ]);
 	},
 	
 	userAction: function(time,id,value){
@@ -73,7 +73,7 @@ var task = {
 		}else if(task.trials==0){
 			//clear screen
 			task.updateUI(stap.clear);
-			task.updateUI([ {"@Score":task.score}, "Thanks, and have a great day!" ]);
+			task.updateUI([ {id:"Score",v:task.score}, "Thanks, and have a great day!" ]);
 			//exit gracefully
 			task.end();
 		}

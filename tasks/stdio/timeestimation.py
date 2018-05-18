@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Classic Shepard, Hovland, & Jenkins (1961) categorization task."""
+"""Time estimation/continuity task."""
 
 
 #########################################################
@@ -11,6 +11,11 @@ if 'raw_input' in vars(__builtins__): input = raw_input		#Fix for Python 2.x raw
 
 def send(d): print(json.dumps(d)); sys.stdout.flush()
 def recv(): return json.loads(input())
+
+def obj(id=None,content=NotImplemented,**options):
+	if id is not None: options['id']=id
+	if content is not NotImplemented: options['v']=content
+	return options
 #########################################################
 
 
@@ -34,28 +39,28 @@ def main():
 	recv()
 	#announce required options
 	send({"require":{
-		"options":[".","T","R","onedit","x","y","w","h","bg"]
+		"options":["S","R","onedit","x","y","w","h","bg"]
 		}})
 	for trial in range(1,MAXTRIALS+1):
 		delay=random.randrange(MINDELAY,MAXDELAY+1)
 		send(None)
 		send([
-			{'@Instructions':'Press the "Start Timer" button to start a timer. Press "Stop Timer" when you think the ball reaches the RED line.'},
-			{'@Drop Time':delay,'unit':'sec'},
-			{"@":[
-				{"@ball":'','title':'','w':BALLSIZE,'h':BALLSIZE,'x':CANVASSIZE/2-BALLSIZE/2,'y':0,'r':BALLSIZE/2,'bg':'blue'},
-				{'w':CANVASSIZE,'h':ENDZONEHEIGHT,'x':0,'y':CANVASSIZE-ENDZONEHEIGHT-GOALLINEHEIGHT,'bg':'blue'},
-				{'w':CANVASSIZE,'h':GOALLINEHEIGHT,'x':0,'y':CANVASSIZE-GOALLINEHEIGHT,'bg':'red'}
-				],"w":CANVASSIZE,"h":CANVASSIZE},
-			{"@Start Timer":False,"onedit":None} ])
+			obj('Instructions','Press the "Start Timer" button to start a timer. Press "Stop Timer" when you think the ball reaches the RED line.'),
+			obj('Drop Time',delay,unit='sec'),
+			obj('x',content=[
+				obj("ball",title='',w=BALLSIZE,h=BALLSIZE,x=CANVASSIZE/2-BALLSIZE/2,y=0,r=BALLSIZE/2,bg='blue'),
+				obj(w=CANVASSIZE,h=ENDZONEHEIGHT,x=0,y=CANVASSIZE-ENDZONEHEIGHT-GOALLINEHEIGHT,bg='blue'),
+				obj(w=CANVASSIZE,h=GOALLINEHEIGHT,x=0,y=CANVASSIZE-GOALLINEHEIGHT,bg='red')
+				],w=CANVASSIZE,h=CANVASSIZE),
+			obj("Start Timer",False,onedit=None) ])
 		recv() #wait for Start button press
-		send({'.': {"@ball":{},"T":delay,"R":2,"y":CANVASSIZE-GOALLINEHEIGHT-BALLSIZE} })
-		recv() #wait for ball to start moving
-		send([ {"@Stop Timer":False,"onedit":None} ])
+		send({"$":"ball","S":delay,"R":1,"y":CANVASSIZE-GOALLINEHEIGHT-BALLSIZE})
+		recv() #wait for ball to start moving (receipt R triggers recv())
+		send([ obj("Stop Timer",False,onedit=None) ])
 		recv() #wait for button press
 		send(None)
 		if trial<MAXTRIALS:
-			send([ {"@Next Trial":False} ])
+			send([ obj("Next Trial",False) ])
 			recv()
 	send(['Thank you for your participation.'])
 
