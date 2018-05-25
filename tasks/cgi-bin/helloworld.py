@@ -1,23 +1,20 @@
 #!/usr/bin/env python3
 
-import cgi; form = cgi.FieldStorage()
-import json
+import sys,os,json
 
-callback = form.getvalue('callback') or form.getvalue('c')
-data = form.getvalue('data') or form.getvalue('d')
-if data: data=json.loads(data)
+
+try: time,id,val=json.loads(sys.stdin.buffer.read(int(os.environ['CONTENT_LENGTH'])).decode('utf-8'))
+except: time,id,val=0,0,[0]
 
 
 def send(stap):
-  print("Content-type: text/plain\n")    #this header precedes content in http responses
-  if callback:                           #return jsonp (based on callback in request)
-    print('%s(%s);'%(callback,json.dumps(stap)))
-  else:                                  #return legal json string
-    print(json.dumps(stap))
+  print("Content-Type: application/json\nAccess-Control-Allow-Origin: *\n")
+  print(json.dumps(stap))
 
 
 
-if data and len(data)>1 and data[1]=='Press Me':
+
+if id=='Press Me':
   send([ 'You pressed the button!' ])
 else:
   send([ 'Hello World!', {'id':'Press Me','v':False} ])

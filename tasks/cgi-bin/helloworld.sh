@@ -1,5 +1,6 @@
 #!/bin/bash
 
 echo 'Content-type: text/plain'
+echo 'Access-Control-Allow-Origin: *'
 echo 
-echo 'recv( ["Hello, World!"] );'
+echo '["Hello, World!"]'

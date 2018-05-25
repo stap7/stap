@@ -9,20 +9,18 @@ reason being, that all of the timing functionality is client-side.
 '''
 
 
-import cgi; form = cgi.FieldStorage()
-import json,random
+import sys,os,json,random
 
 TRIALS = 20
 
+CLEAR_ALL = {'$':True,'v':None}
 
-#read request parameters
-callback = form.getvalue('callback') or form.getvalue('c')
-state = form.getvalue('state') or form.getvalue('s')
-try: state = json.loads(state)
-except: state = {"trial":0}
-data = form.getvalue('data') or form.getvalue('d')
-try: time,element,value = json.loads(data)
-except: time,element,value = 0,0,[0]
+
+
+
+def send(stap):
+	print("Content-Type: application/json\nAccess-Control-Allow-Origin: *\n")
+	print(json.dumps(stap))
 
 
 def obj(id=None,content=NotImplemented,**options):
@@ -31,44 +29,45 @@ def obj(id=None,content=NotImplemented,**options):
 	return options
 
 
-def send(stap,state=None):
-	if callback:                           #return jsonp (based on callback in request)
-		if state:
-			print('%s(%s,%s);'%(callback,json.dumps(stap),json.dumps(state)))
-		else:
-			print('%s(%s);'%(callback,json.dumps(stap)))
-	else:                                  #return legal json string
-		print(json.dumps(stap))
-
-
 def main():
-	#print http header
-	print("Content-type: text/plain\n")
-
-	#initial task setup
-	if element==0 and value==[0]:
-		send({'require':{'options':['U','onedit']}})
-		send([  obj('Trial',1,max=TRIALS),
-				obj('Click a button when one appears',[],onedit=None)  ])
-
-	#final task page
-	if state['trial']==TRIALS:
-		send(None)
-		send([ 'Thank you for your participation.' ])
+	#read request
+	try: time,id,val = json.loads(sys.stdin.buffer.read(int(os.environ['CONTENT_LENGTH'])).decode('utf-8'))
+	except: time,id,val = 0,0,[0]
 	
-	#trial
-	else:
+	displayUpdates=[]
+	display=obj(content=displayUpdates)
+	
+	if val==[0]:
+		#initial task setup
+		display.update({'require':{'options':['U','onedit']},'template':'[type="container"]{min-height:6em}'})
+		displayUpdates+=[
+			obj('Trial',1,max=TRIALS), 
+			obj('Click a button when one appears',[],onedit=None)
+			]
+		trial=0
+
+	elif id.startswith('btn'):
+		#read button id (which includes trial number and display timestamp)
+		_,trial,displayTime=id.split()
+		trial=int(trial)
 		#display response time
-		if element == 'Click me':
-			send([ obj('Your response time is',time-state['show']) ])
+		displayUpdates.append(obj('Your response time is',time-int(displayTime)))
+	
+	if trial==TRIALS:
+		#final task page
+		displayUpdates.append(obj('Click a button when one appears',None))
+		displayUpdates.append('Thank you for your participation.')
+	
+	else:
 		#next trial
-		state['trial']+=1
+		trial+=1
 		#pick random time for button to appear
-		state['show']=time+random.randrange(3000,10000)
-		#wait, then show the button
-		send([
-				obj('Trial',state['trial']), 
-				obj('Click a button when one appears', [obj('Click me',False)],U=state['show']) 
-			], state)
+		displayTime=time+random.randrange(3000,10000)
+		#wait, then show the button (button id includes trial number and time of display to enable stateless scripting)
+		displayUpdates+=[
+				obj('Trial',trial), 
+				obj('Click a button when one appears', [obj('btn %d %d'%(trial,displayTime),False,title='Click me')],U=displayTime) 
+			]
+	send(display)
 
 main()
