@@ -79,7 +79,6 @@ Sample Interactions:
 ![task-to-user](pres/task-to-user.png)
 - each task-to-user message adds or updates UI items on user display
 - null signifies display is cleared
-- please see stap.txt for a full description of **task-options**
 
 ### container
 ![container](pres/container.png)
@@ -92,7 +91,6 @@ Sample Interactions:
 ![property](pres/property.png)
 - id indicates which item in the container to update; if item with the given id does not exist, it is appended to the container
 - **value** sets item value (and inferred item type)
-- please see [stap.txt](stap.txt) for a full list of optional properties
 
 ### id
 ![id](pres/id.png)
@@ -106,3 +104,9 @@ Sample Interactions:
 - number values indicate numeric fields
 - boolean values indicate buttons (or options)
 - `null` signifies item deletion
+
+### task-options
+- please see [stap.txt](stap.txt) for a full list of task options
+
+### optional-property
+- please see [stap.txt](stap.txt) for a full list of optional properties
