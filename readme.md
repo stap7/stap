@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/vdv7/stap/master/pres/stap-icon.png" width=250 align=right>
+<img src="pres/stap-icon.png" width=250 align=right>
 STAP (Simple Task-Actor Protocol) is a machine-readable format for specifying user-interface changes. 
 
 Main focus of STAP is in providing a functionally-equivalent task experience for human and computational users alike.
@@ -12,21 +12,20 @@ Unlike HTML documents, STAP messages are incremental updates to the display.
 Whereas HTML is focused on hypertext look and feel, STAP is focused on function, structure, and affordances of UI elements (though it enables style-sheets for detailed look&feel specification).
 
 Benefits of task development with STAP:
-* less code, more GUI
-* cross-platform, web-friendly
-* millisecond precision time-stamps and timers
-* consistent cross-task API, allowing computational agents to interact with the same sw that that human users interact with
+- less code, more GUI
+- cross-platform, web-friendly
+- millisecond precision time-stamps and timers
+- consistent cross-task API, allowing computational agents to interact with the same sw that that human users interact with
 
 Benefits of agent development for STAP-compliant tasks:
-* consistent cross-task API, allowing computational agents to interact with the same sw that that human users interact with
-* millisecond precision user-time [with faster-than-real-time and slower-than-real-time capabilities]
-* cross-platform, web-friendly
-* low bar of entry (i.e., core API for text-and-button tasks is minimal, additional UI feature handlers can be added to agent framework on a per-task basis)
+- consistent cross-task API, allowing computational agents to interact with the same sw that that human users interact with
+- millisecond precision user-time [with faster-than-real-time and slower-than-real-time capabilities]
+- cross-platform, web-friendly
+- low bar of entry (i.e., core API for text-and-button tasks is minimal, additional UI feature handlers can be added to agent framework on a per-task basis)
 
+###### Please see [stap.txt](stap.txt) for complete syntax and functionality.
 
-Please see [stap.txt](stap.txt) for complete syntax and functionality.
-
-
+***
 
 Sample Interactions:
 
@@ -45,7 +44,7 @@ Sample Interactions:
 
     Sample Interaction 2:
         // user software ready
-        <- [0,[0]]
+        <- [0,0,[0]]
         // let user software know that "T" (timeout) and "eT" (editable-text field) are required directives for this task
         -> {"require":{"options":["T","eT"]}}
         // let user know that a goal in this task is to earn as close to 10 coins as possible
@@ -70,5 +69,40 @@ Sample Interactions:
         -> [{"id":"Coins Earned","v":3}]
         ...
 
+###### Please see [stap.txt](stap.txt) for complete syntax and functionality.
 
-Please see [stap.txt](stap.txt) for complete syntax and functionality.
+***
+
+## Core STAP syntax
+
+### Message sent from task software to user-side software
+(pres/task-to-user.png)
+- each task-to-user message adds or updates UI items on user display
+- null signifies display is cleared
+- please see stap.txt for a full description of **task-options**
+
+### container
+(pres/container.png)
+- each container item update may be declared as a **value** or as **property-list**
+
+### property-list
+(pres/property-list.png)
+
+### property
+(pres/property.png)
+- id indicates which item in the container to update; if item with the given id does not exist, it is appended to the container
+- **value** sets item value (and inferred item type)
+- please see [stap.txt](stap.txt) for a full list of optional properties
+
+### id
+(pres/id.png)
+- text id is a unique and displayable item id
+- number id is an unsigned integer signifying item position in container
+
+### value
+(pres/value.png)
+- text and number syntax must follow the JSON spec for `string` and `number`, respectively (see json.org)
+- boolean value can be `true` or `false`
+- number values indicate numeric fields
+- boolean values indicate buttons (or options)
+- `null` signifies item deletion
