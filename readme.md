@@ -78,7 +78,7 @@ Sample Interactions:
 ### Message sent from task software to user-side software
 ![task-to-user](pres/task-to-user.png)
 - each task-to-user message adds or updates UI items on user display
-- null signifies display is cleared
+- `null` signifies display is cleared
 
 ### container
 ![container](pres/container.png)
@@ -89,7 +89,8 @@ Sample Interactions:
 
 ### property
 ![property](pres/property.png)
-- id indicates which item in the container to update; if item with the given id does not exist, it is appended to the container
+- **id** indicates which item in the container to update; if item with the given id does not exist, it is appended to the container
+- `[ ( id , )* id ]` specifies a hierarchical path to item; please see [stap.txt](stap.txt) for a full description with examples
 - **value** sets item value (and inferred item type)
 
 ### id
