@@ -76,33 +76,38 @@ Sample Interactions:
 ## Core STAP syntax
 
 ### Message sent from task software to user-side software
-(pres/task-to-user.png)
+![task-to-user](pres/task-to-user.png)
 - each task-to-user message adds or updates UI items on user display
-- null signifies display is cleared
-- please see stap.txt for a full description of **task-options**
+- `null` signifies display is cleared
 
 ### container
-(pres/container.png)
+![container](pres/container.png)
 - each container item update may be declared as a **value** or as **property-list**
 
 ### property-list
-(pres/property-list.png)
+![property-list](pres/property-list.png)
 
 ### property
-(pres/property.png)
-- id indicates which item in the container to update; if item with the given id does not exist, it is appended to the container
+![property](pres/property.png)
+- **id** indicates which item in the container to update; if item with the given id does not exist, it is appended to the container
+- `[ ( id , )* id ]` specifies a hierarchical path to item; please see [stap.txt](stap.txt) for a full description with examples
 - **value** sets item value (and inferred item type)
-- please see [stap.txt](stap.txt) for a full list of optional properties
 
 ### id
-(pres/id.png)
+![id](pres/id.png)
 - text id is a unique and displayable item id
 - number id is an unsigned integer signifying item position in container
 
 ### value
-(pres/value.png)
+![value](pres/value.png)
 - text and number syntax must follow the JSON spec for `string` and `number`, respectively (see json.org)
 - boolean value can be `true` or `false`
 - number values indicate numeric fields
 - boolean values indicate buttons (or options)
 - `null` signifies item deletion
+
+### task-options
+- please see [stap.txt](stap.txt) for a full list of task options
+
+### optional-property
+- please see [stap.txt](stap.txt) for a full list of optional properties
