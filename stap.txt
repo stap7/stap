@@ -14,7 +14,7 @@ version 7.11
     <<item>>            <<value>>|{<<property>>(,<<property>>)*}            an item may be declared by value or a set of properties
     <<property>>        "v":<<value>>                                       set item value; i.e., ["hello world"] is just shorthand for [{"v":"hello world"}]
     <<property>>        "id":<<id>>                                         update the item with the specified <<id>> within the current container; if item specified by id doesn't exist, it is appended to the container; root-level display container has no id
-    <<property>>        "id":[<<id>>(,<<id>>)*]                             update the item specified by the <<id>> array, where the first <<id>> identifies the item within current container, with the following <<id>>'s specifying its child, that child's child, etc.; e.g. {"id":[2,3],"v":null} would delete the fourth item inside the third container
+    <<property>>        "id":[<<id>>(,<<id>>)*]                             update the item specified by the <<id>> array, where the first <<id>> identifies the item within current container, with the following <<id>>'s specifying its child, that child's child, etc.; e.g. task->user message [{"id":[2,3],"v":null}] would delete the fourth item inside the third container in the display
     <<id>>              <<text>>                                            unique item key; <<id>> text is displayed as item title text (unless "title" optional property is specified, see below); e.g. [{"id":"Name","v":"Bob"},{"id":"Age","v":77}] adds two key:value pairs to the UI -- Name:Bob and Age:77, and [{"id":"Age","v":78}] would change the value for Age from 77 to 78
     <<id>>              <<uint>>                                            item order number within the current container; item numbering in a container begins at 0, thus {"id":0} is the first item in a given container; if <<uint>> is greater or equal to current number of items in the container, corresponding value is appended as the last item in the container
     <<value>>           <<text>>|<<number>>|<<boolean>>|<<container>>       item value may be text, number, boolean (signifying buttons/options), or an array of item updates for a child container
@@ -74,7 +74,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
     <<optionName>>      ** the part to the left of the colon in the <<property>> or <<taskOption>> expression; e.g. "S", "eB", "bg" **
     <<optionVal>>       ** the part to the right of the colon in the <<property>> or <<taskOption>> expression **
 
-    <<taskOption>>      <<property>>                                        optional properties for top-level container
+    <<taskOption>>      <<property>>                                        optional properties for display container
 
     <<property>>        <<optionName>>:null                                 remove/reset property (i.e. clear or reset to default behavior)
     <<property>>        <<command>>                                         commands that alter how other properties are changed; <<command>> property values are not permanent; e.g. [{"id":"x","T":10,"bg":"blue"}] signifies that the background of "x" should be changed to blue over the course of 10seconds, after which the value of "bg" (background) remains "blue", but the value "T" (time of animation) resets to null, because "T" is an <<command>> option
@@ -154,8 +154,8 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
     <<txtOption>>       "chmax":<<number>>                                  max number of characters in <<text>>
     <<txtOption>>       "mask":{<<regex>>:<<text>>(,<<regex>>:<<text>>)*}   replace <<regex>> with <<text>> throughout the string (global replace); e.g. [{"v":"","eT":1,"mask":{".","*"}}] would add a text input field where each character would be masked by "*" (like in password fields)
 
-    <<aniOption>>       "ease":(0|1|2|3|4|"back"|"elastic"|"bounce")        easing option for animation; default is 0 (linear); see http://greensock.com/ease-visualizer to visualize ease options
-    <<aniOption>>       "easeout":(1|-1|0)                                  ease direction; 1 is out, -1 is in, 0 is in-and-out; default is 1; see http://greensock.com/ease-visualizer to visualize ease options
+    <<aniOption>>       "ease":(0|1|2|3|4|"back"|"elastic"|"bounce")        easing option for animation; 0 (default) is linear animation, 1 is quadratic, 2 is cubic, 3 is quart, 4 is quint, "back" overshoots and comes back, "elastic" overshoots and undershoots a few times before settling at required value, "bounce" bounces off the desired value and then gravitates to it again and bounces again a few times; see http://greensock.com/ease-visualizer to visualize ease options
+    <<aniOption>>       "easeout":(1|-1|0)                                  ease direction; 1 (default) eases the end of the animation, -1 eases the start of the animation, 0 eases on both ends of the animation; see http://greensock.com/ease-visualizer to visualize ease options
 
     <<tableOption>>     "head":0|1                                          if this value is 1, first row of a table is treated as the header row (default value is 0)
 
