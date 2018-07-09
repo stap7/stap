@@ -27,6 +27,10 @@ Benefits of agent development for STAP-compliant tasks:
 
 ***
 
+[Demo](https://cdn.rawgit.com/vdv7/stapjs/ee0cd1f4/demo.html)
+
+***
+
 Sample Interactions:
 
     <-     Message received by task software from user software
