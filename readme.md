@@ -27,7 +27,7 @@ Benefits of agent development for STAP-compliant tasks:
 
 ***
 
-[Demo](https://cdn.rawgit.com/vdv7/stapjs/ee0cd1f4/demo.html)
+[Demo](https://cdn.rawgit.com/stap7/stapjs/ee0cd1f4/demo.html)
 
 ***
 
