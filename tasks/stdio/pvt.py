@@ -24,7 +24,7 @@ def obj(id=None,content=NotImplemented,**options):
 import random,statistics
 
 
-TRIALS = 20
+TRIALS = 10
 INSTRUCTIONS = 'Click a button when one appears here'
 BUTTON = obj('Click Me',False)
 
@@ -33,10 +33,10 @@ def main():
 	#wait for user software to announce readiness
 	ums=recv()[0]
 	#announce required options
-	send({'require':{'options':['U','onedit']}})
+	send({'require':{'options':['U','onedit']},'template':'[type="container"][level="1"]{height:200px}'})
 	#display Trial and instructions containers; let user software know that any buttons inside the instructions container should be deleted once user-input (i.e. click) is detected
 	send([ obj('Trial',1,max=TRIALS),
-			obj(INSTRUCTIONS,[],onedit=CLEAR,h=200) ])
+			obj(INSTRUCTIONS,[],onedit=CLEAR) ])
 	#do trials
 	for trial in range(1,TRIALS+1):
 		#set random time for button appearance

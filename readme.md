@@ -52,7 +52,7 @@ Sample Interactions:
         // let user software know that "T" (timeout) and "eT" (editable-text field) are required directives for this task
         -> {"require":{"options":["T","eT"]}}
         // let user know that a goal in this task is to earn as close to 10 coins as possible
-        -> {"task":{"good":[["Coins Earned",10]]}}
+        -> {"task":{"good":[{"id":"Coins Earned","v":{">":0","closerTo":10}}]}}
         // display a text prompt to get user's name (eT:1 turns text editable)
         -> [{"id":"What is your name?","v":"","eT":1}]
         // user types in "Bob" and hits enter (9.876sec after task display first loaded)

@@ -30,7 +30,7 @@ var stap = {
 var task = {
 	
 	start: function(){
-		task.trials=20;
+		task.trials=10;
 		task.score=0;
 		task.updateUI(stap.clear);
 		task.doTrial();
