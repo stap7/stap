@@ -1,5 +1,5 @@
 STAP (Simple Task-Actor Protocol)
-version 7.12
+version 7.13
 
 
     Message Type        Regular Expression                                  Functionality
@@ -118,7 +118,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
     <<property>>        <<pathOption>>                                      path item options; these options should be used only when needed for the task to function correctly, never merely for visual appeal (visual appeal specifications are loaded via templates, using <<taskOption>> "template":<<url>>)
 
     <<option>>          "title":<<text>>                                    visible title (replaces item id as the visible title)
-    <<option>>          "#":[<<text>>(,<<text>>)*]                          add tags to current item (useful for "$" selection command)
+    <<option>>          "tags":[<<text>>(,<<text>>)*]                       add tags to current item (useful for "$" selection command, visual styling, and classification for computational participants)
     <<option>>          <<emp>>:<<uint>>                                    emphasize item in some way (make it bold or highlight); <<emp>> is an emphasis type declared via "required" directive, <<uint>> is a number signifying emphasis strength, where 0 is nonexistent, 1 is weakest, 2 is stronger, etc. (strongest emphasis level is specified via required directive)
     <<option>>          "bg":<<cssBackground>>                              background
     <<option>>          "c":<<color>>                                       text/stroke color
