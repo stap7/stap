@@ -40,10 +40,10 @@ everything below specifies optional directives that enable more featureful user-
     <<conds>>           [<<cond>>|<<condAnd>>(,<<cond>>|<<condAnd>>)*]      <<conds>> list is True if any of the items in it are True
     <<condAnd>>         [<<cond>>(,<<cond>>)*]                              <<condAnd>> list is True if ALL of the items in it are True
     <<cond>>            {"id":<<id>>(,<<optionName>>:<<condVal>>)*}         a condition defines what property value(s) must be met for a given item, as specified by item <<id>>
-	<<condVal>>         <<value>>|<<range>>|<<propVal>>
-	<<range>>           {(<<comp>>:<<number>>|<<propVal>>)(,<<comp>>:<<number>>|<<propVal>>)*}
-	<<comp>>            "<|>|(<=)|(>=)|(!=)|(closerTo)"                     numerical comparisons; <, >, <=, >=, != signify numerical range limits, and "closerTo" is employed to signify that value scales; e.g., {"task":{"good":[{"id":"R","v":{">":0,"closerTo":1}}],"bad":[{"id":"R","v":{"<":0,"closerTo":-1}}]}} signifies that R<0 is bad, the closer to R:-1 the worse, and R>0 is good, the closer to R:1, the better
-	<<propVal>>         {"@":<<optionName>>(,"id":<<id>>)?}                 property value; e.g., {"@":"max","id":"Score"} is the maximum value of the Score item; if "id" is unspecified it is presumed to be the same as that in the enclosing statement; e.g., {"task":{"good":[{"id":"Score","v":{"closerTo":{"@":"max"}}}]}} signifies that for the current task, the higher the value of the Score item is (i.e., the closer it is to the value of "max"), the better
+    <<condVal>>         <<value>>|<<range>>|<<propVal>>
+    <<range>>           {(<<comp>>:<<number>>|<<propVal>>)(,<<comp>>:<<number>>|<<propVal>>)*}
+    <<comp>>            "<|>|(<=)|(>=)|(!=)|(closerTo)"                     numerical comparisons; <, >, <=, >=, != signify numerical range limits, and "closerTo" is employed to signify that value scales; e.g., {"task":{"good":[{"id":"R","v":{">":0,"closerTo":1}}],"bad":[{"id":"R","v":{"<":0,"closerTo":-1}}]}} signifies that R<0 is bad, the closer to R:-1 the worse, and R>0 is good, the closer to R:1, the better
+    <<propVal>>         {"@":<<optionName>>(,"id":<<id>>)?}                 property value; e.g., {"@":"max","id":"Score"} is the maximum value of the Score item; if "id" is unspecified it is presumed to be the same as that in the enclosing statement; e.g., {"task":{"good":[{"id":"Score","v":{"closerTo":{"@":"max"}}}]}} signifies that for the current task, the higher the value of the Score item is (i.e., the closer it is to the value of "max"), the better
     <<userInfo>>        "ip"                                                request client ip address
     <<userInfo>>        "userAgent"                                         request information about user-side software (e.g. webbrowser type/version, AI architecture type/version)
     <<userInfo>>        "url"                                               request client url (relevant when user-side software runs in a webbrowser)
@@ -132,7 +132,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
     <<option>>          "y":<<number>>|"<<number>><<sizeUnit>>"             vertical position of left-top corner of the item
     <<option>>          "z":<<number>>                                      z-index (stack order) of the item; an item with greater stack order is always in front of an item with a lower stack order
     <<option>>          "r":<<number>>                                      rounded corner radius (ex: create a blue circle w/ radius=10 -> [{"w":20,"h":20,"r":10,"bg":"blue"}])
-    <<option>>          "rot":<<number>>                                    rotation
+    <<option>>          "rot":<<number>>                                    rotation; <<number>> is in degrees (center of box is the rotation origin)
     <<option>>          "bd":<<cssBorder>>                                  border style
     <<option>>          "bdc":<<color>>                                     border color
     <<option>>          "bdw":<<number>>                                    border width
