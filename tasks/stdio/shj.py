@@ -53,7 +53,7 @@ def main():
 	ums=recv()[0]
 	send({
 		#announce required options
-		'require':{'options':['T','R','select','eB','onsubedit','bg','bdc','r']},
+		'require':{'options':['T','R','select','eB','onedit','bg','bdc','r']},
 		#announce task conditions
 		"task":{
 			#let participant know to seek the state when feedback field is Correct
@@ -78,7 +78,7 @@ def main():
 			#add the stimulus to the canvas
 			obj("Is this object a Greeble or a Groble?", [stimulus(s)] ),
 			#add category buttons
-			obj(value=[obj(btnName,False) for btnName in CATEGORY_NAMES], onsubedit={'eB':0}) ])
+			obj(value=[obj(btnName,False) for btnName in CATEGORY_NAMES], onedit={'_':{'eB':0}}) ])
 		#collect response
 		ums,response,_ = recv()
 		#check if correct
@@ -86,7 +86,7 @@ def main():
 		#send reward
 		send([ obj('feedback', ('Correct' if correctTrials[-1] else 'Incorrect'), title='') ])
 		#wait specified amount of milliseconds before beginning next trial
-		send({ "T":TIME_BETWEEN_TRIALS, "R":1 })
+		send({ "T":TIME_BETWEEN_TRIALS, "R":[] })
 		recv()
 	#summary screen
 	send(CLEAR)

@@ -36,7 +36,7 @@ def main():
 	send({'require':{'options':['U','onedit']},'template':'[type="container"][level="1"]{height:200px}'})
 	#display Trial and instructions containers; let user software know that any buttons inside the instructions container should be deleted once user-input (i.e. click) is detected
 	send([ obj('Trial',1,max=TRIALS),
-			obj(INSTRUCTIONS,[],onedit=CLEAR) ])
+			obj(INSTRUCTIONS,[],onedit={'v':CLEAR}) ])
 	#do trials
 	for trial in range(1,TRIALS+1):
 		#set random time for button appearance

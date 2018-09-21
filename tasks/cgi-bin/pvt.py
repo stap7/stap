@@ -42,7 +42,7 @@ def main():
 		display.update({'require':{'options':['U','onedit']},'template':'[type="container"]{min-height:6em}'})
 		displayUpdates+=[
 			obj('Trial',1,max=TRIALS), 
-			obj('Click a button when one appears',[],onedit=None)
+			obj('Click a button when one appears',[],onedit={'v':None})
 			]
 		trial=0
 
@@ -66,7 +66,7 @@ def main():
 		#wait, then show the button (button id includes trial number and time of display to enable stateless scripting)
 		displayUpdates+=[
 				obj('Trial',trial), 
-				obj('Click a button when one appears', [obj('btn %d %d'%(trial,displayTime),False,title='Click me')],U=displayTime) 
+				obj('Click a button when one appears', [obj('btn %d %d'%(trial,displayTime),False,title='Click me')],U=displayTime)
 			]
 	send(display)
 

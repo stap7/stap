@@ -22,21 +22,30 @@ var task = {
 	start: function(){
 		task.pathId=-1;
 		task.mouseDown=false;
-		task.updateUI({require:{e:[42,43,44,46]},template:"#draw {border:solid 1px gray}"});
-		task.updateUI([ {id:"draw",title:"Draw a smiley face",w:400,h:400,e:[42,43,44,46]} ]);
+		task.updateUI({
+			require:{options:['w','h',"onmousedown","onmouseup","onmousemove","onmouseleave"]},
+			template:"#draw {border:solid 1px gray}"
+		});
+		task.updateUI([ {
+				id:"draw",title:"Draw a smiley face",w:400,h:400,
+				onmousedown:{R:[1,'mouseX','mouseY']},
+				onmousemove:{R:[2,'mouseX','mouseY']},
+				onmouseup:{R:[0,'mouseX','mouseY']},
+				onmouseleave:{R:[0,'mouseX','mouseY']}
+		} ]);
 	},
 	
 	userAction: function(time,id,val){
 		if(val.constructor===Array){
-			if(val[0]===42){						//mouseDown event
+			if(val[0]===1){						//mouseDown event
 				task.newPath(val);
 				task.mouseDown=true;
 			}
 			if(task.mouseDown){
-				if(val[0]===43 || val[0]===46){		//mouseUp or mouseLeave event
+				if(val[0]===0){					//mouseUp or mouseLeave event
 					task.lineTo(val);
 					task.mouseDown=false;
-				}else if(val[0]===44){				//mouseMove event
+				}else if(val[0]===2){			//mouseMove event
 					task.lineTo(val);
 				}
 			}

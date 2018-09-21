@@ -47,16 +47,15 @@ def main():
 		send([
 			obj('Instructions','Press the "Start Timer" button to start a timer. Press "Stop Timer" when you think the ball reaches the RED line.'),
 			obj('Drop Time',delay,unit='sec'),
-			obj('x',content=[
+			obj(content=[
 				obj("ball",title='',w=BALLSIZE,h=BALLSIZE,x=CANVASSIZE/2-BALLSIZE/2,y=0,r=BALLSIZE/2,bg='blue'),
 				obj(w=CANVASSIZE,h=ENDZONEHEIGHT,x=0,y=CANVASSIZE-ENDZONEHEIGHT-GOALLINEHEIGHT,bg='blue'),
 				obj(w=CANVASSIZE,h=GOALLINEHEIGHT,x=0,y=CANVASSIZE-GOALLINEHEIGHT,bg='red')
 				],w=CANVASSIZE,h=CANVASSIZE),
-			obj("Start Timer",False,onedit=None) ])
+			obj("Start Timer",False,onedit={"v":None}) ])
 		recv() #wait for Start button press
-		send({"$":"ball","S":delay,"R":1,"y":CANVASSIZE-GOALLINEHEIGHT-BALLSIZE})
-		recv() #wait for ball to start moving (receipt R triggers recv())
-		send([ obj("Stop Timer",False,onedit=None) ])
+		send({"$":"ball","S":delay,"y":CANVASSIZE-GOALLINEHEIGHT-BALLSIZE})
+		send([ obj("Stop Timer",False,onedit={"v":None}) ])
 		recv() #wait for button press
 		send(None)
 		if trial<MAXTRIALS:
