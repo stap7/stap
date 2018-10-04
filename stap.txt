@@ -1,5 +1,5 @@
 STAP (Simple Task-Actor Protocol)
-version 7.15
+version 7.15.20181002
 
 
     Message Type        Regular Expression                                  Functionality
@@ -107,7 +107,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
     <<itemType>>        "popup"                                             this item is a popup -- a special <<container>> that pops up over other items of the parent container, partially obscuring their view, and preventing them from being edited
     <<itemType>>        "table"                                             this item is a table -- a special <<container>> that contains others <<container>> items, each of which will be a row in a table; Ex: [{"id":"personnel","v":[["name","age","gender"],["john",39,"m"],["mary",28,"f"]],"type":"table","head":1}] will add a "personnel" table with a header row and two records (john, mary)
     <<itemType>>        "pie"                                               this item is a pie -- a special <<container>> whose items are displayed as slices in a pie
-    <<itemType>>        "path"                                              this item is a line/path -- a special <<container>> whose first item is a starting <<point>>, and each next item is a <<pathTo>>, which specifies a <<point>> where a line/curve is to be drawn to (and, if it's a curve, how it should curve); Ex: {type:'path',v:[[0,100],["S",50,50,100,100],[0,0]]} would add a path to display where the path starts in the lower-left corner of the container, curves up and back down to the lower-right corner, and then shoots diagonally straight to the top-left corner
+    <<itemType>>        "path"                                              this item is a line/path -- a special <<container>> whose value is a <<path>> (i.e., first item is a starting [<<point>>], and each next item is a <<pathTo>> which specifies where a line or a curve is to be drawn to); all <<point>> values are percentages of width/height of path, and should be between 0 and 100; Ex: {type:'path',v:[[0,100],["S",50,50,100,100],[0,0]]} would add a path to display where the path starts in the lower-left corner of the container, curves up and back down to the lower-right corner, and then shoots diagonally straight to the top-left corner
     <<itemType>>        "html"                                              this item is html body -- its a special <<text>> item that includes html tags; Ex: {"type":"html","v":"<b>this text is bold</b>"}; this should only be employed for displaying documents, not functional UI components, and with the assumption that many machine agents will ignore the tags inside html
     <<itemType>>        "mkdn"                                              this item is markdown text -- its a special <<text>> item that includes markdown syntax; Ex: {"type":"mk","v":"_this text is underlined_"}; this should only be employed for displaying formatted text, not functional UI components, and with the assumption that many machine agents will ignore the markdown syntax
     <<itemType>>        "data"                                              this item is a data frame -- a special <<container>> whose items are related data series (each data series is a <<container>> with values); "data" item types may be displayed in different ways depending on client software and template used (e.g. chart and/or table, 2d/3d, interactive plots, animation, a "download CSV" link, etc)
@@ -165,6 +165,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
 
     <<pieOption>>       "bounda":[<<number>>(,<<number>>)*]                 bounding angles of the pie in clockwise order, 0 degrees is up; Ex: [{"id":"navigation","v":[{"id":"E","v":false},{"id":"S","v":false},{"id":"W","v":false},{"id":"N","v":false}],"type":"pie","bounda":[45,135,225,315]}] creates a 4-button east-south-west-north pie
 
+    <<path>>            [[<<point>>](,<<pathTo>>)*]
     <<point>>           <<number>>,<<number>>
     <<pathTo>>          [<<point>>]
     <<pathTo>>          ["C",<<point>>,<<point>>,<<point>>]
@@ -183,7 +184,8 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
     <<eventType>>       "onblur"                                            item blur (loss of focus) event
     <<eventType>>       "onscroll"                                          item scroll event
     <<eventType>>       "onresize"                                          item resize event
-    <<eventType>>       "onoverlap"                                         item collision event; this event activates whenever an item overlaps with another item that has an "onoverlap" property
+    <<eventType>>       "onoverlap"                                         item overlap (i.e. collision) event; this event activates whenever an item overlaps with another item that has an "onoverlap" property
+    <<eventType>>       "onoverout"                                         item depart (i.e. end of collision) event; this event activates whenever an item overlaps with another item that has an "onoverlap" property
     <<eventType>>       "ondragstart"                                       item drag-start event; items with this event are considered draggable; this event fires once, when dragging starts (i.e., the item is grabbed)
     <<eventType>>       "ondrag"                                            item continuous drag event; items with this event are considered draggable; this even will keep firing as long as the item is being dragged (i.e., item is held and is being moved)
     <<eventType>>       "ondragend"                                         item drag-end event; items with this event are considered draggable; this event fires once dragging stops (i.e., the item is let go)
