@@ -1,4 +1,4 @@
-<img src="https://stap.github.io/img/stap-icon.png" width=250 align=right>
+<img src="https://stap7.github.io/img/stap-icon.png" width=250 align=right>
 STAP (Simple Task-Actor Protocol) is a machine-readable format for specifying user-interface changes. 
 
 Main focus of STAP is in providing a functionally-equivalent task experience for human and computational users alike.
@@ -76,29 +76,29 @@ Sample Interactions:
 ## Core STAP syntax
 
 ### Message sent from task software to user-side software
-![task-to-user](https://stap.github.io/img/task-to-user.png)
+![task-to-user](https://stap7.github.io/img/task-to-user.png)
 - each task-to-user message adds or updates UI items on user display
 - `null` signifies display is cleared
 
 ### container
-![container](pres/container.png)
+![container](https://stap7.github.io/img/container.png)
 - each container item update may be declared as a **value** or as **property-list**
 
 ### property-list
-![property-list](https://stap.github.io/img/property-list.png)
+![property-list](https://stap7.github.io/img/property-list.png)
 
 ### property
-![property](https://stap.github.io/img/property.png)
+![property](https://stap7.github.io/img/property.png)
 - **id** indicates which item in the container to update; if item with the given id does not exist, it is appended to the container
 - **value** sets item value (and inferred item type)
 
 ### id
-![id](https://stap.github.io/img/id.png)
+![id](https://stap7.github.io/img/id.png)
 - text id is a unique and displayable item id
 - number id is an unsigned integer signifying item position in container
 
 ### value
-![value](https://stap.github.io/img/value.png)
+![value](https://stap7.github.io/img/value.png)
 - text and number syntax must follow the JSON spec for `string` and `number`, respectively (see json.org)
 - boolean value can be `true` or `false`
 - number values indicate numeric fields
