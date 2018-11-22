@@ -42,18 +42,16 @@ def checkCorrect(s,r): return (s in CURRENT_CONDITION) == CATEGORY_NAMES.index(r
 
 def stimulus(dimVals):
 	#visual representation of the 3-feature stimulus
-	vis=[(not dimVals[dim]) if VAL2VIS[dim] else dimVals[dim] for dim in DIM2VIS]
-	return dict(w=40,h=40,bd='solid',bdw=10,pad=0,
-		bg='black' if vis[0] else 'white',
-		bdc=('red' if vis[1] else 'blue'),
-		r=vis[2]*20)
+	vis=[int(not dimVals[dim]) if VAL2VIS[dim] else dimVals[dim] for dim in DIM2VIS]
+	return dict(w=40,h=40,lw=10,
+		bg=vis[0],
+		lc=vis[1]+2,
+		shape=vis[2])
 
 def main():
-	#wait for user software to announce readiness
-	ums=recv()[0]
 	send({
 		#announce required options
-		'require':{'options':['T','R','select','eB','onedit','bg','bdc','r']},
+		"require":{'options':['T','R','in','onin','df','*','bg','lc','shape'],'shapes':2,'colors':4},
 		#announce task conditions
 		"task":{
 			#let participant know to seek the state when feedback field is Correct
@@ -63,8 +61,14 @@ def main():
 			#let participant know that the task will end when the title field Trial reaches its max
 			"end":[('Trial',MAXTRIALS)],
 		},
-		#announce that only 1 among boolean options in a given state may be selected at a time (i.e. boolean options are radio buttons)
-		"select":1
+		#default item properties
+		"df":{
+			#once any button is clicked, all buttons should become disabled (to avoid duplicate clicks)
+			"onin":{				#behavior upon input (i.e. button-click)
+				"*":{"scope":2},	#select everything
+				"in":0				#disable buttons/inputs
+			}
+		}
 	})
 	#loop through trials
 	correctTrials=[]
@@ -78,7 +82,8 @@ def main():
 			#add the stimulus to the canvas
 			obj("Is this object a Greeble or a Groble?", [stimulus(s)] ),
 			#add category buttons
-			obj(value=[obj(btnName,False) for btnName in CATEGORY_NAMES], onedit={'_':{'eB':0}}) ])
+			obj(value=[obj(btnName,False) for btnName in CATEGORY_NAMES])
+			])
 		#collect response
 		ums,response,_ = recv()
 		#check if correct

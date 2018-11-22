@@ -1,30 +1,30 @@
 STAP (Simple Task-Actor Protocol)
-version 7.15.20181002
+version 7.16 (201811121)
 
 
-    Message Type        Regular Expression                                  Functionality
-    ** task -> user **  <<displayUpdate>>                                   update current display
-    ** user -> task **  [<<ums>>,<<id>>,<<userVal>>]                        user-side action (e.g. button-click, textbox edit); second field corresponds to the <<id>> of the item that is manipulated by user, and <<userVal>> is the value of said item (based on user manipulation of that value, e.g. toggling button from false to true)
+  Message Type        Regular Expression                                     Functionality
+  ** task -> user **  <<displayUpdate>>                                      update current display
+  ** user -> task **  [<<ums>>,<<id>>,<<userVal>>]                           user-side action (e.g. button-click, textbox edit); second field corresponds to the <<id>> of the item that is manipulated by user (root-level display container has no id, and user->task messages from root-level would look as such: [<<ums>>,null,<<userVal>>]), and <<userVal>> is the value of said item (based on user manipulation of that value, e.g. toggling button from false to true) 
 
-    Label Name          Regular Expression                                  Functionality
-    <<displayUpdate>>   null                                                clear the display container
-    <<displayUpdate>>   <<container>>                                       update display based on changes specified in the <<container>> array
-    <<container>>       [<<item>>(,<<item>>)*]                              array of item updates/declarations for current container
-    <<item>>            <<value>>|({<<property>>(,<<property>>)*})          an item may be declared by value or a set of properties
-    <<property>>        "v":<<value>>                                       set item value; i.e., ["hello world"] is just shorthand for [{"v":"hello world"}]
-    <<property>>        "id":<<id>>                                         update the item with the specified <<id>> within the current container; if item specified by id doesn't exist, it is appended to the container; root-level display container has no id
-    <<property>>        "id":[<<id>>(,<<id>>)*]                             update the item specified by the <<id>> array, where the first <<id>> identifies the item within current container, with the following <<id>>'s specifying its child, that child's child, etc.; Ex: task->user message [{"id":[2,4],"v":null}] would delete the fifth item inside the third container in the display
-    <<id>>              <<text>>                                            unique item key; <<id>> text is displayed as item title text (unless "title" optional property is specified, see below); Ex: [{"id":"Name","v":"Bob"},{"id":"Age","v":77}] adds two key:value pairs to the UI -- Name:Bob and Age:77, and [{"id":"Age","v":78}] would change the value for Age from 77 to 78
-    <<id>>              <<uint>>                                            item order number within the current container; item numbering in a container begins at 0, thus {"id":0} is the first item in a given container; if <<uint>> is greater or equal to current number of items in the container, corresponding value is appended as the last item in the container
-    <<value>>           <<text>>|<<number>>|<<boolean>>|<<container>>       item value may be text, number, boolean (signifying buttons/options), or an array of item updates for a child container
-    <<value>>           null                                                value of null removes item from container; Ex: [{"id":0,"v":null}] will remove the first item from the display
-    <<ums>>             <<uint>>                                            time in milliseconds since the initiation of user software
-    <<text>>            ** see JSON string specification, e.g. http://json.org **
-    <<number>>          ** see JSON number specification, e.g. http://json.org **
-    <<uint>>            ** integer >= 0 **
-    <<boolean>>         (true)|(false)
-    <<userVal>>         <<value>>                                           value changed by user; <<value>> must be of a type consistent with its corresponding item; Ex: a button created via task->user msg [{"id":"click me","v":false}] will result in user->task msg [<<ums>>,"click me",true] when clicked
-    <<userVal>>         {"error":<<text>>}                                  user->task messages with this signature should be dumped into task-side error stream
+  Label Name          Regular Expression                                     Functionality
+  <<displayUpdate>>   null                                                   clear the display container; display container (also root-level container) is a special container that cannot be removed, only cleared
+  <<displayUpdate>>   <<container>>                                          update display based on changes specified in the <<container>> array; display container (also root-level container) is a special container whose type cannot be changed
+  <<container>>       [<<item>>(,<<item>>)*]                                 array of item updates/declarations for current container
+  <<item>>            <<value>>|<<pList>>                                    an item may be declared by value or a list of properties
+  <<pList>>           {<<property>>(,<<property>>)*}
+  <<property>>        "v":<<value>>                                          set item value; i.e., ["hello world"] is just shorthand for [{"v":"hello world"}]
+  <<property>>        "id":<<id>>                                            update the item with the specified <<id>> within the current container; if item specified by id doesn't exist, it is appended to the container; root-level display container has no id
+  <<id>>              <<text>>                                               unique item key; <<id>> text is displayed as item title text (unless "title" optional property is specified, see below); Ex: [{"id":"Name","v":"Bob"},{"id":"Age","v":77}] adds two key:value pairs to the UI -- Name:Bob and Age:77, and [{"id":"Age","v":78}] would change the value for Age from 77 to 78
+  <<id>>              <<uint>>                                               item order number within the current container; item numbering in a container begins at 0, thus {"id":0} is the first item in a given container; if <<uint>> is greater or equal to current number of items in the container, corresponding value is appended as the last item in the container
+  <<value>>           <<text>>|<<number>>|<<boolean>>|<<container>>          item value may be text, number, boolean (signifying a button), or an array of item updates for a child container
+  <<value>>           null                                                   value of null removes item from container; Ex: [{"id":0,"v":null}] will remove the first item from the display
+  <<ums>>             <<uint>>                                               time in milliseconds since the initiation of user software
+  <<text>>            ** see JSON string specification, e.g. http://json.org **
+  <<number>>          ** see JSON number specification, e.g. http://json.org **
+  <<uint>>            ** integer >= 0 **
+  <<boolean>>         (true)|(false)
+  <<userVal>>         <<value>>                                              value changed by user; <<value>> must be of a type consistent with its corresponding item; Ex: a button created via task->user msg [{"id":"click me","v":false}] will result in user->task msg [<<ums>>,"click me",true] when clicked
+  <<userVal>>         {"error":<<text>>}                                     user->task messages with this signature should be dumped into task-side error stream
 
 everything above is core-STAP; all user-side sw must be able to handle the format specified above for simple text+button tasks
 
@@ -32,24 +32,24 @@ everything above is core-STAP; all user-side sw must be able to handle the forma
 
 everything below specifies optional user-side sw features that enable more featureful UI interactions
 
-    <<displayUpdate>>   {<<taskOption>>(,<<taskOption>>)*}                  optional task commands/properties
-    <<taskOption>>      "require":{<<required>>(,<<required>>)*}            should be sent once before task begins; specify which options and option values are required for correctly interpreting current task; if any of the <<required>> items are not implemented yet in the user software, the suggested behavior is to disconnect from task after a polite [<<ums>>,0,{"error":"sorry, <<required>> is not yet implemented on this side"}]
-    <<taskOption>>      "error":<<text>>                                    error message to be dumped into user-side error stream
-    <<taskOption>>      "template":<<url>>|<<js>>|<<css>>                   likely sent once before task begins (may be ignored by computational agents); custom visualization template for STAP messages (e.g. CSS or JS text or url); Template command may be called multiple times to load multiple parts of a template
-    <<taskOption>>      "task":{"(win)|(loss)|(end)":<<conds>>}             likely sent once before task begins; win, loss, and neutral task-end conditions; suggested user-sw behavior for human participants is to convert <<conds>> into natural language and display as "Instructions"; Ex: {"task":{"win":[[{"id":"Round","v":{">":15}},{"id":["player 1","points"],"v":{">":{"@":"v","id":["player 2","points"]}}}]]}} means that a win condition for current task is that after Round 15 player 1 should have more points than player 2
-    <<taskOption>>      "task":{"(good)|(bad)":<<conds>>}                   likely sent once before task begins; goal values (what to seek, what to avoid); suggested user-sw behavior for human participants is to convert <<conds>> into natural language and display as "Instructions"; Ex: {"task":{"good":[{"id":"Feedback","v":"Correct"}]}} means that one of the goals in the current task is to get to the state where the value for the field "Feedback" is "Correct", {"task":{"good":[{"id":"Reward","v":{">":0,"closerTo":1}}]}} means that it's good when Reward is above 0 and the closer it is to 1, the better
-    <<conds>>           [<<cond>>|<<condAnd>>(,<<cond>>|<<condAnd>>)*]      <<conds>> list is True if any of the items in it are True
-    <<condAnd>>         [<<cond>>(,<<cond>>)*]                              <<condAnd>> list is True if ALL of the items in it are True
-    <<cond>>            {"id":<<id>>(,<<optionName>>:<<condVal>>)*}         a condition defines what property value(s) must be met for a given item, as specified by item <<id>>
-    <<condVal>>         <<value>>|<<range>>|<<propVal>>
-    <<range>>           {(<<comp>>:<<number>>|<<propVal>>)(,<<comp>>:<<number>>|<<propVal>>)*}
-    <<comp>>            "<|>|(<=)|(>=)|(!=)|(closerTo)"                     numerical comparisons; <, >, <=, >=, != signify numerical range limits, and "closerTo" is employed to signify that value scales; Ex: {"task":{"good":[{"id":"R","v":{">":0,"closerTo":1}}],"bad":[{"id":"R","v":{"<":0,"closerTo":-1}}]}} signifies that R<0 is bad, the closer to R:-1 the worse, and R>0 is good, the closer to R:1, the better
-    <<propVal>>         {"@":<<optionName>>(,"id":<<id>>)?}                 property value; Ex: {"@":"max","id":"Score"} is the maximum value of the Score item; if "id" is unspecified it is presumed to be the same as that in the enclosing statement; Ex: {"task":{"good":[{"id":"Score","v":{"closerTo":{"@":"max"}}}]}} signifies that for the current task, the higher the value of the Score item is (i.e., the closer it is to the value of "max"), the better
-    <<optionName>>      ** the part to the left of the colon in the <<property>> or <<taskOption>> expression; e.g. "v", "S", "eB", "bg" **
-    <<json>>            ** see full JSON specification, e.g. http://json.org **
-    <<url>>             ** legal url **
-    <<js>>              ** legal javascript **
-    <<css>>             ** legal css **
+  <<displayUpdate>>   {<<taskOption>>(,<<taskOption>>)*}                     optional task commands/properties
+  <<taskOption>>      "require":{<<required>>(,<<required>>)*}               should be sent once before task begins; specify which options and option values are required for correctly interpreting current task; if any of the <<required>> items are not implemented yet in the user software, the suggested behavior is to disconnect from task after a polite [<<ums>>,null,{"error":"sorry, <<required>> is not yet implemented on this side"}]
+  <<taskOption>>      "error":<<text>>                                       error message to be dumped into user-side error stream
+  <<taskOption>>      "template":<<url>>|<<js>>|<<css>>                      likely sent once before task begins (may be ignored by computational agents); custom visualization template for STAP messages (e.g. CSS or JS text or url); Template command may be called multiple times to load multiple parts of a template
+  <<taskOption>>      "task":{"(win)|(loss)|(end)":<<conds>>}                likely sent once before task begins; win, loss, and neutral task-end conditions; suggested user-sw behavior for human participants is to convert <<conds>> into natural language and display as "Instructions"; Ex: {"task":{"win":[[{"id":"Round","v":{">":15}},{"id":["player 1","points"],"v":{">":{"@":"v","id":["player 2","points"]}}}]]}} means that a win condition for current task is that after Round 15 player 1 should have more points than player 2
+  <<taskOption>>      "task":{"(good)|(bad)":<<conds>>}                      likely sent once before task begins; goal values (what to seek, what to avoid); suggested user-sw behavior for human participants is to convert <<conds>> into natural language and display as "Instructions"; Ex: {"task":{"good":[{"id":"Feedback","v":"Correct"}]}} means that one of the goals in the current task is to get to the state where the value for the field "Feedback" is "Correct", {"task":{"good":[{"id":"Reward","v":{">":0,"closerTo":1}}]}} means that it's good when Reward is above 0 and the closer it is to 1, the better
+  <<conds>>           [<<cond>>|<<condAnd>>(,<<cond>>|<<condAnd>>)*]         <<conds>> list is True if any of the items in it are True
+  <<condAnd>>         [<<cond>>(,<<cond>>)*]                                 <<condAnd>> list is True if ALL of the items in it are True
+  <<cond>>            {"id":<<id>>(,<<pName>>:<<condVal>>)*}                 a condition defines what property value(s) must be met for a given item, as specified by item <<id>>
+  <<condVal>>         <<value>>|<<range>>|<<propVal>>
+  <<range>>           {(<<comp>>:<<number>>|<<propVal>>)(,<<comp>>:<<number>>|<<propVal>>)*}
+  <<comp>>            "<|>|(<=)|(>=)|(!=)|(closerTo)"                        numerical comparisons; <, >, <=, >=, != signify numerical range limits, and "closerTo" is employed to signify that value scales; Ex: {"task":{"good":[{"id":"R","v":{">":0,"closerTo":1}}],"bad":[{"id":"R","v":{"<":0,"closerTo":-1}}]}} signifies that R<0 is bad, the closer to R:-1 the worse, and R>0 is good, the closer to R:1, the better
+  <<propVal>>         {"@":<<pName>>(,"id":<<id>>)?}                         property value; Ex: {"@":"max","id":"Score"} is the maximum value of the Score item; if "id" is unspecified it is presumed to be the same as that in the enclosing statement; Ex: {"task":{"good":[{"id":"Score","v":{"closerTo":{"@":"max"}}}]}} signifies that for the current task, the higher the value of the Score item is (i.e., the closer it is to the value of "max"), the better
+  <<pName>>           ** property name: the part to the left of the colon in the <<property>> or <<taskOption>> expression; e.g. "v", "bg", "x" **
+  <<json>>            ** see full JSON specification, e.g. http://json.org **
+  <<url>>             ** legal url **
+  <<js>>              ** legal javascript **
+  <<css>>             ** legal css **
 
 
 everything above is core-STAP; although task-options can be ignored in many cases, user-side sw must still expect them as potentially incoming messages, and be willing to quit if it cannot handle any of the items specified via the "require" task option
@@ -58,184 +58,216 @@ everything above is core-STAP; although task-options can be ignored in many case
 
 everything below can be negotiated via the "require" <<taskOption>>; if task requires options that user sw cannot handle, user software can disconnect
 
-- if a <<property>> is specified for a container (or a container-type, such as table or popup), and it is not applicable to containers, this <<property>> is inherited by all decendent elements; Ex: [{"id":"my container","v":[1,2,{"id":"more","v":[3,4]}],"rnd":1}] signifies that all numeric values in the container "my container", including those in the "more" container, are rounded to 1 (integers)
+  Label Name          Regular Expression                                     Functionality
+  <<required>>        "options":[<<pName>>(,<<pName>>)*]                     specify options necessary for this task; Ex: {"require":{"options":["r","rot"]}}
+  <<required>>        <<pName>>:[<<value>>(,<<value>>)*]                     specify option values necessary for this task; Ex: {"require":{"select":[1,2,"n"],"type":["table","path"]}}; for any property where its value can be an array (e.g. "R","id","in"), {"require":[<<value>>(,<<value>>)*]} specifies which values are allowed in said array (e.g. {"require":{"id":[null]}} signifies that the <<idArray>> in this task may take the form [null(,<<id>>)*], {"require":{"R":["mouseX","mouseY"]}} signifies that mouseX and mouseY <<info>> requests are necessary for this task, etc)
+  <<required>>        "colors":<<uint>>                                      specify how many different preset colors are necessary for this task; <<uint>> must be greater than 1 (presets 0 and 1 are default background and text colors); Ex: {"require":{"colors":4}} signifies that the task will require 4 preset colors: 0,1,2,3 (i.e., 2 different colors in addition to the background and text colors)
+  <<required>>        "shapes":<<uint>>                                      specify how many different preset shapes are necessary for this task; preset 0 is the default container shape (usually it would be a rectangle or a rounded-corner rectangle); Ex: {"require":{"shapes":5}} signifies that the task will require 5 different preset shapes: 0,1,2,3,4 (i.e., 4 shapes in addition to the default container shape)
+  <<required>>        "strokeDashes":<<uint>>                                specify how many different preset stroke types are necessary for this task; preset 0 (default) is a solid line; Ex: {"require":{"strokeDashes":3}} signifies that the task will require 3 different line types: 0,1,2 (i.e., 2 stroke types, such as long and short dashes, in addition to the default solid stroke)
+  <<required>>        "sizeUnits":["<<sizeUnit>>"(,"<<sizeUnit>>")*]         specify size-units necessary for this task; Ex: {"require":{"sizeUnits":["%","E","vh","vw","w","h"]}}
+  <<required>>        "overlap":[<<geoComplication>>(,<<geoComplication>>)*]
+  
+  <<taskOption>>      <<property>>                                           optional properties for display container
 
-    Label Name          Regular Expression                                  Functionality
-    <<required>>        "options":[<<optionName>>(,<<optionName>>)*]        specify options necessary for this task; Ex: {"required":{"options":["r","rot"]}}
-    <<required>>        <<optionName>>:[<<value>>(,<<value>>)*]             specify option values necessary for this task; Ex: {"required":{"select":[1,2,"n"],"type":["table","path"]}}
-    <<required>>        "R":[<<info>>(,<<info>>)*]                          specify which information can be requested via R command and captured events
-    <<required>>        "path":[<<curveType>>(,<<curveType>>)*]             specify path curve options necessary for this task; Ex: {"required":{"path":["S","C"]}}
-    <<required>>        "colors":<<uint>>                                   specify how many different preset colors are necessary for this task; <<uint>> must be greater than 1 (presets 0 and 1 are default background and text colors); Ex: {"required":{"colors":3}} signifies that the task will require 2 different colors in addition to the background and text colors
-    <<required>>        "sizeUnits":["<<sizeUnit>>"(,"<<sizeUnit>>")*]      specify size-units necessary for this task; Ex: {"required":{"sizeUnits":["%","E","vh","vw"]}}
-    <<required>>        "emphases":{<<emp>>:<<uint>>(,<<emp>>:<<uint>>)*}   specify emphasis types necessary for this task; Ex: {"required":{"emphases":{"emp":3,"emp2":3}}} signifies that two emphases types are required (emp and emp2), each with three levels of strength
-    <<required>>        "overlap":[<<geoComplication>>(,<<geoComplication>>)*]
-    
-    <<geoComplication>> "r|z|(rot)|(type)"                                  geometry complication taken into account when calculating overlap of items for the "overlap" event (i.e. collision); Ex: {"require":{"overlap":["r","rot"]}} signifies that user-side software has to be able to deal with collision events even when items are rotated and have rounded corners
-    <<emp>>             ** text string starting with "emp"; e.g. "emp2" **
-    <<curveType>>       ** the string on the leftmost part of <<pathTo>> expression; i.e., character C, S, Q, T, or A **
+  <<property>>        <<pName>>:null                                         remove/reset property (i.e. clear or reset to default behavior)
 
-    <<taskOption>>      <<property>>                                        optional properties for display container
+  <<property>>        "type":<<itemType>>                                    type of this UI item (e.g. table, popup)
+  <<itemType>>        "bin"                                                  default <<container>> item; if "v" property isn't specified, it is set to []
+  <<itemType>>        "txt"                                                  default <<text>> item; if "v" property isn't specified, it is set to ""
+  <<itemType>>        "num"                                                  default <<number>> item; if "v" property isn't specified, it is set to 0
+  <<itemType>>        "btn"                                                  default <<boolean>> item; if "v" property isn't specified, it is set to false
+  <<itemType>>        "select"                                               this item is a selectable option -- a special <<boolean>> that can be selected and deselected
+  <<itemType>>        "hold"                                                 this item is a holddown button -- a special <<boolean>> whose value ("v" property) is true while it is being held; this input button sends [<<ums>>,<<id>>,true] on mousedown and [<<ums>>,<<id>>,false] on mouseup
+  <<itemType>>        "html"                                                 this item is html body -- its a special <<text>> item that includes html tags; Ex: {"type":"html","v":"<b>this text is bold</b>"}; this should only be employed for displaying documents, not functional UI components, and with the assumption that many machine agents will ignore the tags inside html
+  <<itemType>>        "mkdn"                                                 this item is markdown text -- its a special <<text>> item that includes markdown syntax; Ex: {"type":"mk","v":"_this text is underlined_"}; this should only be employed for displaying formatted text, not functional UI components, and with the assumption that many machine agents will ignore the markdown syntax
+  <<itemType>>        "popup"                                                this item is a popup -- a special <<container>> that pops up over other items of the parent container, partially obscuring their view, and preventing them from being edited
+  <<itemType>>        "table"                                                this item is a table -- a special <<container>> that contains others <<container>> items, each of which will be a row in a table; Ex: [{"id":"personnel","v":[["name","age","gender"],["john",39,"m"],["mary",28,"f"]],"type":"table","head":1}] will add a "personnel" table with a header row and two records (john, mary)
+  <<itemType>>        "data"                                                 this item is a data frame -- a special <<container>> whose items are related data series (each data series is a <<container>> with values); "data" item types may be displayed in different ways depending on client software and template used (e.g. chart and/or table, 2d/3d, interactive plots, animation, a "download CSV" link, etc)
+  <<itemType>>        "pie"                                                  this item is a pie -- a special <<container>> whose items are displayed as slices in a pie
+  <<itemType>>        "ln"                                                   this item is a path of lines/links -- a special <<container>> in which each item is connected; items connected via "ln" may lay outside of this container, and referenced via <<ref>>; Ex: [{"type":"path","w":100,"h":100,"v":[{"x":10,"y":10},{"x":20,"y":0},{x:100,y:100}]}] draws path 10,10->20,0->100,100
 
-    <<property>>        <<optionName>>:null                                 remove/reset property (i.e. clear or reset to default behavior)
-    <<property>>        <<command>>                                         commands that alter how other properties are changed; <<command>> property values are not permanent; Ex: [{"id":"x","T":10,"bg":"blue"}] signifies that the background of "x" should be changed to blue over the course of 10seconds, after which the value of "bg" (background) remains "blue", but the value "T" (time of animation) resets to null, because "T" is an <<command>> option
-    <<property>>        <<option>>                                          generic options
-    <<property>>        <<inputOption>>                                     user-input options (specify whether item value is editable, and what the behavior is upon edits)
-    <<property>>        <<boolOption>>                                      boolean item options
-    <<property>>        <<numOption>>                                       number item options
-    <<property>>        <<txtOption>>                                       text item options
-    <<property>>        <<aniOption>>                                       animation options
+  <<property>>        <<command>>                                            commands that alter how other properties are changed; <<command>> property values are not permanent; Ex: [{"id":"x","T":10,"bg":"blue"}] signifies that the background of "x" should be changed to blue over the course of 10seconds, after which the value of "bg" (background) remains "blue", but the value "T" (time of animation) resets to null, because "T" is an <<command>>, rather than another type of item property
+  <<property>>        <<option>>                                             generic item options
+  <<property>>        <<visOption>>                                          visual item options; <<visOption>>'s should only be used when <<option>>'s would not suffice -- e.g. if something just needs to be emphasized, regardless of whether it is via background color change or not, then "emp" <<option>> should be used, rather than the "bg" <<visOption>> ("template" <<taskOption>> can be used to indicate that the preferred emphasis type for the "emp" option should be a background highlight)
+  <<property>>        <<containerOption>>                                    container options (also applicable to other item types that can have child items, such as table and popup)
+  <<property>>        <<interactOption>>                                     user-interaction options
+  <<property>>        <<boolOption>>                                         boolean item options
+  <<property>>        <<numOption>>                                          number item options
+  <<property>>        <<txtOption>>                                          text item options
+  <<property>>        <<aniOption>>                                          animation options
+  <<property>>        <<selectOption>>                                       select item options
+  <<property>>        <<tableOption>>                                        table item options
+  <<property>>        <<pieOption>>                                          pie item options
+  <<property>>        <<lnOption>>                                           line/link item options; these options should be used only when needed for the task to function correctly, never merely for visual appeal (visual appeal specifications are loaded via templates, using <<taskOption>> "template":<<url>>)
 
-    <<command>>         "$":<<searchTerm>>                                  select items; apply current updates to all of the items that match <<searchTerm>>; Ex: [{"id":"x","v":"hello"},{"id":"z","v":[{"id":"y","v":[{"id":"x","v":"goodbye"}]}]}] followed by {"$":["y","x"],"bg":"red"} would turn the background of "x"-"hello" and "x"-"goodbye" id-value pairs red
-    <<command>>         "$":[<<searchTerm>>(,<<searchTerm>>)*]              multiple selects; apply current updates to all of the items that match any one <<searchTerm>>
-    <<command>>         "U":<<ums>>                                         User-time for current update (exclusive with "T" command); used to delay the processing of the current update until user time has reached specified <<ums>>
-    <<command>>         "T":<<number>>                                      Timeout (i.e. delay) for current update (exclusive with "U" command); <<number>> is the number of seconds to delay; Ex: {"v":null,"T":2} will clear the screen after a 2 seconds timout; [{"id":"text","v":"hello"},{"id":"text","v":null,"T":2}}] would add "text":"hello" to screen, and then remove it 2 seconds later
-    <<command>>         "S":<<number>>                                      Seconds to make current update (i.e. animation); <<number>> is the number of seconds over which current update takes place; "S" is equivalent to "T" for properties that do not allow gradual changes
-    <<command>>         "R":[<<value>>(,<<info>>)*]                         Request item info; [<<value>>(,<<info>>)*] describes the <<userVal>> information array to be sent back to task-software; <<value>> is a prefix, to be sent back at the beggining of the <<userVal>> info array; when <<value>> is null (default), no prefix is sent; requested info always gets aggregated and sent after the update is complete, which means that in the case where option S is used, info would get sent after animation is complete (in this way R is useful as a receipt for delay/animation commands S, T, and U); Ex: [{"id":"myItem","v":"hi","bg":2,"T":2,"R":[]}] will wait 2s and send back [<<ums>>,"myItem",[]], and a later msg {"$":"myItem","R":[null,"v","bg"]} will send back [<<ums>>,"myItem",["hi",2]]; Ex: {"e":{"click":{"R":[1,"mouseX","mouseY"]},"dblclick":{"R":[2,"mouseX","mouseY"]}}} will send back [<<ums>>,0,[1,<<number>>,<<number>>]] to task software every time the mouse is clicked, and [<<ums>>,0,[2,<<number>>,<<number>>]] every time the mouse is double-clicked
-    <<command>>         "Q":<<number>>|<<text>>                             Queue identifier (Qid) for current update; useful for identifying and resetting updates; receipts for edits with Q would include a Qid in place of item <<id>>; updates animated via S command that also include a Qid are immediately stopped next time an update is sent with the same Qid reference; updates delayed via T or U commands that also include a Qid are removed from queue next time an update is sent with the same Qid reference; e.g. the following two task->user message -- [{"id":"candles","v":0},{"id":"candles","v":1,"Q":"t1","U":10000,"R":[]},{"id":"candles","v":2,"Q":"t2","U":20000,"R":[]}] -- would result in a key:value pair "candles":0 being added to display, and timers set up to change the value of "candles" to 1 at 10sec, then to 2 at 20sec into the task, and a follow-up message {"Q":"t1"} would remove the update scheduled to occur at 10sec, resulting in a single receipt message sent by user sw at 20s into the task -- [20000,"t2",[]]
-    <<command>>         "P":<<id>>                                          Push (i.e. insert) current item before item specified by <<id>> in current container; if <<id>> is unrecognized (e.g., "P":-1), item is moved to end of container; Ex: ["a","b","c"] followed by [{"v":"x","P":1}] is equivalent to ["a","x","b","c"]
-    <<command>>         "P":[<<id>>(,<<id>>)*]                              Push (i.e. insert) current item before item specified by [<<id>>(,<<id>>)*], where the first <<id>> in array is in root container; if the last <<id>> in array is unrecognized (e.g., "P":[0,-1]), item is moved to end of container; Ex: [["a","b"],["c","d"]] followed by [{"id":[0,0],"P":[1,0]}] is equivalent to [["b"],["a","c","d"]]
-    <<command>>         "O":1                                               On-edit update trigger (i.e. pretend as if there was user-side input); useful for playback, demo, instructions; Ex: task->user messages [{"id":"press me","v":false,"onedit":{"eB":0}}] [{"id":"press me","v":true,"O":1}] would add a button thad becomes disabled once clicked, and then force-click the button, causing it to become disabled
-    <<command>>         "O":<<eventType>>                                   On-event update trigger (i.e. pretend as if there was a user-side event); useful for playback, demo, instructions; Ex: task->user messages [{"id":"box","v":"hello","e":{"mouseenter":{"v":"goodbye"}}}] [{"id":"box","O":"mouseenter"}] would add a text box "hello", and then force-activate its mouseenter event, causing the text to switch from "hello" to "goodbye"
-    <<command>>         "_":<<displayUpdate>>                               update display; useful for "onedit" and <<eventType>> options; Ex: [{"id":"press me","v":false,"onedit":{"_":{"eB":0}}}] will disable all buttons in the display when the "press me" button is clicked
+  <<command>>         "id":<<idArray>>                                       select item via the specified <<idArray>> tree-path; exclusive with "*" selector
+  <<command>>         "\*":<<searchTerm>>                                    select items; exclusive with "id" selector; apply current updates to all of the items that match <<searchTerm>>; Ex: [{"id":"x","v":"hello"},{"id":"z","v":[{"id":"y","v":[{"id":"x","v":"goodbye"}]}]}] followed by {"*":"x","bg":"red"} would turn the backgrounds of "hello" and "goodbye" text items red
+  <<command>>         "U":<<ums>>                                            User-time for current update (exclusive with "T" command); used to delay the processing of the current update until user time has reached specified <<ums>>
+  <<command>>         "T":<<number>>                                         Timeout (i.e. delay) for current update (exclusive with "U" command); <<number>> is the number of seconds to delay; Ex: {"v":null,"T":2} will clear the screen after a 2 seconds timout; [{"id":"text","v":"hello"},{"id":"text","v":null,"T":2}}] would add "text":"hello" to screen, and then remove it 2 seconds later
+  <<command>>         "S":<<number>>                                         Seconds to make current update (i.e. animation); <<number>> is the number of seconds over which current update takes place; "S" is equivalent to "T" for properties that do not allow gradual changes
+  <<command>>         "R":[<<value>>(,<<info>>)*]                            Request item info; [<<value>>(,<<info>>)*] describes the <<userVal>> information array to be sent back to task-software; <<value>> is a prefix, to be sent back at the beggining of the <<userVal>> info array; when <<value>> is null (default), no prefix is sent; requested info always gets aggregated and sent after the update is complete, which means that in the case where option S is used, info would get sent after animation is complete (in this way R is useful as a receipt for delay/animation commands S, T, and U); Ex: [{"id":"myItem","v":"hi","bg":2,"T":2,"R":[]}] will wait 2s and send back [<<ums>>,"myItem",[]], and a later msg {"*":"myItem","R":[null,"v","bg"]} will send back [<<ums>>,"myItem",["hi",2]]; Ex: {"onclick":{"R":[1,"mouseX","mouseY"]},"ondblclick":{"R":[2,"mouseX","mouseY"]}} will send back [<<ums>>,null,[1,<<number>>,<<number>>]] to task software every time the mouse is clicked, and [<<ums>>,null,[2,<<number>>,<<number>>]] every time the mouse is double-clicked, where <<number>>,<<number>> will correspond to the mouse x/y coordinates
+  <<command>>         "Q":<<number>>|<<text>>                                Queue identifier (Qid) for current update; useful for identifying and resetting updates; receipts for edits with Q would include a Qid in place of item <<id>>; updates animated via S command that also include a Qid are immediately stopped next time an update is sent with the same Qid reference; updates delayed via T or U commands that also include a Qid are removed from queue next time an update is sent with the same Qid reference; e.g. the following two task->user message -- [{"id":"candles","v":0},{"id":"candles","v":1,"Q":"t1","U":10000,"R":[]},{"id":"candles","v":2,"Q":"t2","U":20000,"R":[]}] -- would result in a key:value pair "candles":0 being added to display, and timers set up to change the value of "candles" to 1 at 10sec, then to 2 at 20sec into the task, and a follow-up message {"Q":"t1"} would remove the update scheduled to occur at 10sec, resulting in a single receipt message sent by user sw at 20s into the task -- [20000,"t2",[]]
+  <<command>>         "P":<<id>>|<<idArray>>                                 Push (i.e. insert) current item before item specified by <<id>> in current container; if <<id>> is unrecognized (e.g., "P":-1), item is moved to end of container; Ex: ["a","b","c"] followed by [{"v":"x","P":1}] is equivalent to ["a","x","b","c"]
+  <<command>>         "O":1                                                  On-input update trigger (i.e. pretend as if there was user-side input); useful for playback, demo, instructions; Ex: task->user messages [{"id":"press me","v":false,"onin":{"in":0}}] [{"id":"press me","v":true,"O":1}] would add a button that becomes disabled once clicked, and then force-click the button, causing it to become disabled
+  <<command>>         "O":<<pName>>                                          On-input-property update trigger (i.e. pretend as if there was user-side property change); useful for playback, demo, instructions
+  <<command>>         "O":<<eventType>>                                      On-event update trigger (i.e. pretend as if there was a user-side event); useful for playback, demo, instructions; Ex: task->user messages [{"id":"box","v":"hello","onmouseenter":{"v":"goodbye"}}] [{"id":"box","O":"onmouseenter"}] would add a text box "hello", and then force-activate its mouseenter event, causing the text to switch from "hello" to "goodbye"
 
-    <<searchTerm>>      <<id>>|<<tag>>                                      match by <<id>> or <<tag>>; search is recursive, not just in current container; empty-string matches items where id isn't specified; Ex: {"$":"","bg":"red"} sets background of all items without an id to red); Ex: {"$":"x","bg":"red"} would find all items where id is "x" or one of the tags (specified via "#") is "x" and set their background colors to "red"
-    <<searchTerm>>      {<<searchProp>>(,<<searchProp>>)*}                  match by property values; if no <<searchProp>> is specified, all items are selected (Ex: {"$":{},"c":"red"} sets color of all text of all items to "red")
-    <<searchProp>>      "recur":0                                           recursive search flag; property searches are recursive by default, add "recur":0 to search only current container, not child containers; Ex: {"$":{"recur":0},"c":"red"} sets color of all text of all items in current container to "red"
-    <<searchProp>>      <<property>>                                        match by property values; all <<property>> values must match; selection by "type" property is allowed for items with both explicit and derived types (Ex: {"$":{"type":0},"v":0} would set all numeric values to 0's); selection by "#" property searches for whether the specified hashtag exists (Ex: {"$":{"#":"xx"},"c":"red"} finds all elements where one of the hashtags is "xx" and sets text color to red); Ex: {"$":{"v":1},"v":0} would set all 1's to 0's, [{"id":"my container","v":[{"$":{"type":[]},"bg":"blue"}]}] will set backgrounds of all containers inside of "my container" to blue
+  <<idArray>>         [<<id>>(,<<id>>)*]                                     item identification via a hierarchical <<id>> path, where the first <<id>> identifies an item within current container, with the following <<id>>'s specifying its child, that child's child, etc.; identifying item by <<idArray>> at task-level assumes that current container is the root container (e.g. task->user message {"id":[2,4],"v":null} would translate into [{"id":[2,4],"v":null}], which would delete the fifth item inside the third container in the display)
+  <<idArray>>         [null(,<<id>>)*]                                       item identification via a hierarchical <<id>> path, where the first <<id>> identifies an item in root container, with the following <<id>>'s specifying its child, that child's child, etc.; this is mainly useful for onin, oninps, and <<eventType>> property specifications (e.g., [{"id":"press me","type":"btn","onin":{"id":[null],"v":null}}] will clear the display when the "press me" button is clicked)
+  <<searchTerm>>      <<id>>|<<tag>>                                         match by <<id>> or <<tag>>; search is recursive, not just in current container; empty-string matches items where id isn't specified (e.g. {"*":"","bg":"red"} sets background of all items without an id to red); Ex: {"*":"x","bg":"red"} would find all items where id is "x" or one of the tags (specified via "tags") is "x" and set their background colors to "red"
+  <<searchTerm>>      {<<searchProp>>(,<<searchProp>>)*}                     match by property values; if no <<searchProp>> is specified, all items are selected (Ex: {"*":{},"c":"red"} sets text-color of all items to "red")
+  <<searchProp>>      "scope":0|1|2                                          scope of search-based selection; "scope":0 will search only current container, not child containers (Ex: {"*":{"scope":0},"c":"red"} sets text-color of all items in current container to "red"); "scope":1 (default) will search current and all child containers recursively; "scope":2 will search all items on display starting at root -- this is mainly useful for onin, oninps, and <<eventType>> property specifications (Ex: [{"id":"press me","v":false,"onin":{"*":{"scope":2,"type":false},"in":0}}] will disable all buttons in the display when the "press me" button is clicked); "scope" is treated as <<pName>> for purposes of <<required>> specifications
+  <<searchProp>>      <<property>>                                           match by property values; all <<property>> values must match; selection by "type" property is allowed for items with both explicit and derived types (e.g.: {"*":{"type":0},"v":10} would set all numeric values to 10's); selection by a property that requires a list of values (rather than a single value) selects any items containing any of the supplied list values (e.g.: {"*":{"tags":["xx","yy"]},"c":"red"} finds all elements where one of the tags is "xx" or "yy" and sets text color to red); Ex: {"*":{"v":1},"v":0} would set all 1's to 0's, [{"id":"my container","v":[{"*":{"type":[]},"bg":"blue"}]}] will set backgrounds of all containers inside of "my container" to blue
 
-    <<property>>        "type":<<itemType>>                                 type of this UI item (e.g. table, popup)
-    <<itemType>>        "popup"                                             this item is a popup -- a special <<container>> that pops up over other items of the parent container, partially obscuring their view, and preventing them from being edited
-    <<itemType>>        "table"                                             this item is a table -- a special <<container>> that contains others <<container>> items, each of which will be a row in a table; Ex: [{"id":"personnel","v":[["name","age","gender"],["john",39,"m"],["mary",28,"f"]],"type":"table","head":1}] will add a "personnel" table with a header row and two records (john, mary)
-    <<itemType>>        "pie"                                               this item is a pie -- a special <<container>> whose items are displayed as slices in a pie
-    <<itemType>>        "path"                                              this item is a line/path -- a special <<container>> whose value is a <<path>> (i.e., first item is a starting [<<point>>], and each next item is a <<pathTo>> which specifies where a line or a curve is to be drawn to); all <<point>> values are percentages of width/height of path, and should be between 0 and 100; Ex: {type:'path',v:[[0,100],["S",50,50,100,100],[0,0]]} would add a path to display where the path starts in the lower-left corner of the container, curves up and back down to the lower-right corner, and then shoots diagonally straight to the top-left corner
-    <<itemType>>        "html"                                              this item is html body -- its a special <<text>> item that includes html tags; Ex: {"type":"html","v":"<b>this text is bold</b>"}; this should only be employed for displaying documents, not functional UI components, and with the assumption that many machine agents will ignore the tags inside html
-    <<itemType>>        "mkdn"                                              this item is markdown text -- its a special <<text>> item that includes markdown syntax; Ex: {"type":"mk","v":"_this text is underlined_"}; this should only be employed for displaying formatted text, not functional UI components, and with the assumption that many machine agents will ignore the markdown syntax
-    <<itemType>>        "data"                                              this item is a data frame -- a special <<container>> whose items are related data series (each data series is a <<container>> with values); "data" item types may be displayed in different ways depending on client software and template used (e.g. chart and/or table, 2d/3d, interactive plots, animation, a "download CSV" link, etc)
-    <<property>>        <<tableOption>>                                     table item options
-    <<property>>        <<pieOption>>                                       pie item options
-    <<property>>        <<pathOption>>                                      path item options; these options should be used only when needed for the task to function correctly, never merely for visual appeal (visual appeal specifications are loaded via templates, using <<taskOption>> "template":<<url>>)
+  <<interactOption>>  "patronym":<<uint>>                                    <<uint>> indicates the number of patronyms (i.e. parent container names) to include in user->task messages; names of parents always preceed names of children; Ex: [{"id":"personnel","v":[["name","age","gender"],["john",39,"m",false],["mary",28,"f",false]],"type":"table","head":1,"patronym":1}] will create a "personnel" table with a header and two records, each record having an unnamed button -- when the button corresponding to "john" row is clicked, user->task message will be [<<ums>>,[1,3],true], where [1,3] correspond to the button's parent id and the button's id, respectively (i.e. row and cell numbers in the case of a table); when the button corresponding to "mary" row is clicked, user->task message will be [<<ums>>,[2,3],true]; if the "patronym" option for this table was set to 2, clicking the buttons corresponding to "john" and "mary" rows would send [<<ums>>,["personnel",1,3],true] and  [<<ums>>,["personnel",2,3],true] user->task messages, respectively
+  <<interactOption>>  "in":0|1                                               interactive/input flag to signify whether user-input is disabled or enabled for non-container-type items (e.g. boolean, text, number); "in":0 (default for text/number items) signifies that input is disabled for current item (i.e. no user editing/toggling allowed); "in":1 (default for boolean items like buttons/checkboxes) means that the current item's input is enabled (i.e. value may be edited/toggled by the user); text input fields must include a newline in the value to enable multi-line input (e.g. [{"id":"name","v":"",in:1},{"id":"story","v":"\n",in:1}] creates a single-line text input field called "name" and a multi-line one called "story"); Ex: [{"id":"type something","v":"",in:1},{"id":"button 1","v":false,in:0}] would add a text input box titled "type something", and a disabled button "button 1"
+  <<interactOption>>  "in":2                                                 interactive/input flag for text/number types to signify that detailed/dynamic value input is enabled (i.e. text/number input fields will send value-changes on every keypress and value toggle, rather than just when the field loses focus)
+  <<interactOption>>  "in":3                                                 interactive/input flag for container-types (i.e. items that have children) to signify that user has the ability to add new items to current container
+  <<interactOption>>  "inps":[<<pName>>|null(,<<pName>>|null)*]              interactive/input flag for multiple properties; null signifies item is deletable by user, <<pName>> signfies the corresponding property is editable by user; user->task message upon item deletion would look as such: [<<ums>>,<<id>>,null]; user->task message upon <<pName>> changes would look as such: [<<ums>>,<<id>>,{<<pName>>:<<value>>}]; <<pName>> "P" signifies that user can change item position within the container; for container-types, <<pName>> "v" signifies that user can append new items to container; Ex: [{"id":"choose color","bg":"red","in":["bg"]}] adds a "choose color" container where the user can edit the background color, sending [<<ums>>,"choose color",{"bg":<<color>>}] messages back to task upon color changes
+  <<interactOption>>  "onin":<<pList>>                                       what to do and how to change current item if user changes its value (e.g., user toggles button, edits text); for container-types "onin" will trigger when user adds or deletes a contained item; Ex: [{"id":"say something:","v":"","in":1,"onin":{"v":""}}] will create a textbox where user can type something, but as soon as they hit Enter, the text will disappear; Ex: [{"id":"btn1","v":false,"onin":{"in":0}}] creates a button, btn1, that becomes disabled once clicked; Ex: [{"id":"btn1","v":false,"onin":{"v":null}}] creates a button, btn1, that gets removed once clicked
+  <<interactOption>>  "oninps":{<<pName>>:<<pList>>(,<<pName>>:<<pList>>)*}  what to do and how to change current item if user changes its properties (e.g., user edits background color); Ex: [{"id":"choose color","inps":["bg"],"oninps":{"bg":{"inps":null}}}] adds a "choose color" container which lets the user choose the color once, and then disables further color choosing
+  <<interactOption>>  <<eventType>>:<<pList>>                                what to do and how to update current item upon a given UI event; in the absence of the "R" command among the <<property>> list, "R":[<<eventType>>] is presumed; Ex: {"onmousemove":{"R":[null,"mouseX","mouseY"]},"onclick":{"bg":3}} will cause user sw to send back [<<ums>>,null,[<<number>>,<<number>>]] to task software every time the mouse moves, where [<<number>>,<<number>>] will be mouse coordinates, and to change background color and send [<<ums>>,null,["onclick"]] to task-software if the mouse is clicked
+  <<interactOption>>  "rsu":"<<sizeUnit>>"                                   size unit for user->task messages for any <<info>> sent back via R command or captured events for current item (default is "px" -- pixels)
 
-    <<option>>          "title":<<text>>                                    visible title (replaces item id as the visible title)
-    <<option>>          "tags":[<<text>>(,<<text>>)*]                       tags for current item (useful for "$" selection command, visual styling for human users, and classification for computational users)
-    <<option>>          <<emp>>:<<uint>>                                    emphasize item in some way (make it bold or highlight); <<emp>> is an emphasis type declared via "required" directive, <<uint>> is a number signifying emphasis strength, where 0 is nonexistent, 1 is weakest, 2 is stronger, etc. (strongest emphasis level is specified via required directive)
-    <<option>>          "bg":<<cssBackground>>                              background
-    <<option>>          "c":<<color>>                                       text/stroke color
-    <<option>>          "opc":<<number>>                                    opacity; <<number>> must be between 0 (seethrough) and 1 (solid); 1 is default
-    <<option>>          "fnt":<<cssFont>>                                   text font
-    <<option>>          "scroll":0|1|2|3                                    vertical scrolling; 0 - scrolling isn't allowed, 1 (default) - scrolling allowed when possible, 2 - scrolling isn't allowed, but container automatically scrolls to the bottom to reveal newly added content, 3 - scrolling is allowed, and container automatically scrolls to the bottom to reveal newly added content
-    <<option>>          "scrollH":0|1|2|3                                   horizontal scrolling; 0 - scrolling isn't allowed, 1 (default) - scrolling allowed when possible, 2 - scrolling isn't allowed, but container automatically scrolls to the right to reveal newly added content, 3 - scrolling is allowed, and container automatically scrolls to the right to reveal newly added content
-    <<option>>          "w":<<number>>|"<<number>><<sizeUnit>>"             width of the item
-    <<option>>          "h":<<number>>|"<<number>><<sizeUnit>>"             height of the item
-    <<option>>          "x":<<number>>|"<<number>><<sizeUnit>>"             horizontal position of left-top corner of the item
-    <<option>>          "y":<<number>>|"<<number>><<sizeUnit>>"             vertical position of left-top corner of the item
-    <<option>>          "z":<<number>>                                      z-index (stack order) of the item; an item with greater stack order is always in front of an item with a lower stack order
-    <<option>>          "r":<<number>>                                      rounded corner radius (ex: create a blue circle w/ radius=10 -> [{"w":20,"h":20,"r":10,"bg":"blue"}])
-    <<option>>          "rot":<<number>>                                    rotation; <<number>> is in degrees (center of box is the rotation origin)
-    <<option>>          "bd":<<cssBorder>>                                  border style
-    <<option>>          "bdc":<<color>>                                     border color
-    <<option>>          "bdw":<<number>>                                    border width
-    <<option>>          "pad":<<cssPadding>>                                padding
-    <<option>>          "esu":"<<sizeUnit>>"                                size unit for x/y/w/h specs in user->task messages for any <<info>> sent back via R command or captured events
+  <<option>>          "title":<<text>>                                       visible title (replaces item id as the visible title)
+  <<option>>          "tags":[<<text>>(,<<text>>)*]                          tags for current item (useful for "*" selection command, visual styling for human users, and classification for computational users)
+  <<option>>          "emp":<<uint>>                                         emphasize item text in some way (e.g., make it bold or highlight); <<uint>> is a number signifying emphasis strength, where 0 (default) is nonexistent, 1 is weakest, 2 is stronger, etc. (emphasis levels can be specified via require directive; e.g., {"require":{"emp":[1,2,3,4,5]}}); "emp" is different from "str" in that "emp" relays discrete level of emphasis, whereas "str" relays continuous values
+  <<option>>          "emp2":<<uint>>                                        emphasize item text in some way that is different from "emp"; <<uint>> is a number signifying emphasis strength, where 0 (default) is nonexistent, 1 is weakest, 2 is stronger, etc. (emphasis levels can be specified via require directive; e.g., {"require":{"emp2":[1,2]}})
+  <<option>>          "emp3":<<uint>>                                        emphasize item text in some way that is different from "emp" and "emp2"; <<uint>> is a number signifying emphasis strength, where 0 (default) is nonexistent, 1 is weakest, 2 is stronger, etc. (emphasis levels can be specified via require directive; e.g., {"require":{"emp3":[1,2,3,4,5,6,7]}})
+  <<option>>          "emp4":<<uint>>                                        emphasize item text in some way that is different from "emp","emp2","emp3"; <<uint>> is a number signifying emphasis strength, where 0 (default) is nonexistent, 1 is weakest, 2 is stronger, etc. (emphasis levels can be specified via require directive; e.g., {"require":{"emp4":[1,2,3]}})
+  <<option>>          "emp5":<<uint>>                                        emphasize item text in some way that is different from "emp","emp2","emp3","emp4"; <<uint>> is a number signifying emphasis strength, where 0 (default) is nonexistent, 1 is weakest, 2 is stronger, etc. (emphasis levels can be specified via require directive; e.g., {"require":{"emp5":[1,2,3]}})
+  <<option>>          "str":<<number>>                                       indicate item strength in some way (e.g., change hue/opacity, line thickness); <<number>> is some continuous value (usually between -1 and 1, but other values may be specified via the "require" directive); "str" is different from "emp" in that "emp" relays discrete level of emphasis, whereas "str" relays continuous values
+  <<option>>          "str2":<<number>>                                      indicate item strength in some way that is different from "str"
+  <<option>>          "str3":<<number>>                                      indicate item strength in some way that is different from "str" and "str2"
+  <<option>>          "notes":<<container>>|<<ref>>                          description (footnotes/caption/label) regarding the current item
 
-    <<inputOption>>     "patronym":<<uint>>                                 <<uint>> indicates the number of patronyms (i.e. parent container names) to include in ** user -> task ** messages; names of parents always preceed names of children; Ex: [{"id":"personnel","v":[["name","age","gender"],["john",39,"m",false],["mary",28,"f",false]],"type":"table","head":1,"patronym":1}] will create a "personnel" table with a header and two records, each record having an unnamed button -- when the button corresponding to "john" row is clicked, user->task message will be [<<ums>>,[1,3],true], where [1,3] correspond to the button's parent id and the button's id, respectively (i.e. row and cell numbers in the case of a table); when the button corresponding to "mary" row is clicked, user->task message will be [<<ums>>,[2,3],true]; if the "patronym" option for this table was set to 2, clicking the buttons corresponding to "john" and "mary" rows would send [<<ums>>,["personnel",1,3],true] and  [<<ums>>,["personnel",2,3],true] user->task messages, respectively
-    <<inputOption>>     "eB":0|1                                            editable Boolean flag; 0 makes boolean items (e.g. buttons) disabled; 1 (default) enables them
-    <<inputOption>>     "eN":0|1                                            editable Number flag; eN:0 (default) is standard, non-editable numeric field; eN:1 is a numeric input
-    <<inputOption>>     "eT":0|1|2|3|4                                      editable Text flag; eT:0 (default) is standard, non-editable text; non-zero value turns text items into text inputs; eT:1 signifies a standard single-line input field, where user-entered value is sent to task software whenever the field loses focus (on blur or enter); eT:2 is a multi-line text area that allows carriage returns, and sends user-entered value on blur; eT:3 signifies a single-line input field where the value is sent to task software on every input; eT:4 signifies a multi-line text area where the value is sent to task software on every input
-    <<inputOption>>     "onedit":{<<property>>(,<<property>>)*}             what to do and how to change current item if user changes its value (e.g., user toggles button, edits text); Ex: [{"id":"say something:","v":"","eT":1,"onedit":{"v":""}}] will create a textbox where user can type something, but as soon as they hit Enter, the text will disappear; Ex: [{"id":"btn1","v":false,"onedit":{"eB":0}}] creates a button, btn1, that becomes disabled once clicked; Ex: [{"id":"btn1","v":false,"onedit":{"v":null}}] creates a button, btn1, that gets removed once clicked
-    <<inputOption>>     <<eventType>>:{<<property>>(,<<property>>)*}        what to do and how to update current item upon a given UI event; in the absence of the "R" command among the <<property>> list, "R":[<<eventType>>] is presumed; Ex: {"mousemove":{"R":[null,"mouseX","mouseY"]},"click":{"bg":3}} will cause user sw to send back [<<ums>>,0,[<<number>>,<<number>>]] to task software every time the mouse moves, where [<<number>>,<<number>>] will be mouse coordinates, and to change background color and send [<<ums>>,0,["click"]] to task-software if the mouse is clicked
+  <<visOption>>       "bg":<<background>>                                    background/fill of item
+  <<visOption>>       "c":<<color>>                                          color for text (or, in the case of "type":"ln" items, line color)
+  <<visOption>>       "shape":<<shape>>                                      shape of current item; Ex: [{"v":"this is a circle","w":100,"h":100,"shape":"round","bg":3}]
+  <<visOption>>       "opc":<<number>>                                       opacity; <<number>> must be between 0 (seethrough) and 1 (solid); 1 is default
+  <<visOption>>       "fnt":<<cssFont>>                                      text font
+  <<visOption>>       "lc":<<color>>                                         line color (default is 1)
+  <<visOption>>       "lw":<<number>>|("<<number>><<sizeUnit>>")             line width
+  <<visOption>>       "w":<<number>>|("<<number>><<sizeUnit>>")              width of the item
+  <<visOption>>       "h":<<number>>|("<<number>><<sizeUnit>>")              height of the item
+  <<visOption>>       "x":<<number>>|("<<number>><<sizeUnit>>")              horizontal position of left-top corner of the item
+  <<visOption>>       "y":<<number>>|("<<number>><<sizeUnit>>")              vertical position of left-top corner of the item
+  <<visOption>>       "z":<<number>>                                         z-index (stack order) of the item; an item with greater stack order is always in front of an item with a lower stack order
+  <<visOption>>       "scroll":0|1|2|3                                       vertical scrolling; 0 - scrolling isn't allowed, 1 (default) - scrolling allowed when possible, 2 - scrolling isn't allowed, but container automatically scrolls to the bottom to reveal newly added content, 3 - scrolling is allowed, and container automatically scrolls to the bottom to reveal newly added content
+  <<visOption>>       "scrollH":0|1|2|3                                      horizontal scrolling; 0 - scrolling isn't allowed, 1 (default) - scrolling allowed when possible, 2 - scrolling isn't allowed, but container automatically scrolls to the right to reveal newly added content, 3 - scrolling is allowed, and container automatically scrolls to the right to reveal newly added content
+  <<visOption>>       "su":"<<sizeUnit>>"                                    size unit default for options x/y/w/h/lw in current item (default is "px" -- pixels)
 
-    <<boolOption>>      "select":-1|0|1|2                                   selection behavior for boolean items: -1 (default) means that each item is selected (true) on click, and considered deselected immediately (i.e. clickable buttons); 0 means that each item is selected (true) on mousedown, and deselected (false) on mouseup (i.e. hold-down buttons); 1 means that an item stays selected (true) when clicked, until it is clicked again to deselect (false), or until another item is selected within the current container (i.e. radio buttons or select); 2 means that each item is selected (true) when clicked and deselected (false) when clicked again (i.e. checkboxes or multiple-select)
-    <<boolOption>>      "select":"n"                                        selection behavior for boolean items: "n" is a hybrid between 1 and 0 -- only one item in container can be selected at a time, but the selection/deselection does not happen on click, but rather on mousedown/hover/mouseup  (e.g. a set of navigation buttons) -- each item is selected (true) either on mousedown or on mousehover while another boolean item in this container is selected, and an item is deselected (false) either on mouseup or when mouse hovers over some other boolean item in this container
-    <<boolOption>>      "keys":[<<key>>(,<<key>>)*])                        keyboard shortcuts assigned to boolean inputs
-    <<boolOption>>      "codes":[<<keyboardCode>>(,<<keyboardCode>>)*])     keyboard shortcuts assigned to boolean inputs
+  <<containerOption>> "df":<<pList>>                                         default property list for child elements; recursive; pList is updated by key, rather than replaced, when df is updated (to drop the entire df plist, set df to null); Ex: {"df":{"rnd":1}} will round all numeric fields to integers by default
 
-    <<numOption>>       "rnd":<<number>>                                    round to the nearest <<number>>; Ex: [{"id":"x","v":57.1,"rnd":.01}] should be interpreted as x=57.10, [{"id":"x","v":57.1,"rnd":5}] should be interpreted as x=55
-    <<numOption>>       "min":<<number>>                                    minimum displayable value
-    <<numOption>>       "max":<<number>>                                    maximum displayable value
-    <<numOption>>       "unit":<<text>>                                     exclusive with "time" option; unit for the number (e.g. "$", "%", "m/sec", "kg", "€ million", "$ k")
-    <<numOption>>       "time":"(<<timeField>>)+"                           exclusive with "unit" option; indicates that the value for this item is the total number of seconds since 1970/01/01 00:00; Ex: [{"id":"when","v":1483963200,"time":"YMDhm"}] is a way to specify date/time 2017/01/09 12:00; [{"v":543.21,"time":"ms."}] is a way to specify 9:03.210 (9min, 3sec, 210ms)
+  <<boolOption>>      "keys":[<<key>>(,<<key>>)*])                           keyboard shortcuts assigned to boolean inputs
+  <<boolOption>>      "codes":[<<keyboardCode>>(,<<keyboardCode>>)*])        keyboard shortcuts assigned to boolean inputs
 
-    <<txtOption>>       "chmax":<<number>>                                  max number of characters in <<text>>
-    <<txtOption>>       "mask":{<<regex>>:<<text>>(,<<regex>>:<<text>>)*}   replace <<regex>> with <<text>> throughout the string (global replace); Ex: [{"v":"","eT":1,"mask":{".","*"}}] would add a text input field where each character would be masked by "*" (like in password fields)
+  <<numOption>>       "rnd":<<number>>                                       round to the nearest <<number>>; Ex: [{"id":"x","v":57.1,"rnd":.01}] should be interpreted as x=57.10, [{"id":"x","v":57.1,"rnd":5}] should be interpreted as x=55
+  <<numOption>>       "min":<<number>>                                       minimum displayable value
+  <<numOption>>       "max":<<number>>                                       maximum displayable value
+  <<numOption>>       "unit":<<text>>                                        exclusive with "time" option; unit for the number (e.g. "$", "%", "m/sec", "kg", "€ million", "$ k")
+  <<numOption>>       "time":"(<<timeField>>)+"                              exclusive with "unit" option; indicates that the value for this item is the total number of seconds since 1970/01/01 00:00; Ex: [{"id":"when","v":1483963200,"time":"YMDhm"}] is a way to specify date/time 2017/01/09 12:00; [{"v":543.21,"time":"ms."}] is a way to specify 9:03.210 (9min, 3sec, 210ms)
 
-    <<aniOption>>       "ease":(0|1|2|3|4|"back"|"elastic"|"bounce")        easing option for animation; 0 (default) is linear animation, 1 is quadratic, 2 is cubic, 3 is quart, 4 is quint, "back" overshoots and comes back, "elastic" overshoots and undershoots a few times before settling at required value, "bounce" bounces off the desired value and then gravitates to it again and bounces again a few times; see http://greensock.com/ease-visualizer to visualize ease options
-    <<aniOption>>       "easeout":(1|-1|0)                                  ease direction; 1 (default) eases the end of the animation, -1 eases the start of the animation, 0 eases on both ends of the animation; see http://greensock.com/ease-visualizer to visualize ease options
+  <<txtOption>>       "chmax":<<number>>                                     max number of characters in <<text>>
+  <<txtOption>>       "mask":{<<regex>>:<<text>>(,<<regex>>:<<text>>)*}      replace <<regex>> with <<text>> throughout the string (global replace); Ex: [{"v":"","eT":1,"mask":{".","*"}}] would add a text input field where each character would be masked by "*" (like in password fields)
 
-    <<tableOption>>     "head":0|1                                          if this value is 1, first row of a table is treated as the header row (default value is 0)
+  <<aniOption>>       "ease":(0|1|2|3|4|"back"|"elastic"|"bounce")           easing option for animation; 0 (default) is linear animation, 1 is quadratic, 2 is cubic, 3 is quart, 4 is quint, "back" overshoots and comes back, "elastic" overshoots and undershoots a few times before settling at required value, "bounce" bounces off the desired value and then gravitates to it again and bounces again a few times; see http://greensock.com/ease-visualizer to visualize ease options
+  <<aniOption>>       "easeout":(1|-1|0)                                     ease direction; 1 (default) eases the end of the animation, -1 eases the start of the animation, 0 eases on both ends of the animation; see http://greensock.com/ease-visualizer to visualize ease options
 
-    <<pieOption>>       "bounda":[<<number>>(,<<number>>)*]                 bounding angles of the pie in clockwise order, 0 degrees is up; Ex: [{"id":"navigation","v":[{"id":"E","v":false},{"id":"S","v":false},{"id":"W","v":false},{"id":"N","v":false}],"type":"pie","bounda":[45,135,225,315]}] creates a 4-button east-south-west-north pie
+  <<selectOption>>    "group":<<text>>                                       if this property is present (not null), the "select" item type belongs to a group (named via <<text>>) where only one item can be selected at a time (i.e. radio-buttons); Ex: [{"id":"Choose a car","df":{"type":"select","group":"car"},"v":[{"id":"Subaru"},{"id":"Toyota"}]}] creates a container "Choose a car" with two radio buttons -- "Subaru" and "Tesla" where only one can be chosen at a time
 
-    <<path>>            [[<<point>>](,<<pathTo>>)*]
-    <<point>>           <<number>>,<<number>>
-    <<pathTo>>          [<<point>>]
-    <<pathTo>>          ["C",<<point>>,<<point>>,<<point>>]
-    <<pathTo>>          ["S",<<point>>,<<point>>]
-    <<pathTo>>          ["Q",<<point>>,<<point>>]
-    <<pathTo>>          ["T",<<point>>]
-    <<pathTo>>          ["A",<<point>>,<<number>>,0|1,0|1,<<point>>]
-    <<pathOption>>      "f":<<color>>                                       similar to SVG fill
-    <<pathOption>>      "thk":<<number>>                                    similar to SVG stroke-width
-    <<pathOption>>      "end1|2":"(arrow)|(circle)|(square)"                similar to SVG marker-start/marker-end
-    <<pathOption>>      "cap":"(square)|(round)|()"                         similar to SVG stroke-linecap
-    <<pathOption>>      "dash":<<strokeDash>>                               similar to SVG stroke-dasharray
+  <<tableOption>>     "head":0|1                                             if this value is 1, first row of a table is treated as the header row (default value is 0)
 
-    <<eventType>>       "onunload"                                          item unload event
-    <<eventType>>       "onfocus"                                           item focus event
-    <<eventType>>       "onblur"                                            item blur (loss of focus) event
-    <<eventType>>       "onscroll"                                          item scroll event
-    <<eventType>>       "onresize"                                          item resize event
-    <<eventType>>       "onoverlap"                                         item overlap (i.e. collision) event; this event activates whenever an item overlaps with another item that has an "onoverlap" property
-    <<eventType>>       "onoverout"                                         item depart (i.e. end of collision) event; this event activates whenever an item overlaps with another item that has an "onoverlap" property
-    <<eventType>>       "ondragstart"                                       item drag-start event; items with this event are considered draggable; this event fires once, when dragging starts (i.e., the item is grabbed)
-    <<eventType>>       "ondrag"                                            item continuous drag event; items with this event are considered draggable; this even will keep firing as long as the item is being dragged (i.e., item is held and is being moved)
-    <<eventType>>       "ondragend"                                         item drag-end event; items with this event are considered draggable; this event fires once dragging stops (i.e., the item is let go)
-    <<eventType>>       "onselect"                                          text select event
-    <<eventType>>       "oncopy"                                            text copy event
-    <<eventType>>       "oncut"                                             text cut event
-    <<eventType>>       "onpaste"                                           text paste event
-    <<eventType>>       "onclick"                                           mouse click event
-    <<eventType>>       "ondblclick"                                        mouse double-click event
-    <<eventType>>       "onmousedown"                                       mouse button-down event
-    <<eventType>>       "onmouseup"                                         mouse button-up event
-    <<eventType>>       "onmousemove"                                       mouse move event
-    <<eventType>>       "onmouseenter"                                      mouse enter event
-    <<eventType>>       "onmouseleave"                                      mouse leave event
-    <<eventType>>       "onmouseover"                                       mouse over event
-    <<eventType>>       "onmouseout"                                        mouse out event
-    <<eventType>>       "onkeydown"                                         keyboard key-down event
-    <<eventType>>       "onkeyup"                                           keyboard key-up event
+  <<pieOption>>       "bounda":[<<number>>(,<<number>>)*]                    bounding angles of the pie in clockwise order, 0 degrees is up; Ex: [{"id":"navigation","type":"pie","bounda":[45,135,225,315],"df":{"type":"btn"},"v":[{"id":"E"},{"id":"S"},{"id":"W"},{"id":"N"}]}] creates a 4-button east-south-west-north pie
 
-    <<userVal>>         [<<value>>(,<<value>>)*]                            user-side item information array that corresponds to the <<info>> array, as specified via the "R" <<command>> or "R" <<eventOption>>; Ex: [{"id":"myItem","v":"hi","bg":2,"R":["v","bg"]}] will send back [<<ums>>,"myItem",["hi",2]]
-    <<info>>            <<optionName>>
-    <<info>>            "mouseX|Y"                                          mouse coordinates relative to top-left of the current container; Ex: {"e":{"mousemove":{"R":["mouseX","mouseY"]}}} will send back [<<ums>>,0,[<<number>>,<<number>>]] to task software every time the mouse moves, where [<<number>>,<<number>>] will be mouse coordinates
-    <<info>>            "key"                                               request <<key>>
-    <<info>>            "keyLocation"                                       request key location (0 is default, 1 is left-hand side modifier keys, 2 is right-hand modifier keys, 3 is numeric pad)
-    <<info>>            "code"                                              request <<keyboardCode>>
-    <<info>>            "modKeys"                                           modifier keys; returns 1 if Shift is held, 2 if Alt is held, 4 if Ctrl is held, 8 if Meta key is held, and sums of these values for any combinations (e.g., Shift+Ctrl = 5); if a modKeys <<require>> array is specified, the first item in this array will be 16, the next will be 32, and so on (Ex: {"require":{"modKeys":["Fn","CapsLock","NumLock"]}} would mean that when NumLock is engaged, modKeys is 64)
-    <<info>>            "scrollTop"                                         
-    <<info>>            "scrollLeft"                                        
-    <<info>>            "selectStart"                                       
-    <<info>>            "selectEnd"                                         
-    <<info>>            "selectText"                                        
-    <<info>>            "bounds"                                            
-    <<info>>            "collisionPoly"                                     
-    <<info>>            "ip"                                                request user-agent ip address
-    <<info>>            "userAgent"                                         request information about user-side software (e.g. type/version)
-    <<info>>            "url"                                               request url information employed by user-agent to connect to task
-    <<info>>            "screen"                                            user-agent screen size
+  <<lnOption>>        "v":[<<item>>|<<ref>>(,<<item>>|<<ref>>)*]             line way-points through which the "type":"ln" connector must pass; Ex: ["A","B",{"type":"ln","v":[0,1]}] would add "A" and "B" texts to the display, and draw a connecting line between the two texts
+  <<lnOption>>        "dir":-1|0|1|2                                         line direction; 0 (default) is a non-directional line, 1 is unidirectional (pointing toward from earlier to latter items in specified order), 2 is bi-directional
+  <<lnOption>>        "path":0|1|2|3                                         line path-type; 0 is direct (i.e. shortest-path), 1 is grid-like (i.e. city-block), 2 is curved near shortest path (i.e. smoothed), 3 is arched away from shortest path; unspecified path value (i.e. "path":null) signifies that path line path-type does not have functional significance and may be chosen automatically
+  <<lnOption>>        "dash":<<uint>>                                        line dash-array type; 0 (default) is 
 
-    <<timeField>>       Y|M|D|d|h|m|s|.                                     the characters "YMDdhms." correspond to Year, Month, Day, day of week, hours, min, sec, and milliseconds
-    <<sizeUnit>>        ** legal CSS length unit; e.g., http://www.w3schools.com/cssref/css_units.asp **
-    <<sizeUnit>>        E                                                   E signifies item size; when specifying height of <<container>> or <<table>>, E is row-height (Ex: {"h":"2.5E"} signifies that 2.5 rows will be visible in current container before scrolling down); when specifying width of <<container>> or <<table>>, E is item-width (Ex: {"w":"2.5E"} signifies that 2.5 items will be visible in current container before scrolling right); when specifying height of a <<text>> item, E is (font height + space between lines) (Ex: {"h":"2.5E"} signifies that 2.5 lines of text will be visible in current item before scrolling down); when specifying width of a <<text>> item, E is (font width + space between characters) (Ex: {"w":"10E"} signifies that, if font-type is monospace, 10 characters will be visible; if font is not monospace, at least client promises to do its best).
-    <<sizeUnit>>        w|h                                                 specify size as a proportion of current width or height; Ex: [{"id":"my box","w":100,"h":".5w"}] makes the width/height of "my box" 100 and 50 pixels, respectively
-    <<color>>           <<uint>>                                            one of preset template colors; each present color is assumed to be different and distinguishable from other preset colors; 0 is default background color, 1 is default text color, necessity for other preset colors should be stated via the {"require":{"colors":<<unit>>}} directive; Ex: {"require":{"colors":3}} ensures that template contains at least 2 color presets beyond bg/text colors, and [{"v":"hello","bg":2,"c":3}] would add "hello" text to the display, drawn in colors diff from default bg/text colors (in a case where a template might specify blue/yellow as color presets 2/3 respectively, the "hello" would be drawn in yellow on blue background)
-    <<color>>           ** see CSS color specification; e.g. https://www.w3schools.com/colors/default.asp **
-    <<cssBackground>>   <<color>>
-    <<cssBackground>>   ** see CSS background specification; e.g. http://www.w3schools.com/cssref/css3_pr_background.asp **
-    <<cssBorder>>       ** see CSS border style specification; e.g. http://www.w3schools.com/cssref/pr_border.asp **
-    <<cssPadding>>      ** see CSS border style specification; e.g. http://www.w3schools.com/cssref/pr_padding.asp **
-    <<cssFont>>         ** see CSS font specification; e.g. http://www.w3schools.com/cssref/pr_font_font.asp **
-    <<strokeDash>>      ** see SVG stroke-dasharray specification; e.g. https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-dasharray **
-    <<key>>             ** key values as specified by w3c; e.g., "Shift", "ArrowLeft", "q", "Q"; see https://www.w3.org/TR/uievents-key/ for a list of legal key values **
-    <<keyboardCode>>    ** key values as specified by w3c; e.g., "ShiftLeft", "ArrowLeft", "KeyQ"; see https://www.w3.org/TR/uievents-code/ for a list of legal code values **
+  <<ref>>             {"#":<<id>>|<<idArray>>}                               reference to another item; "#" is treated as <<pName>> for the purposes of <<required>> specifications
 
+  <<eventType>>       "onunload"                                             item unload event
+  <<eventType>>       "onfocus"                                              item focus event
+  <<eventType>>       "onblur"                                               item blur (loss of focus) event
+  <<eventType>>       "onscroll"                                             item scroll event
+  <<eventType>>       "onresize"                                             item resize event
+  <<eventType>>       "onoverlap"                                            item overlap (i.e. collision) event; this event activates whenever an item overlaps with another item that has an "onoverlap" property
+  <<eventType>>       "onoverout"                                            item depart (i.e. end of collision) event; this event activates whenever an item overlaps with another item that has an "onoverlap" property
+  <<eventType>>       "ondragstart"                                          item drag-start event; items with this event are considered draggable; this event fires once, when dragging starts (i.e., the item is grabbed)
+  <<eventType>>       "ondrag"                                               item continuous drag event; items with this event are considered draggable; this even will keep firing as long as the item is being dragged (i.e., item is held and is being moved)
+  <<eventType>>       "ondragend"                                            item drag-end event; items with this event are considered draggable; this event fires once dragging stops (i.e., the item is let go)
+  <<eventType>>       "onselect"                                             text select event
+  <<eventType>>       "oncopy"                                               text copy event
+  <<eventType>>       "oncut"                                                text cut event
+  <<eventType>>       "onpaste"                                              text paste event
+  <<eventType>>       "onclick"                                              mouse click event
+  <<eventType>>       "ondblclick"                                           mouse double-click event
+  <<eventType>>       "onmousedown"                                          mouse button-down event
+  <<eventType>>       "onmouseup"                                            mouse button-up event
+  <<eventType>>       "onmousemove"                                          mouse move event
+  <<eventType>>       "onmouseenter"                                         mouse enter event
+  <<eventType>>       "onmouseleave"                                         mouse leave event
+  <<eventType>>       "onmouseover"                                          mouse over event
+  <<eventType>>       "onmouseout"                                           mouse out event
+  <<eventType>>       "onkeydown"                                            keyboard key-down event
+  <<eventType>>       "onkeyup"                                              keyboard key-up event
+
+  <<userVal>>         [<<value>>(,<<value>>)*]                               user-side item information array that corresponds to the <<info>> array, as specified via the "R" <<command>> or "R" <<eventOption>>; Ex: [{"id":"myItem","v":"hi","bg":2,"R":["v","bg"]}] will send back [<<ums>>,"myItem",["hi",2]]
+  <<info>>            <<pName>>                                              request property value for current item; Ex: ["a","b","c"] followed by [{"id":1,"R":["the value is","v"]}] would send back [<<ums>>,1,["the value is","b"]]
+  <<info>>            "mouseX|Y"                                             mouse coordinates relative to top-left of the current container; Ex: {"e":{"mousemove":{"R":["mouseX","mouseY"]}}} will send back [<<ums>>,null,[<<number>>,<<number>>]] to task software every time the mouse moves, where [<<number>>,<<number>>] will be mouse coordinates
+  <<info>>            "key"                                                  request <<key>>
+  <<info>>            "keyLocation"                                          request key location (0 is default, 1 is left-hand side modifier keys, 2 is right-hand modifier keys, 3 is numeric pad)
+  <<info>>            "code"                                                 request <<keyboardCode>>
+  <<info>>            "modKeys"                                              modifier keys; returns 1 if Shift is held, 2 if Alt is held, 4 if Ctrl is held, 8 if Meta key is held, and sums of these values for any combinations (e.g., Shift+Ctrl = 5); if a modKeys <<require>> array is specified, the first item in this array will be 16, the next will be 32, and so on (Ex: {"require":{"modKeys":["Fn","CapsLock","NumLock"]}} would mean that when NumLock is engaged, modKeys is 64)
+  <<info>>            "scrollTop"                                            vertical scroll position of the current container
+  <<info>>            "scrollLeft"                                           horizontal scroll position of the current container
+  <<info>>            "selectStart"                                          if there is text selected, this is the index of first character in text selection, otherwise null
+  <<info>>            "selectEnd"                                            if there is text selected, this is the index of last character in text selection, otherwise null
+  <<info>>            "selectText"                                           selected text
+  <<info>>            "bounds"                                               request bounding rectangle, to be returned as a [left,top,right,bottom] array
+  <<info>>            "overlapPoly"                                          request a polygon of overlap during overlap event
+  <<info>>            "ip"                                                   request user-agent ip address
+  <<info>>            "userAgent"                                            request information about user-side software (e.g. type/version)
+  <<info>>            "url"                                                  request url information employed by user-agent to connect to task
+  <<info>>            "screen"                                               user-agent screen size
+
+  <<shape>>           <<uint>>                                               predefined shapes; "shape":0 is the default container shape (usually this would be a "rect" or "roundedRect"), and every other number is a different unique shape (e.g. 1=round, 2=hexagon, 3=diamond, etc)
+  <<shape>>           [<<pathPart>>(,<<pathPart>>)*]                         custom shape; Ex: [{"shape":["0,100","50,0","100,100"],"bg":"#faa","w":7,"h":7}]
+  <<shape>>           "rect"
+  <<shape>>           "roundedRect"
+  <<shape>>           "round"
+  <<shape>>           "roundTop"
+  <<shape>>           "roundBottom"
+  <<shape>>           "roundLeft"
+  <<shape>>           "roundRight"
+  <<shape>>           "diamond"
+  <<shape>>           "pentagon"
+  <<shape>>           "hexagon"
+  <<shape>>           "triangleUp"
+  <<shape>>           "triangleDown"
+  <<shape>>           "triangleLeft"
+  <<shape>>           "triangleRight"
+  <<shape>>           "arrowLeft"
+  <<shape>>           "arrowRight"
+  <<shape>>           "bowtie"
+  <<shape>>           "hourglass"
+  <<shape>>           "plus"
+  <<shape>>           "star4"
+  <<shape>>           "star5"
+  <<shape>>           "star6"
+  <<shape>>           "explosion"
+  <<shape>>           "cloud"
+
+  <<geoComplication>> "(shape)|(rot)|(type)|z"                               geometry complication taken into account when calculating overlap of items for the "overlap" event (i.e. collision); Ex: {"require":{"overlap":["r","rot"]}} signifies that user-side software has to be able to deal with collision events even when items are rotated and have rounded corners
+  <<timeField>>       Y|M|D|d|h|m|s|.                                        the characters "YMDdhms." correspond to Year, Month, Day, day of week, hours, min, sec, and milliseconds
+  <<background>>      <<color>>|"url(<<url>>)"                               background may be a color or a link to an image
+  <<color>>           <<uint>>                                               one of preset template colors; each present color is assumed to be different and distinguishable from other preset colors; 0 is default background color, 1 is default text color, necessity for other preset colors should be stated via the {"require":{"colors":<<unit>>}} directive; Ex: {"require":{"colors":3}} ensures that template contains at least 2 color presets beyond bg/text colors, and [{"v":"hello","bg":2,"c":3}] would add "hello" text to the display, drawn in colors diff from default bg/text colors (in a case where a template might specify blue/yellow as color presets 2/3 respectively, the "hello" would be drawn in yellow on blue background)
+  <<color>>           ** see CSS color specification; e.g. https://www.w3schools.com/colors/default.asp **
+  <<cssFont>>         ** see CSS font specification (e.g. http://www.w3schools.com/cssref/pr_font_font.asp) **
+  <<pathPart>>        ** part of the path string; see "d" attribute of full SVG path specification (e.g. https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths) **
+  <<key>>             ** key values as specified by w3c; e.g., "Shift", "ArrowLeft", "q", "Q"; see https://www.w3.org/TR/uievents-key/ for a list of legal key values **
+  <<keyboardCode>>    ** key values as specified by w3c; e.g., "ShiftLeft", "ArrowLeft", "KeyQ"; see https://www.w3.org/TR/uievents-code/ for a list of legal code values **
+  <<sizeUnit>>        ** legal CSS length unit; e.g., http://www.w3schools.com/cssref/css_units.asp **
+  <<sizeUnit>>        w|h                                                    specify size as a proportion of current width or height; Ex: [{"id":"my box","w":100,"h":".5w"}] makes the width/height of "my box" 100 and 50 pixels, respectively
+  <<sizeUnit>>        lh                                                     specify size as a proportion of current line/row height (this would be bigger than the "em" size unit, as "em" would only account for text height, whereas "lh" would account for text-height plus spacing between lines)

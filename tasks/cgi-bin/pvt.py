@@ -13,9 +13,6 @@ import sys,os,json,random
 
 TRIALS = 20
 
-CLEAR_ALL = {'$':True,'v':None}
-
-
 
 
 def send(stap):
@@ -32,21 +29,21 @@ def obj(id=None,content=NotImplemented,**options):
 def main():
 	#read request
 	try: time,id,val = json.loads(sys.stdin.buffer.read(int(os.environ['CONTENT_LENGTH'])).decode('utf-8'))
-	except: time,id,val = 0,0,[0]
+	except: time,id,val = 0,None,['onload']
 	
 	displayUpdates=[]
 	display=obj(content=displayUpdates)
 	
-	if val==[0]:
+	if val==['onload']:
 		#initial task setup
-		display.update({'require':{'options':['U','onedit']},'template':'[type="container"]{min-height:6em}'})
+		display.update({'require':{'options':['U','onin']},'template':'[type="bin"]{min-height:6em}'})
 		displayUpdates+=[
 			obj('Trial',1,max=TRIALS), 
-			obj('Click a button when one appears',[],onedit={'v':None})
+			obj('Click a button when one appears',[])
 			]
 		trial=0
 
-	elif id.startswith('btn'):
+	elif id and id.startswith('btn'):
 		#read button id (which includes trial number and display timestamp)
 		_,trial,displayTime=id.split()
 		trial=int(trial)
@@ -66,7 +63,7 @@ def main():
 		#wait, then show the button (button id includes trial number and time of display to enable stateless scripting)
 		displayUpdates+=[
 				obj('Trial',trial), 
-				obj('Click a button when one appears', [obj('btn %d %d'%(trial,displayTime),False,title='Click me')],U=displayTime)
+				obj('Click a button when one appears', [obj('btn %d %d'%(trial,displayTime),False,title='Click me',onin={'v':None})],U=displayTime)
 			]
 	send(display)
 

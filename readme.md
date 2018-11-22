@@ -1,4 +1,4 @@
-<img src="pres/stap-icon.png" width=250 align=right>
+<img src="https://stap.github.io/img/stap-icon.png" width=250 align=right>
 STAP (Simple Task-Actor Protocol) is a machine-readable format for specifying user-interface changes. 
 
 Main focus of STAP is in providing a functionally-equivalent task experience for human and computational users alike.
@@ -27,7 +27,7 @@ Benefits of agent development for STAP-compliant tasks:
 
 ***
 
-[Demo](https://cdn.rawgit.com/stap7/stapjs/ee0cd1f4/demo.html)
+[Demo](https://stap7.github.io/demo)
 
 ***
 
@@ -37,8 +37,6 @@ Sample Interactions:
     ->     Message sent from task software to user software
 
     Sample Interaction 1:
-        // user software ready
-        <- [0,0,[0]]
         // display "Hello World"
         -> ["Hello World"]
         // display a "Click Me" button
@@ -47,20 +45,18 @@ Sample Interactions:
         <- [30800,"Click Me",true]
 
     Sample Interaction 2:
-        // user software ready
-        <- [0,0,[0]]
-        // let user software know that "T" (timeout) and "eT" (editable-text field) are required directives for this task
-        -> {"require":{"options":["T","eT"]}}
+        // let user software know that "T" (timeout), "in" (interactive-field), "df" (defaults), and "type" (item-type) are required directives for this task
+        -> {"require":{"options":["T","in","df","type"]}}
         // let user know that a goal in this task is to earn as close to 10 coins as possible
         -> {"task":{"good":[{"id":"Coins Earned","v":{">":0","closerTo":10}}]}}
         // display a text prompt to get user's name (eT:1 turns text editable)
-        -> [{"id":"What is your name?","v":"","eT":1}]
+        -> [{"id":"What is your name?","v":"","in":1}]
         // user types in "Bob" and hits enter (9.876sec after task display first loaded)
         <- [9876,"What is your name?","Bob"]
         // clear display
         -> null
         // display two buttons
-        -> [{"id":"choose a button","v":[{"id":"Button 1","v":false},{"id":"Button 2","v":false}]}]
+        -> [{"id":"choose a button","df":{"type":"btn"},"v":[{"id":"Button 1"},{"id":"Button 2"}]}]
         // first button was clicked after 12.307sec
         <- [12307,"Button 1",true]
         // give user reward, "Coins Earned"=7
@@ -80,7 +76,7 @@ Sample Interactions:
 ## Core STAP syntax
 
 ### Message sent from task software to user-side software
-![task-to-user](pres/task-to-user.png)
+![task-to-user](https://stap.github.io/img/task-to-user.png)
 - each task-to-user message adds or updates UI items on user display
 - `null` signifies display is cleared
 
@@ -89,21 +85,20 @@ Sample Interactions:
 - each container item update may be declared as a **value** or as **property-list**
 
 ### property-list
-![property-list](pres/property-list.png)
+![property-list](https://stap.github.io/img/property-list.png)
 
 ### property
-![property](pres/property.png)
+![property](https://stap.github.io/img/property.png)
 - **id** indicates which item in the container to update; if item with the given id does not exist, it is appended to the container
-- `[ ( id , )* id ]` specifies a hierarchical path to item; please see [stap.txt](stap.txt) for a full description with examples
 - **value** sets item value (and inferred item type)
 
 ### id
-![id](pres/id.png)
+![id](https://stap.github.io/img/id.png)
 - text id is a unique and displayable item id
 - number id is an unsigned integer signifying item position in container
 
 ### value
-![value](pres/value.png)
+![value](https://stap.github.io/img/value.png)
 - text and number syntax must follow the JSON spec for `string` and `number`, respectively (see json.org)
 - boolean value can be `true` or `false`
 - number values indicate numeric fields
