@@ -1,5 +1,5 @@
 STAP (Simple Task-Actor Protocol)
-version 7.16 (201811121)
+version 7.16 (20181231)
 
 
   Message Type        Regular Expression                                     Functionality
@@ -95,6 +95,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
   <<property>>        <<numOption>>                                          number item options
   <<property>>        <<txtOption>>                                          text item options
   <<property>>        <<aniOption>>                                          animation options
+  <<property>>        <<timeOption>>                                         date/time item options
   <<property>>        <<selectOption>>                                       select item options
   <<property>>        <<tableOption>>                                        table item options
   <<property>>        <<pieOption>>                                          pie item options
@@ -173,6 +174,8 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
 
   <<aniOption>>       "ease":(0|1|2|3|4|"back"|"elastic"|"bounce")           easing option for animation; 0 (default) is linear animation, 1 is quadratic, 2 is cubic, 3 is quart, 4 is quint, "back" overshoots and comes back, "elastic" overshoots and undershoots a few times before settling at required value, "bounce" bounces off the desired value and then gravitates to it again and bounces again a few times; see http://greensock.com/ease-visualizer to visualize ease options
   <<aniOption>>       "easeout":(1|-1|0)                                     ease direction; 1 (default) eases the end of the animation, -1 eases the start of the animation, 0 eases on both ends of the animation; see http://greensock.com/ease-visualizer to visualize ease options
+
+  <<timeOption>>      "unit":"(<<timeField>>)+"                              date/time components to be displayed; Ex: [{"id":"when","v":1483963200,"type":"time","unit":"YMDhm"}] is a way to specify date/time 2017/01/09 12:00; Ex: [{"v":543.21,"type":"time","unit":"ms."}] is a way to specify 9:03.210 (9min, 3sec, 210ms)
 
   <<selectOption>>    "group":<<text>>                                       if this property is present (not null), the "select" item type belongs to a group (named via <<text>>) where only one item can be selected at a time (i.e. radio-buttons); Ex: [{"id":"Choose a car","df":{"type":"select","group":"car"},"v":[{"id":"Subaru"},{"id":"Toyota"}]}] creates a container "Choose a car" with two radio buttons -- "Subaru" and "Tesla" where only one can be chosen at a time
 
