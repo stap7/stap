@@ -1,5 +1,5 @@
 STAP (Simple Task-Actor Protocol)
-version 7.16 (20181231)
+version 7.16 (20180114)
 
 
   Message Type        Regular Expression                                     Functionality
@@ -85,7 +85,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
   <<itemType>>        "table"                                                this item is a table -- a special <<container>> that contains others <<container>> items, each of which will be a row in a table; Ex: [{"id":"personnel","v":[["name","age","gender"],["john",39,"m"],["mary",28,"f"]],"type":"table","head":1}] will add a "personnel" table with a header row and two records (john, mary)
   <<itemType>>        "data"                                                 this item is a data frame -- a special <<container>> whose items are related data series (each data series is a <<container>> with values); "data" item types may be displayed in different ways depending on client software and template used (e.g. chart and/or table, 2d/3d, interactive plots, animation, a "download CSV" link, etc)
   <<itemType>>        "pie"                                                  this item is a pie -- a special <<container>> whose items are displayed as slices in a pie
-  <<itemType>>        "ln"                                                   this item is a path of lines/links -- a special <<container>> in which each item is connected; items connected via "ln" may lay outside of this container, and referenced via <<ref>>; Ex: [{"type":"path","w":100,"h":100,"v":[{"x":10,"y":10},{"x":20,"y":0},{x:100,y:100}]}] draws path 10,10->20,0->100,100
+  <<itemType>>        "ln"                                                   this item is a path of lines/links -- a special <<container>> in which each item is connected; items connected via "ln" may lay outside of this container, and referenced via <<ref>>; Ex: [{"type":"ln","v":["a","b","c"]}] would add a container with connected text items "a", "b", "c"; Ex: [{"type":"ln","v":[{"x":10,"y":10},{"x":20,"y":20}]}] would add a diagonal line going (10,10) to (20,20)
 
   <<property>>        <<command>>                                            commands that alter how other properties are changed; <<command>> property values are not permanent; Ex: [{"id":"x","T":10,"bg":"blue"}] signifies that the background of "x" should be changed to blue over the course of 10seconds, after which the value of "bg" (background) remains "blue", but the value "T" (time of animation) resets to null, because "T" is an <<command>>, rather than another type of item property
   <<property>>        <<option>>                                             generic item options
@@ -171,7 +171,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
   <<numOption>>       "time":"(<<timeField>>)+"                              exclusive with "unit" option; indicates that the value for this item is the total number of seconds since 1970/01/01 00:00; Ex: [{"id":"when","v":1483963200,"time":"YMDhm"}] is a way to specify date/time 2017/01/09 12:00; [{"v":543.21,"time":"ms."}] is a way to specify 9:03.210 (9min, 3sec, 210ms)
 
   <<txtOption>>       "chmax":<<number>>                                     max number of characters in <<text>>
-  <<txtOption>>       "mask":{<<regex>>:<<text>>(,<<regex>>:<<text>>)*}      replace <<regex>> with <<text>> throughout the string (global replace); Ex: [{"v":"","eT":1,"mask":{".","*"}}] would add a text input field where each character would be masked by "*" (like in password fields)
+  <<txtOption>>       "mask":{<<regex>>:<<text>>(,<<regex>>:<<text>>)*}      replace <<regex>> with <<text>> throughout the string (global replace); Ex: [{"v":"","in":1,"mask":{".","*"}}] would add a text input field where each character would be masked by "*" (like in password fields)
 
   <<aniOption>>       "ease":(0|1|2|3|4|"back"|"elastic"|"bounce")           easing option for animation; 0 (default) is linear animation, 1 is quadratic, 2 is cubic, 3 is quart, 4 is quint, "back" overshoots and comes back, "elastic" overshoots and undershoots a few times before settling at required value, "bounce" bounces off the desired value and then gravitates to it again and bounces again a few times; see http://greensock.com/ease-visualizer to visualize ease options
   <<aniOption>>       "easeout":(1|-1|0)                                     ease direction; 1 (default) eases the end of the animation, -1 eases the start of the animation, 0 eases on both ends of the animation; see http://greensock.com/ease-visualizer to visualize ease options
@@ -184,7 +184,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
 
   <<pieOption>>       "bounda":[<<number>>(,<<number>>)*]                    bounding angles of the pie in clockwise order, 0 degrees is up; Ex: [{"id":"navigation","type":"pie","bounda":[45,135,225,315],"df":{"type":"btn"},"v":[{"id":"E"},{"id":"S"},{"id":"W"},{"id":"N"}]}] creates a 4-button east-south-west-north pie
 
-  <<lnOption>>        "v":[<<item>>|<<ref>>(,<<item>>|<<ref>>)*]             line way-points through which the "type":"ln" connector must pass; Ex: ["A","B",{"type":"ln","v":[0,1]}] would add "A" and "B" texts to the display, and draw a connecting line between the two texts
+  <<lnOption>>        "v":[<<item>>|<<ref>>(,<<item>>|<<ref>>)*]             line way-points through which the "type":"ln" connector must pass; Ex: [{"type":"ln","v":["a","b","c"]}] would add a container with connected text items "a", "b", "c"; Ex: [{"type":"ln","v":[{"x":10,"y":10},{"x":20,"y":20}]}] would add a diagonal line going (10,10) to (20,20)
   <<lnOption>>        "dir":-1|0|1|2                                         line direction; 0 (default) is a non-directional line, 1 is unidirectional (pointing toward from earlier to latter items in specified order), 2 is bi-directional
   <<lnOption>>        "path":0|1|2|3                                         line path-type; 0 is direct (i.e. shortest-path), 1 is grid-like (i.e. city-block), 2 is curved near shortest path (i.e. smoothed), 3 is arched away from shortest path; unspecified path value (i.e. "path":null) signifies that path line path-type does not have functional significance and may be chosen automatically
   <<lnOption>>        "dash":<<uint>>                                        line dash-array type; 0 (default) is 
