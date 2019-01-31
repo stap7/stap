@@ -1,5 +1,5 @@
 STAP (Simple Task-Actor Protocol)
-version 7.16 (20180114)
+version 7.16 (20180121)
 
 
   Message Type        Regular Expression                                     Functionality
@@ -41,10 +41,9 @@ everything below specifies optional user-side sw features that enable more featu
   <<conds>>           [<<cond>>|<<condAnd>>(,<<cond>>|<<condAnd>>)*]         <<conds>> list is True if any of the items in it are True
   <<condAnd>>         [<<cond>>(,<<cond>>)*]                                 <<condAnd>> list is True if ALL of the items in it are True
   <<cond>>            {"id":<<id>>(,<<pName>>:<<condVal>>)*}                 a condition defines what property value(s) must be met for a given item, as specified by item <<id>>
-  <<condVal>>         <<value>>|<<range>>|<<propVal>>
-  <<range>>           {(<<comp>>:<<number>>|<<propVal>>)(,<<comp>>:<<number>>|<<propVal>>)*}
+  <<condVal>>         <<value>>|<<range>>
+  <<range>>           {(<<comp>>:<<number>>)(,<<comp>>:<<number>>)*}
   <<comp>>            "<|>|(<=)|(>=)|(!=)|(closerTo)"                        numerical comparisons; <, >, <=, >=, != signify numerical range limits, and "closerTo" is employed to signify that value scales; Ex: {"task":{"good":[{"id":"R","v":{">":0,"closerTo":1}}],"bad":[{"id":"R","v":{"<":0,"closerTo":-1}}]}} signifies that R<0 is bad, the closer to R:-1 the worse, and R>0 is good, the closer to R:1, the better
-  <<propVal>>         {"@":<<pName>>(,"id":<<id>>)?}                         property value; Ex: {"@":"max","id":"Score"} is the maximum value of the Score item; if "id" is unspecified it is presumed to be the same as that in the enclosing statement; Ex: {"task":{"good":[{"id":"Score","v":{"closerTo":{"@":"max"}}}]}} signifies that for the current task, the higher the value of the Score item is (i.e., the closer it is to the value of "max"), the better
   <<pName>>           ** property name: the part to the left of the colon in the <<property>> or <<taskOption>> expression; e.g. "v", "bg", "x" **
   <<json>>            ** see full JSON specification, e.g. http://json.org **
   <<url>>             ** legal url **
@@ -189,6 +188,10 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
   <<lnOption>>        "dash":<<uint>>                                        line dash-array type; 0 (default) is 
 
   <<ref>>             {"#":<<id>>|<<idArray>>}                               reference to another item; "#" is treated as <<pName>> for the purposes of <<required>> specifications
+
+  <<refVal>>          {"@":<<pName>>(,"#":<<id>>|<<idArray>>)?}              reference to a property value; "@" is treated as <<pName>> for the purposes of <<required>> specifications (e.g. {"require":{"options":["@"]}}); Ex: {"@":"max","id":"Score"} is the maximum value of the Score item; if "#" is unspecified it is presumed to be the same as that in the enclosing statement; Ex: {"task":{"good":[{"id":"Score","v":{"closerTo":{"@":"max"}}}]}} signifies that for the current task, the higher the value of the Score item is (i.e., the closer it is to the value of "max"), the better
+  <<value>>           <<refVal>>                                             specifying <<refVal>> as a property value enables automatic interface changes based on other property values in the UI; Ex: [{"bg":"red","v":{"@":"bg"}}] would add a red item containing the text string "red"
+  <<range>>           {(<<comp>>:<<refVal>>)(,<<comp>>:<<refVal>>)*}         <<refVal>> can be used as part of <<range>> in place of numeric values; Ex: {"task":{"good":[{"id":"Score","v":{"closerTo":{"@":"max"}}}]}} signifies that for the current task, the higher the value of the Score item is (i.e., the closer it is to the value of "max"), the better
 
   <<eventType>>       "onunload"                                             item unload event
   <<eventType>>       "onfocus"                                              item focus event
