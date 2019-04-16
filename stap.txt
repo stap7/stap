@@ -1,5 +1,5 @@
 STAP (Simple Task-Actor Protocol)
-version 7.16 (20180121)
+version 7.16 (20180416)
 
 
   Message Type        Regular Expression                                     Functionality
@@ -80,7 +80,8 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
   <<itemType>>        "time"                                                 this item is a date/time field -- its a special <<number>> item whose value indicates the number of seconds (counted since 1970/01/01 00:00 for dates) and "unit" property specifies date/time components to be displayed; Ex: {"type":"time","v":90,"unit":"ms"} is 1 min and 30 sec
   <<itemType>>        "html"                                                 this item is html body -- its a special <<text>> item that includes html tags; Ex: {"type":"html","v":"<b>this text is bold</b>"}; this should only be employed for displaying documents, not functional UI components, and with the assumption that many machine agents will ignore the tags inside html
   <<itemType>>        "mkdn"                                                 this item is markdown text -- its a special <<text>> item that includes markdown syntax; Ex: {"type":"mk","v":"_this text is underlined_"}; this should only be employed for displaying formatted text, not functional UI components, and with the assumption that many machine agents will ignore the markdown syntax
-  <<itemType>>        "popup"                                                this item is a popup -- a special <<container>> that pops up over other items of the parent container, partially obscuring their view, and preventing them from being edited
+  <<itemType>>        "popup"                                                this item is a popup -- a special <<container>> that pops up over other items of the parent container, partially obscuring their view and by preventing them from being edited
+  <<itemType>>        "toast"                                                this item is a toast -- a special <<container>> that pops up temporarily and in a non-invasive way over parent container
   <<itemType>>        "table"                                                this item is a table -- a special <<container>> that contains others <<container>> items, each of which will be a row in a table; Ex: [{"id":"personnel","v":[["name","age","gender"],["john",39,"m"],["mary",28,"f"]],"type":"table","head":1}] will add a "personnel" table with a header row and two records (john, mary)
   <<itemType>>        "data"                                                 this item is a data frame -- a special <<container>> whose items are related data series (each data series is a <<container>> with values); "data" item types may be displayed in different ways depending on client software and template used (e.g. chart and/or table, 2d/3d, interactive plots, animation, a "download CSV" link, etc)
   <<itemType>>        "pie"                                                  this item is a pie -- a special <<container>> whose items are displayed as slices in a pie
@@ -158,7 +159,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
   <<visOption>>       "scrollH":0|1|2|3                                      horizontal scrolling; 0 - scrolling isn't allowed, 1 (default) - scrolling allowed when possible, 2 - scrolling isn't allowed, but container automatically scrolls to the right to reveal newly added content, 3 - scrolling is allowed, and container automatically scrolls to the right to reveal newly added content
   <<visOption>>       "su":"<<sizeUnit>>"                                    size unit default for options x/y/w/h/lw in current item (default is "px" -- pixels)
 
-  <<containerOption>> "df":<<pList>>                                         default property list for child elements; recursive; pList is updated by key, rather than replaced, when df is updated (to drop the entire df plist, set df to null); Ex: {"df":{"rnd":1}} will round all numeric fields to integers by default
+  <<containerOption>> "df":<<pList>>                                         default property list for child elements; recursive; pList is updated by key rather than replaced when updated (to drop the entire df plist, set df to null); Ex: {"df":{"rnd":1}} will round all numeric fields to integers by default
 
   <<boolOption>>      "keys":[<<key>>(,<<key>>)*])                           keyboard shortcuts assigned to boolean inputs
   <<boolOption>>      "codes":[<<keyboardCode>>(,<<keyboardCode>>)*])        keyboard shortcuts assigned to boolean inputs
