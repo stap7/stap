@@ -1,5 +1,5 @@
 STAP (Simple Task-Actor Protocol)
-version 7.16 (20180416)
+version 7.16 (20190526)
 
 
   Message Type        Regular Expression                                     Functionality
@@ -83,9 +83,9 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
   <<itemType>>        "popup"                                                this item is a popup -- a special <<container>> that pops up over other items of the parent container, partially obscuring their view and by preventing them from being edited
   <<itemType>>        "toast"                                                this item is a toast -- a special <<container>> that pops up temporarily and in a non-invasive way over parent container
   <<itemType>>        "table"                                                this item is a table -- a special <<container>> that contains others <<container>> items, each of which will be a row in a table; Ex: [{"id":"personnel","v":[["name","age","gender"],["john",39,"m"],["mary",28,"f"]],"type":"table","head":1}] will add a "personnel" table with a header row and two records (john, mary)
-  <<itemType>>        "data"                                                 this item is a data frame -- a special <<container>> whose items are related data series (each data series is a <<container>> with values); "data" item types may be displayed in different ways depending on client software and template used (e.g. chart and/or table, 2d/3d, interactive plots, animation, a "download CSV" link, etc)
   <<itemType>>        "pie"                                                  this item is a pie -- a special <<container>> whose items are displayed as slices in a pie
   <<itemType>>        "ln"                                                   this item is a path of lines/links -- a special <<container>> in which each item is connected; items connected via "ln" may lay outside of this container, and referenced via <<ref>>; Ex: [{"type":"ln","v":["a","b","c"]}] would add a container with connected text items "a", "b", "c"; Ex: [{"type":"ln","v":[{"x":10,"y":10},{"x":20,"y":20}]}] would add a diagonal line going (10,10) to (20,20)
+  <<itemType>>        "url"                                                  this item is a url link -- a special <<text>> item that clicks through to an external target
 
   <<property>>        <<command>>                                            commands that alter how other properties are changed; <<command>> property values are not permanent; Ex: [{"id":"x","T":10,"bg":"blue"}] signifies that the background of "x" should be changed to blue over the course of 10seconds, after which the value of "bg" (background) remains "blue", but the value "T" (time of animation) resets to null, because "T" is an <<command>>, rather than another type of item property
   <<property>>        <<option>>                                             generic item options
@@ -101,6 +101,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
   <<property>>        <<tableOption>>                                        table item options
   <<property>>        <<pieOption>>                                          pie item options
   <<property>>        <<lnOption>>                                           line/link item options; these options should be used only when needed for the task to function correctly, never merely for visual appeal (visual appeal specifications are loaded via templates, using <<taskOption>> "template":<<url>>)
+  <<property>>        <<urlOption>>                                          url item options
 
   <<command>>         "id":<<idArray>>                                       select item via the specified <<idArray>> tree-path; exclusive with "*" selector
   <<command>>         "\*":<<searchTerm>>                                    select items; exclusive with "id" selector; apply current updates to all of the items that match <<searchTerm>>; Ex: [{"id":"x","v":"hello"},{"id":"z","v":[{"id":"y","v":[{"id":"x","v":"goodbye"}]}]}] followed by {"*":"x","bg":"red"} would turn the backgrounds of "hello" and "goodbye" text items red
@@ -113,6 +114,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
   <<command>>         "O":1                                                  On-input update trigger (i.e. pretend as if there was user-side input); useful for playback, demo, instructions; Ex: task->user messages [{"id":"press me","v":false,"onin":{"in":0}}] [{"id":"press me","v":true,"O":1}] would add a button that becomes disabled once clicked, and then force-click the button, causing it to become disabled
   <<command>>         "O":<<pName>>                                          On-input-property update trigger (i.e. pretend as if there was user-side property change); useful for playback, demo, instructions
   <<command>>         "O":<<eventType>>                                      On-event update trigger (i.e. pretend as if there was a user-side event); useful for playback, demo, instructions; Ex: task->user messages [{"id":"box","v":"hello","onmouseenter":{"v":"goodbye"}}] [{"id":"box","O":"onmouseenter"}] would add a text box "hello", and then force-activate its mouseenter event, causing the text to switch from "hello" to "goodbye"
+  <<command>>         "M":<<text>>                                           Media command; Ex: [{"id":"my song","type":"url","v":"mysong.mp3","M":"play"}]
 
   <<idArray>>         [<<id>>(,<<id>>)*]                                     item identification via a hierarchical <<id>> path, where the first <<id>> identifies an item within current container, with the following <<id>>'s specifying its child, that child's child, etc.; identifying item by <<idArray>> at task-level assumes that current container is the root container (e.g. task->user message {"id":[2,4],"v":null} would translate into [{"id":[2,4],"v":null}], which would delete the fifth item inside the third container in the display)
   <<idArray>>         [null(,<<id>>)*]                                       item identification via a hierarchical <<id>> path, where the first <<id>> identifies an item in root container, with the following <<id>>'s specifying its child, that child's child, etc.; this is mainly useful for onin, oninps, and <<eventType>> property specifications (e.g., [{"id":"press me","type":"btn","onin":{"id":[null],"v":null}}] will clear the display when the "press me" button is clicked)
@@ -125,7 +127,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
   <<interactOption>>  "in":0|1                                               interactive/input flag to signify whether user-input is disabled or enabled for non-container-type items (e.g. boolean, text, number); "in":0 (default for text/number items) signifies that input is disabled for current item (i.e. no user editing/toggling allowed); "in":1 (default for boolean items like buttons/checkboxes) means that the current item's input is enabled (i.e. value may be edited/toggled by the user); text input fields must include a newline in the value to enable multi-line input (e.g. [{"id":"name","v":"",in:1},{"id":"story","v":"\n",in:1}] creates a single-line text input field called "name" and a multi-line one called "story"); Ex: [{"id":"type something","v":"",in:1},{"id":"button 1","v":false,in:0}] would add a text input box titled "type something", and a disabled button "button 1"
   <<interactOption>>  "in":2                                                 interactive/input flag for text/number types to signify that detailed/dynamic value input is enabled (i.e. text/number input fields will send value-changes on every keypress and value toggle, rather than just when the field loses focus)
   <<interactOption>>  "in":3                                                 interactive/input flag for container-types (i.e. items that have children) to signify that user has the ability to add new items to current container
-  <<interactOption>>  "inps":[<<pName>>|null(,<<pName>>|null)*]              interactive/input flag for multiple properties; null signifies item is deletable by user, <<pName>> signfies the corresponding property is editable by user; user->task message upon item deletion would look as such: [<<ums>>,<<id>>,null]; user->task message upon <<pName>> changes would look as such: [<<ums>>,<<id>>,{<<pName>>:<<value>>}]; <<pName>> "P" signifies that user can change item position within the container; for container-types, <<pName>> "v" signifies that user can append new items to container; Ex: [{"id":"choose color","bg":"red","in":["bg"]}] adds a "choose color" container where the user can edit the background color, sending [<<ums>>,"choose color",{"bg":<<color>>}] messages back to task upon color changes
+  <<interactOption>>  "inps":[<<pName>>|null(,<<pName>>|null)*]              interactive/input flag for multiple properties; null signifies item is deletable by user, <<pName>> signfies the corresponding property is editable by user; user->task message upon item deletion would look as such: [<<ums>>,<<id>>,null]; user->task message upon <<pName>> changes would look as such: [<<ums>>,<<id>>,{<<pName>>:<<value>>}]; <<pName>> "P" signifies that user can change item position within the container; for container-types, <<pName>> "v" signifies that user can append new items to container; Ex: {"in":["scrollY"]} means that user can scroll down; Ex: [{"id":"choose color","bg":"red","in":["bg"]}] adds a "choose color" container where the user can edit the background color, sending [<<ums>>,"choose color",{"bg":<<color>>}] messages back to task upon color changes
   <<interactOption>>  "onin":<<pList>>                                       what to do and how to change current item if user changes its value (e.g., user toggles button, edits text); for container-types "onin" will trigger when user adds or deletes a contained item; Ex: [{"id":"say something:","v":"","in":1,"onin":{"v":""}}] will create a textbox where user can type something, but as soon as they hit Enter, the text will disappear; Ex: [{"id":"btn1","v":false,"onin":{"in":0}}] creates a button, btn1, that becomes disabled once clicked; Ex: [{"id":"btn1","v":false,"onin":{"v":null}}] creates a button, btn1, that gets removed once clicked
   <<interactOption>>  "oninps":{<<pName>>:<<pList>>(,<<pName>>:<<pList>>)*}  what to do and how to change current item if user changes its properties (e.g., user edits background color); Ex: [{"id":"choose color","inps":["bg"],"oninps":{"bg":{"inps":null}}}] adds a "choose color" container which lets the user choose the color once, and then disables further color choosing
   <<interactOption>>  <<eventType>>:<<pList>>                                what to do and how to update current item upon a given UI event; in the absence of the "R" command among the <<property>> list, "R":[<<eventType>>] is presumed; Ex: {"onmousemove":{"R":[null,"mouseX","mouseY"]},"onclick":{"bg":3}} will cause user sw to send back [<<ums>>,null,[<<number>>,<<number>>]] to task software every time the mouse moves, where [<<number>>,<<number>>] will be mouse coordinates, and to change background color and send [<<ums>>,null,["onclick"]] to task-software if the mouse is clicked
@@ -148,18 +150,20 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
   <<visOption>>       "shape":<<shape>>                                      shape of current item; Ex: [{"v":"this is a circle","w":100,"h":100,"shape":"round","bg":3}]
   <<visOption>>       "opc":<<number>>                                       opacity; <<number>> must be between 0 (seethrough) and 1 (solid); 1 is default
   <<visOption>>       "fnt":<<cssFont>>                                      text font
-  <<visOption>>       "lc":<<color>>                                         line color (default is 1)
-  <<visOption>>       "lw":<<number>>|("<<number>><<sizeUnit>>")             line width
+  <<visOption>>       "lc":<<color>>                                         line/stroke color (default is 1)
+  <<visOption>>       "lw":<<number>>|("<<number>><<sizeUnit>>")             line/stroke width
   <<visOption>>       "w":<<number>>|("<<number>><<sizeUnit>>")              width of the item
   <<visOption>>       "h":<<number>>|("<<number>><<sizeUnit>>")              height of the item
   <<visOption>>       "x":<<number>>|("<<number>><<sizeUnit>>")              horizontal position of left-top corner of the item
   <<visOption>>       "y":<<number>>|("<<number>><<sizeUnit>>")              vertical position of left-top corner of the item
   <<visOption>>       "z":<<number>>                                         z-index (stack order) of the item; an item with greater stack order is always in front of an item with a lower stack order
-  <<visOption>>       "scroll":0|1|2|3                                       vertical scrolling; 0 - scrolling isn't allowed, 1 (default) - scrolling allowed when possible, 2 - scrolling isn't allowed, but container automatically scrolls to the bottom to reveal newly added content, 3 - scrolling is allowed, and container automatically scrolls to the bottom to reveal newly added content
-  <<visOption>>       "scrollH":0|1|2|3                                      horizontal scrolling; 0 - scrolling isn't allowed, 1 (default) - scrolling allowed when possible, 2 - scrolling isn't allowed, but container automatically scrolls to the right to reveal newly added content, 3 - scrolling is allowed, and container automatically scrolls to the right to reveal newly added content
   <<visOption>>       "su":"<<sizeUnit>>"                                    size unit default for options x/y/w/h/lw in current item (default is "px" -- pixels)
+  <<visOption>>       "scrollY":<<number>>|("<<number>><<sizeUnit>>")        how far up the contents of this item are moved; "scrollY":"100%" will auto-scroll to the bottom of the container
+  <<visOption>>       "scrollX":<<number>>|("<<number>><<sizeUnit>>")        how far left the contents of this item are moved; "scrollX":"100%" will auto-scroll to the rightmost part of the container
 
   <<containerOption>> "df":<<pList>>                                         default property list for child elements; recursive; pList is updated by key rather than replaced when updated (to drop the entire df plist, set df to null); Ex: {"df":{"rnd":1}} will round all numeric fields to integers by default
+  <<containerOption>> "scaleX":<<number>>                                    scale factor for all "x" and "w" properties of items inside this container
+  <<containerOption>> "scaleY":<<number>>                                    scale factor for all "y" and "h" properties of items inside this container
 
   <<boolOption>>      "keys":[<<key>>(,<<key>>)*])                           keyboard shortcuts assigned to boolean inputs
   <<boolOption>>      "codes":[<<keyboardCode>>(,<<keyboardCode>>)*])        keyboard shortcuts assigned to boolean inputs
@@ -186,7 +190,9 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
   <<lnOption>>        "v":[<<item>>|<<ref>>(,<<item>>|<<ref>>)*]             line way-points through which the "type":"ln" connector must pass; Ex: [{"type":"ln","v":["a","b","c"]}] would add a container with connected text items "a", "b", "c"; Ex: [{"type":"ln","v":[{"x":10,"y":10},{"x":20,"y":20}]}] would add a diagonal line going (10,10) to (20,20)
   <<lnOption>>        "dir":-1|0|1|2                                         line direction; 0 (default) is a non-directional line, 1 is unidirectional (pointing toward from earlier to latter items in specified order), 2 is bi-directional
   <<lnOption>>        "path":0|1|2|3                                         line path-type; 0 is direct (i.e. shortest-path), 1 is grid-like (i.e. city-block), 2 is curved near shortest path (i.e. smoothed), 3 is arched away from shortest path; unspecified path value (i.e. "path":null) signifies that path line path-type does not have functional significance and may be chosen automatically
-  <<lnOption>>        "dash":<<uint>>                                        line dash-array type; 0 (default) is 
+  <<lnOption>>        "dash":<<uint>>                                        line dash-array type; 0 (default) is solid
+
+  <<urlOption>>       "filetype":<<text>>                                    some file types may be treated in special ways by user-agent; Ex: [{"id":"my song","type":"url","v":"mysong.mp3","M":"play"}] would add an mp3 file to the UI and play it; Ex: [{"type":"url","v":"myresults.csv","filetype":"csv"}] would announce that the included filetype is a comma-separated data file, and a user-side GUI may provide special data visualization tools for displaying such formats
 
   <<ref>>             {"#":<<id>>|<<idArray>>}                               reference to another item; "#" is treated as <<pName>> for the purposes of <<required>> specifications
 
@@ -219,6 +225,10 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
   <<eventType>>       "onmouseout"                                           mouse out event
   <<eventType>>       "onkeydown"                                            keyboard key-down event
   <<eventType>>       "onkeyup"                                              keyboard key-up event
+  <<eventType>>       "onplay"                                               media play event
+  <<eventType>>       "onpause"                                              media pause event
+  <<eventType>>       "onseek"                                               media seek event
+  <<eventType>>       "onended"                                              media ended event
 
   <<userVal>>         [<<value>>(,<<value>>)*]                               user-side item information array that corresponds to the <<info>> array, as specified via the "R" <<command>> or "R" <<eventOption>>; Ex: [{"id":"myItem","v":"hi","bg":2,"R":["v","bg"]}] will send back [<<ums>>,"myItem",["hi",2]]
   <<info>>            <<pName>>                                              request property value for current item; Ex: ["a","b","c"] followed by [{"id":1,"R":["the value is","v"]}] would send back [<<ums>>,1,["the value is","b"]]
@@ -238,6 +248,7 @@ everything below can be negotiated via the "require" <<taskOption>>; if task req
   <<info>>            "userAgent"                                            request information about user-side software (e.g. type/version)
   <<info>>            "url"                                                  request url information employed by user-agent to connect to task
   <<info>>            "screen"                                               user-agent screen size
+  <<info>>            "media"                                                request media info
 
   <<shape>>           <<uint>>                                               predefined shapes; "shape":0 is the default container shape (usually this would be a "rect" or "roundedRect"), and every other number is a different unique shape (e.g. 1=round, 2=hexagon, 3=diamond, etc)
   <<shape>>           [<<pathPart>>(,<<pathPart>>)*]                         custom shape; Ex: [{"shape":["0,100","50,0","100,100"],"bg":"#faa","w":7,"h":7}]
