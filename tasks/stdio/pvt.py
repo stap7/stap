@@ -34,8 +34,8 @@ def main():
 	#announce required options
 	send({'require':{'options':['U','onin']},'template':'[type="bin"][level="1"]{height:200px}'})
 	#display Trial and instructions containers; let user software know that any buttons inside the instructions container should be deleted once user-input (i.e. click) is detected
-	send([ obj('Trial',1,max=TRIALS),
-			obj(INSTRUCTIONS,[]) ])
+	send([  obj('Trial',1,max=TRIALS),
+			obj(INSTRUCTIONS,[])  ])
 	#do trials
 	for trial in range(1,TRIALS+1):
 		#set random time for button appearance
@@ -48,9 +48,9 @@ def main():
 		log.append(ums-buttonAppearanceTime)
 		send([ obj('Your response time is',log[-1],unit='ms') ])
 	#display goodbye message in popup
-	send(CLEAR)
-	send([ obj('Your mean response time is',statistics.mean(log)),
-		'Thank you for your participation.' ])
+	send([  CLEAR,
+			obj('Your mean response time is',statistics.mean(log)),
+			'Thank you for your participation.'  ])
 
 
 if __name__=='__main__': main()

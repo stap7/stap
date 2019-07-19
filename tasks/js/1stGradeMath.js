@@ -3,14 +3,14 @@
 		use this script alongside stap.js api2gui library, e.g.
 			<html><head><script src=location/of/stap.js><script src=location/of/1stGradeMath.js></head><body /></html>
 		OR write your own in-browser GUI
-			* must overload task.show to process display changes
+			* must overload task.display to process display changes
 			* must call task.userAction for each user event/input
 			* must call task.start() to start task
 			* optionally overload task.end (it will be called at the end of the task)
 	- as a console app, which can pipe io to agent (or serve via server like servep, websocketd, netcat)
 		* in console, type "node 1stGradeMath.js"
 	- as a node.js module
-		* must overload task.show to process display changes
+		* must overload task.display to process display changes
 		* must call task.userAction for each user event/input
 		* must call task.start() to start task
 		* optionally overload task.end (it will be called at the end of the task)
@@ -24,15 +24,14 @@ if(!Math.randbtwn)Math.randbtwn=function(min,max){return Math.floor(Math.random(
 
 var stap = {
 	clear: null,
-	button:function(name){return {id:name+'',v:false};}
+	button: name=>{return {id:name+'',v:false}}
 };
 
 var task = {
 	
 	start: function(){
-		task.trials=10;
+		task.trials=2;
 		task.score=0;
-		task.show(stap.clear);
 		task.doTrial();
 	},
 	
@@ -51,29 +50,30 @@ var task = {
 			answers.push(answers.last()+Math.randbtwn(1,2));
 		}
 		//add question and answer buttons to user display
-		task.show([ {id:"Questions left",v:task.trials--},
-					{id:"Question",v:[x,["-","+"][operation],y]},
-					{id:"Answers",v:answers.map(stap.button)} ]);
+		task.display([
+			{id:"Questions left",v:task.trials--},
+			{id:"Question",v:[x,["-","+"][operation],y]},
+			{id:"Answers",v:answers.map(stap.button)}
+		]);
 	},
 	
 	userAction: function(time,id,value){
 		if(task.trials){
 			if(id.constructor===String){
 				//clear screen
-				task.show(stap.clear);
+				task.display(stap.clear);
 				if(id=='Next Question'){
 					task.doTrial();
 				}else if(id==''+task.correct){
 					task.score++;
-					task.show([ "Correct!", stap.button('Next Question') ]);
+					task.display([ "Correct!", stap.button('Next Question') ]);
 				}else{
-					task.show([ "Incorrect.", stap.button('Next Question') ]);
+					task.display([ "Incorrect.", stap.button('Next Question') ]);
 				}
 			}
 		}else if(task.trials==0){
-			//clear screen
-			task.show(stap.clear);
-			task.show([ {id:"Score",v:task.score}, "Thanks, and have a great day!" ]);
+			//last screen
+			task.display([ stap.clear, {id:"Score",v:task.score}, "Thanks, and have a great day!" ]);
 			//exit gracefully
 			task.end();
 		}
@@ -84,5 +84,5 @@ var task = {
 
 ////////////////////////////////////////////////////////////////
 // line below added for node.js
-if(typeof(window)==='undefined'){task.end=function(){process.exit()};if(require.main===module){task.show=function(data){console.log(JSON.stringify(data))};process.stdin.on("data",function(s){var data;try{data=JSON.parse(s)}catch(e){console.log('{"error":"invalid JSON string"}');return}if(data.constructor!==Array||data.length!=3){console.log('{"error":"Invalid STAP 7 response. Expected [time,id,value]"}');return}task.userAction(data[0],data[1],data[2])});task.start()}else{exports.task=task}}
+if(typeof(window)==='undefined'){task.end=function(){process.exit()};if(require.main===module){task.display=function(data){console.log(JSON.stringify(data))};process.stdin.on("data",function(s){var data;try{data=JSON.parse(s)}catch(e){console.log('{"error":"invalid JSON string"}');return}if(data.constructor!==Array||data.length!=3){console.log('{"error":"Invalid STAP 7 response. Expected [time,id,value]"}');return}task.userAction(data[0],data[1],data[2])});task.start()}else{exports.task=task}}
 ////////////////////////////////////////////////////////////////

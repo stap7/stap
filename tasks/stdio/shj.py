@@ -24,7 +24,7 @@ def obj(id=None,value=NotImplemented,**options):
 import random
 
 
-MAXTRIALS=20
+MAXTRIALS=32
 TIME_BETWEEN_TRIALS=.5 #seconds
 CONDITIONS=[ #response should be CATEGORY_NAMES[1]
 	[(0,0,0),(0,0,1),(0,1,0),(0,1,1)],	#type I
@@ -75,8 +75,8 @@ def main():
 	for trial in range(1,MAXTRIALS+1):
 		#create random stimulus
 		s=random.randrange(2),random.randrange(2),random.randrange(2)
-		send(CLEAR)
 		send([
+			CLEAR,
 			#set Trial field in title bar to current trial number
 			obj("Trial", trial, **{"<=":MAXTRIALS}),
 			#add the stimulus to the canvas
@@ -94,8 +94,8 @@ def main():
 		send({ "T":TIME_BETWEEN_TRIALS, "R":[] })
 		recv()
 	#summary screen
-	send(CLEAR)
 	send([
+		CLEAR,
 		'Thank you for your participation.',
 		obj('Experiment Summary', [
 			obj('Category Structure Type', ['I','II','IV','VI'][CONDITIONS.index(CURRENT_CONDITION)]),
@@ -105,4 +105,3 @@ def main():
 				obj('Second Half', sum(correctTrials[(MAXTRIALS//2):])) ]) ]) ])
 
 if __name__=='__main__': main()
-

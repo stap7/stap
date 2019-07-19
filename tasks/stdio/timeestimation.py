@@ -37,29 +37,27 @@ GOALLINEHEIGHT = 20
 def main():
 	#announce required options
 	send({"require":{
-		"options":["S","onin","x","y","w","h","bg","*"]
-		}})
+			"options":["S","onin","x","y","w","h","bg"] }})
 	for trial in range(1,MAXTRIALS+1):
 		delay=random.randrange(MINDELAY,MAXDELAY+1)
-		send(None)
 		send([
+			None,
 			obj('Instructions','Press the "Start Timer" button to start a timer. Press "Stop Timer" when you think the ball reaches the RED line.'),
 			obj('Drop Time',delay,unit='sec'),
 			obj(content=[
-				obj("ball",title='',w=BALLSIZE,h=BALLSIZE,x=CANVASSIZE/2-BALLSIZE/2,y=0,shape='round',bg='blue'),
-				obj(w=CANVASSIZE,h=ENDZONEHEIGHT,x=0,y=CANVASSIZE-ENDZONEHEIGHT-GOALLINEHEIGHT,bg='blue'),
-				obj(w=CANVASSIZE,h=GOALLINEHEIGHT,x=0,y=CANVASSIZE-GOALLINEHEIGHT,bg='red')
+				obj("ball",title='',w=BALLSIZE,h=BALLSIZE,x=CANVASSIZE/2-BALLSIZE/2,y=0,shape='round',bg=2),
+				obj(w=CANVASSIZE,h=ENDZONEHEIGHT,x=0,y=CANVASSIZE-ENDZONEHEIGHT-GOALLINEHEIGHT,bg=2),
+				obj(w=CANVASSIZE,h=GOALLINEHEIGHT,x=0,y=CANVASSIZE-GOALLINEHEIGHT,bg=3)
 				],w=CANVASSIZE,h=CANVASSIZE),
 			obj("Start Timer",False,onin={"v":None}) ])
 		recv() #wait for Start button press
-		send({"*":"ball","S":delay,"y":CANVASSIZE-GOALLINEHEIGHT-BALLSIZE})
+		send({"_":"ball","S":delay,"y":CANVASSIZE-GOALLINEHEIGHT-BALLSIZE})
 		send([ obj("Stop Timer",False,onin={"v":None}) ])
 		recv() #wait for button press
-		send(None)
 		if trial<MAXTRIALS:
-			send([ obj("Next Trial",False) ])
+			send([ None, obj("Next Trial",False) ])
 			recv()
-	send(['Thank you for your participation.'])
+	send([ None, 'Thank you for your participation.' ])
 
 
 main()

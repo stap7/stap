@@ -19,7 +19,7 @@ Benefits of task development with STAP:
 
 Benefits of agent development for STAP-compliant tasks:
 - consistent cross-task API, allowing computational agents to interact with the same sw that that human users interact with
-- millisecond precision user-time [with faster-than-real-time and slower-than-real-time capabilities]
+- millisecond precision user-time (with faster-than-real-time and slower-than-real-time capabilities)
 - cross-platform, web-friendly
 - low bar of entry (i.e., core API for text-and-button tasks is minimal, additional UI feature handlers can be added to agent framework on a per-task basis)
 
@@ -37,12 +37,12 @@ Sample Interactions:
     ->     Message sent from task software to user software
 
     Sample Interaction 1:
-        // display "Hello World"
-        -> ["Hello World"]
-        // display a "Click Me" button
-        -> [{"id":"Click Me","v":false}]
-        // user clicks the button after 30.8s
-        <- [30800,"Click Me",true]
+        // display "Hello World" and a "Click Me" button
+        -> ["Hello World",{"id":"Click Me","v":false}]
+        // user clicks the button after 3.8s
+        <- [3800,"Click Me",true]
+        // remove "Click Me" button
+        -> {"_":"Click Me","v":null}
 
     Sample Interaction 2:
         // let user software know that "T" (timeout), "in" (interactive-field), "df" (defaults), and "type" (item-type) are required directives for this task
@@ -77,12 +77,13 @@ Sample Interactions:
 
 ### Message sent from task software to user-side software
 ![task-to-user](https://stap7.github.io/img/task-to-user.png)
-- each task-to-user message adds or updates UI items on user display
+- each task-to-user message declares or updates UI items on user display
 - `null` signifies display is cleared
 
 ### container
 ![container](https://stap7.github.io/img/container.png)
-- each container item update may be declared as a **value** or as **property-list**
+- each container item may be declared as a **value** or as **property-list**
+- if the container declaration array begins with a value of `null` (i.e., `[null,...]`), the container is cleared prior to appending items to this array
 
 ### property-list
 ![property-list](https://stap7.github.io/img/property-list.png)
@@ -109,4 +110,4 @@ Sample Interactions:
 - please see [stap.txt](stap.txt) for a full list of task options
 
 ### optional-property
-- please see [stap.txt](stap.txt) for a full list of optional properties
+- please see [stap.txt](stap.txt) for a full list of optional properties and commands
