@@ -59,14 +59,13 @@ Whereas HTML is focused on hypertext look and feel, STAP is focused on function,
 -&gt;     Message sent from task software to user software
 
 Sample Interaction:
-    // (0.0 seconds into the task) user software ready
-    &lt;- [0,[0]]
-    // display "Hello World"
-    -&gt; ["Hello World"]
-    // display a "Click Me" button
-    -&gt; [{"id":"Click Me","v":false}]
-    // (30.8 seconds into the task) user clicks the button
-    &lt;- [30800,"Click Me",true]
+    // display "Hello World" and a "Click Me" button
+    -&gt; ["Hello World",{"id":"Click Me","v":false}]
+    // (3.8 seconds into the task) user clicks the button
+    &lt;- [3800,"Click Me",true]
+    // remove "Click Me" button
+    -&gt; {"_":"Click Me","v":null}
+
 </code></pre>
   
   </body>
